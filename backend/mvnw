@@ -1,0 +1,31 @@
+#!/bin/sh
+# Maven Wrapper script
+
+MAVEN_WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+MAVEN_WRAPPER_PROPERTIES=".mvn/wrapper/maven-wrapper.properties"
+MAVEN_PROJECTBASEDIR=$(cd "$(dirname "$0")"; pwd -P)
+
+if [ -r "$MAVEN_WRAPPER_PROPERTIES" ]; then
+  . "$MAVEN_WRAPPER_PROPERTIES"
+fi
+
+if [ ! -f "$MAVEN_WRAPPER_JAR" ]; then
+  if [ -n "$wrapperUrl" ]; then
+    echo "Downloading Maven wrapper from $wrapperUrl"
+    if command -v curl >/dev/null 2>&1; then
+      curl -fsSL -o "$MAVEN_WRAPPER_JAR" "$wrapperUrl"
+    elif command -v wget >/dev/null 2>&1; then
+      wget -O "$MAVEN_WRAPPER_JAR" "$wrapperUrl"
+    else
+      echo "curl or wget is required to download the Maven wrapper."
+      exit 1
+    fi
+  else
+    echo "Missing $MAVEN_WRAPPER_JAR and wrapperUrl is not set."
+    exit 1
+  fi
+fi
+
+exec java -classpath "$MAVEN_WRAPPER_JAR" \
+  -Dmaven.multiModuleProjectDirectory="$MAVEN_PROJECTBASEDIR" \
+  org.apache.maven.wrapper.MavenWrapperMain "$@"

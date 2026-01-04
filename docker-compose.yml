@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://backend:8081
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8081
+    depends_on:
+      - backend
+    restart: unless-stopped
+    init: true
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      - redis
+    volumes:
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+    init: true
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    init: true
+
+volumes:
+  backend_uploads:
+  redis_data:

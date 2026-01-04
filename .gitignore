@@ -1,0 +1,34 @@
+# Java
+target/
+*.log
+*.class
+
+# Node
+node_modules/
+.next/
+.turbo/
+.vercel/
+coverage/
+.eslintcache
+
+# IDE
+.idea/
+.vscode/
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+tsconfig.tsbuildinfo
+
+# Uploads
+uploads/
