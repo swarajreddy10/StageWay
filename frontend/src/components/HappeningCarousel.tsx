@@ -125,7 +125,7 @@ export default function HappeningCarousel() {
           <AnimatePresence mode="wait">
             <motion.div
               key={current.title}
-              className="relative aspect-[16/7] w-full"
+              className="relative aspect-16/7 w-full"
               initial={{ opacity: 0.4, scale: 1.02 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}

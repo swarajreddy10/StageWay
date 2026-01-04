@@ -57,25 +57,25 @@ export default function AboutPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 shrink-0" />
                     <span className="text-sm">Browse curated events across all categories</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 shrink-0" />
                     <span className="text-sm">Easy one-click registration process</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 shrink-0" />
                     <span className="text-sm">
                       Digital passes with QR codes for seamless check-in
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 shrink-0" />
                     <span className="text-sm">Track all your registrations in one dashboard</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#D8573B] mt-0.5 shrink-0" />
                     <span className="text-sm">Real-time notifications and event updates</span>
                   </li>
                 </ul>
@@ -105,23 +105,23 @@ export default function AboutPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 shrink-0" />
                     <span className="text-sm">Create beautiful event pages in minutes</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 shrink-0" />
                     <span className="text-sm">Manage registrations and capacity in real-time</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 shrink-0" />
                     <span className="text-sm">QR code check-in system for smooth entry</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 shrink-0" />
                     <span className="text-sm">Comprehensive analytics and insights dashboard</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#1E5A55] mt-0.5 shrink-0" />
                     <span className="text-sm">Automated email notifications to attendees</span>
                   </li>
                 </ul>

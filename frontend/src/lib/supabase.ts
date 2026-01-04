@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   SUPABASE_ANON_KEY,
   SUPABASE_ANON_KEY_ENV,
@@ -9,16 +9,27 @@ import {
 const supabaseUrl = SUPABASE_URL;
 const supabaseAnonKey = SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    `Missing Supabase configuration. Set ${SUPABASE_URL_ENV} and ${SUPABASE_ANON_KEY_ENV}.`
-  );
-}
+const missingConfigMessage = `Missing Supabase configuration. Set ${SUPABASE_URL_ENV} and ${SUPABASE_ANON_KEY_ENV}.`;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: true,
-  },
-});
+const createSupabaseClient = (): SupabaseClient => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return new Proxy(
+      {},
+      {
+        get() {
+          throw new Error(missingConfigMessage);
+        },
+      }
+    ) as SupabaseClient;
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: true,
+    },
+  });
+};
+
+export const supabase = createSupabaseClient();
