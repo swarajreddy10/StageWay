@@ -25,11 +25,9 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -41,12 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,16 +48,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class RegistrationService {
     private static final Pattern REGISTRATION_QR_PATTERN = Pattern.compile("/registrations/(\\d+)/qr");
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RegistrationService.class);
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final RegistrationRepository registrationRepository;
     private final AuthService authService;
     private final SeatService seatService;
-    private final JavaMailSender mailSender;
     private final SimpMessagingTemplate messagingTemplate;
-    private final boolean notificationsEnabled;
-    private final String notificationFrom;
 
     public RegistrationService(
         EventRepository eventRepository,
@@ -72,20 +61,14 @@ public class RegistrationService {
         RegistrationRepository registrationRepository,
         AuthService authService,
         SeatService seatService,
-        JavaMailSender mailSender,
-        SimpMessagingTemplate messagingTemplate,
-        @Value("${app.notification.enabled:false}") boolean notificationsEnabled,
-        @Value("${app.notification.from:noreply@example.com}") String notificationFrom
+        SimpMessagingTemplate messagingTemplate
     ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.registrationRepository = registrationRepository;
         this.authService = authService;
         this.seatService = seatService;
-        this.mailSender = mailSender;
         this.messagingTemplate = messagingTemplate;
-        this.notificationsEnabled = notificationsEnabled;
-        this.notificationFrom = notificationFrom;
     }
 
     @Transactional
@@ -159,7 +142,6 @@ public class RegistrationService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Selected seat is already taken.");
         }
         publishRegistrationUpdate(event);
-        sendRegistrationEmail(attendee, event, saved);
         return buildRegistrationResponse(saved, event, httpRequest);
     }
 
@@ -540,56 +522,6 @@ public class RegistrationService {
             OffsetDateTime.now(ZoneOffset.UTC)
         );
         messagingTemplate.convertAndSend("/topic/events/" + event.getId() + "/registrations", update);
-    }
-
-    private void sendRegistrationEmail(User user, Event event, Registration registration) {
-        if (!notificationsEnabled || user.getEmail() == null || user.getEmail().isBlank()) {
-            return;
-        }
-
-        String status = registration.getStatus();
-        boolean includeQr = "CONFIRMED".equalsIgnoreCase(status) || "CHECKED_IN".equalsIgnoreCase(status);
-        String seatLabel = registration.getSeatNumber() != null ? "Seat " + registration.getSeatNumber() : "Waitlist";
-        String subject = "StageWay pass update: " + event.getName();
-        String body = """
-            <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;">
-              <h2 style="margin-bottom:8px;">You're set for %s</h2>
-              <p>Status: <strong>%s</strong></p>
-              <p>%s</p>
-              <p><strong>Schedule:</strong> %s</p>
-              <p><strong>Venue:</strong> %s</p>
-              <p style="margin-top:16px;">Present this email at entry. Your QR pass is attached%s.</p>
-              <p style="font-size:12px;color:#6b7280;">StageWay ƒ?› Live experiences, beautifully managed.</p>
-            </div>
-            """
-            .formatted(
-                event.getName(),
-                status,
-                seatLabel,
-                EventFormatter.formatRange(event),
-                EventFormatter.formatVenue(event),
-                includeQr ? "" : " when available"
-            );
-
-        try {
-            var message = mailSender.createMimeMessage();
-            var helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
-            helper.setTo(user.getEmail());
-            helper.setFrom(notificationFrom);
-            helper.setSubject(subject);
-            helper.setText(body, true);
-            if (includeQr) {
-                byte[] qrCode = buildQrPng("REG-" + registration.getId());
-                helper.addAttachment(
-                    "stageway-pass.png",
-                    new ByteArrayResource(qrCode),
-                    MediaType.IMAGE_PNG_VALUE
-                );
-            }
-            mailSender.send(message);
-        } catch (MessagingException | IOException | WriterException ex) {
-            log.warn("Failed to send registration email for registrationId={}: {}", registration.getId(), ex.getMessage());
-        }
     }
 
     private byte[] buildQrPng(String value) throws WriterException, IOException {
