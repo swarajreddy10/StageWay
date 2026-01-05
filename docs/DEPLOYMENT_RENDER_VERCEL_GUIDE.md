@@ -96,17 +96,28 @@ Required:
 - `QR_SECRET` = `YOUR_32_CHAR_SECRET`
 
 Optional:
-- `REDIS_HOST` = `YOUR_UPSTASH_HOST`
+- `REDIS_HOST` = `YOUR_REDIS_HOST`
 - `REDIS_PORT` = `6379`
-- `REDIS_PASSWORD` = `YOUR_UPSTASH_PASSWORD`
+- `SPRING_DATA_REDIS_PASSWORD` = `YOUR_REDIS_PASSWORD`
+- `SPRING_DATA_REDIS_SSL` = `true` (set this if your provider requires TLS)
 
 If you do NOT want Redis on the free tier:
 - `SPRING_SESSION_STORE_TYPE` = `none`
+
+If you DO want Redis in production:
+- Use a managed Redis (Render Redis, Upstash, Redis Cloud).
+- Do not use `localhost` on Render; set `REDIS_HOST` to the provider host.
+- Keep `SPRING_SESSION_STORE_TYPE=redis` (default).
 
 Security defaults:
 - `SECURE_COOKIES` = `true`
 - `ALLOW_LOCAL_TOKENS` = `false`
 - `SESSION_COOKIE_NAME` = `stageway.session`
+
+QR_SECRET notes:
+- 32+ characters is recommended so you do not ship the default insecure value.
+- The current QR payload is `REG-<id>`, so this value is reserved for future signed QR payloads.
+- Keep it stable across deployments if you later enable signed QR codes.
 
 ### 2.3 Persistent uploads (optional)
 If you use local uploads, add a Render disk:
@@ -116,6 +127,13 @@ If you use local uploads, add a Render disk:
 ### 2.4 Health check
 Render Health Check Path:
 - `/actuator/health`
+
+---
+
+### 2.5 Runtime optimization (optional)
+- Keep the keep-awake GitHub Action enabled to reduce cold starts on free tiers.
+- If you are not using Redis, set `SPRING_SESSION_STORE_TYPE=none` to avoid connection retries.
+- For faster boot time, you can set `SPRING_MAIN_LAZY_INITIALIZATION=true` (first request may be slower).
 
 ---
 
@@ -207,6 +225,9 @@ Commit and push. This pings the backend every 10 minutes.
   - `server.port` should be `${PORT:8081}` in `application.yml`.
 - If auth callback fails, check Supabase redirect URLs and Google OAuth redirect URL.
 - If CORS errors appear, include your Vercel domain in `CORS_ALLOWED_ORIGINS`.
+- If you see `RedisConnectionFailureException: Unable to connect to Redis`:
+  - Either set `SPRING_SESSION_STORE_TYPE=none` (single instance), or
+  - Configure managed Redis and set `REDIS_HOST`/`REDIS_PORT`/`SPRING_DATA_REDIS_PASSWORD` (no `localhost` on Render).
 
 ---
 
@@ -220,7 +241,8 @@ Backend:
 - `SUPABASE_ANON_KEY`
 - `CORS_ALLOWED_ORIGINS`
 - `QR_SECRET`
-- `REDIS_HOST`/`REDIS_PORT`/`REDIS_PASSWORD` (optional)
+- `REDIS_HOST`/`REDIS_PORT` (optional)
+- `SPRING_DATA_REDIS_PASSWORD`/`SPRING_DATA_REDIS_SSL` (optional)
 - `SPRING_SESSION_STORE_TYPE=none` (optional, if no Redis)
 - `SECURE_COOKIES=true`
 
