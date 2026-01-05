@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,27 +23,20 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.eventmanagement.repository.UserRepository;
-import com.eventmanagement.service.SessionService;
+import com.eventmanagement.service.SupabaseAuthService;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
     private final List<String> allowedOrigins;
-    private final String sessionCookieName;
-    private final boolean allowLocalTokens;
-
     public SecurityConfig(
-        @Value("${app.cors.allowed-origins:http://localhost:3000}") String allowedOrigins,
-        @Value("${app.security.session-cookie-name:stageway.session}") String sessionCookieName,
-        @Value("${app.security.allow-local-tokens:false}") boolean allowLocalTokens
+        @Value("${app.cors.allowed-origins:http://localhost:3000}") String allowedOrigins
     ) {
         this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
             .map(String::trim)
             .filter(origin -> !origin.isBlank())
             .toList();
-        this.sessionCookieName = sessionCookieName;
-        this.allowLocalTokens = allowLocalTokens;
     }
 
     @Bean
@@ -63,8 +57,8 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
         allowedOrigins.forEach(corsConfig::addAllowedOriginPattern);
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Desired-Role"));
+        corsConfig.setAllowCredentials(false);
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -73,36 +67,30 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthCookieFilter authCookieFilter() {
-        return new AuthCookieFilter(sessionCookieName);
-    }
-
-    @Bean
     public RequestIdFilter requestIdFilter() {
         return new RequestIdFilter();
     }
 
     @Bean
-    public SessionAuthenticationFilter sessionAuthenticationFilter(
-        SessionService sessionService,
+    public SupabaseAuthenticationFilter supabaseAuthenticationFilter(
+        SupabaseAuthService supabaseAuthService,
         UserRepository userRepository
     ) {
-        return new SessionAuthenticationFilter(sessionService, userRepository, allowLocalTokens);
+        return new SupabaseAuthenticationFilter(supabaseAuthService, userRepository);
     }
 
     @Bean
     public SecurityFilterChain filterChain(
         HttpSecurity http,
         RequestIdFilter requestIdFilter,
-        AuthCookieFilter authCookieFilter,
-        SessionAuthenticationFilter sessionAuthenticationFilter
+        SupabaseAuthenticationFilter supabaseAuthenticationFilter
     ) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(authCookieFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(sessionAuthenticationFilter, AuthCookieFilter.class)
+            .addFilterBefore(supabaseAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(

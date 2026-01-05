@@ -12,10 +12,15 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,6 +29,10 @@ public class FileStorageService {
     private final AuthService authService;
     private final FileUploadRepository fileUploadRepository;
     private final Path uploadRoot;
+    private final RestTemplate restTemplate;
+    private final String supabaseUrl;
+    private final String supabaseServiceRoleKey;
+    private final String supabaseStorageBucket;
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         ".jpg",
         ".jpeg",
@@ -40,9 +49,20 @@ public class FileStorageService {
         "image/heif-sequence"
     );
 
-    public FileStorageService(AuthService authService, FileUploadRepository fileUploadRepository) {
+    public FileStorageService(
+        AuthService authService,
+        FileUploadRepository fileUploadRepository,
+        RestTemplate restTemplate,
+        @Value("${supabase.url:}") String supabaseUrl,
+        @Value("${supabase.service-role-key:}") String supabaseServiceRoleKey,
+        @Value("${supabase.storage.bucket:}") String supabaseStorageBucket
+    ) {
         this.authService = authService;
         this.fileUploadRepository = fileUploadRepository;
+        this.restTemplate = restTemplate;
+        this.supabaseUrl = supabaseUrl;
+        this.supabaseServiceRoleKey = supabaseServiceRoleKey;
+        this.supabaseStorageBucket = supabaseStorageBucket;
         this.uploadRoot = Paths.get("uploads");
         try {
             Files.createDirectories(uploadRoot);
@@ -61,18 +81,23 @@ public class FileStorageService {
         validateImageFile(file, extension);
         String id = UUID.randomUUID().toString();
         String storedFilename = id + extension;
-        Path targetPath = uploadRoot.resolve(storedFilename);
+        String storagePath = resolveStoragePath(storedFilename);
 
-        try {
-            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");
+        if (isSupabaseStorageEnabled()) {
+            uploadToSupabase(file, storagePath);
+        } else {
+            Path targetPath = uploadRoot.resolve(storedFilename);
+            try {
+                Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");
+            }
         }
 
         FileUpload upload = new FileUpload();
         upload.setId(id);
         upload.setOriginalFilename(originalFilename != null ? originalFilename : "upload");
-        upload.setStoredFilename(storedFilename);
+        upload.setStoredFilename(storagePath);
         upload.setContentType(file.getContentType() != null
             ? file.getContentType()
             : MediaType.APPLICATION_OCTET_STREAM_VALUE);
@@ -97,6 +122,12 @@ public class FileStorageService {
         }
         FileUpload upload = fileUploadRepository.findById(id).orElse(null);
         enforceDownloadAccess(upload, authHeader);
+        if (upload != null && isSupabaseStorageEnabled()) {
+            String publicUrl = buildSupabasePublicUrl(upload.getStoredFilename());
+            return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, publicUrl)
+                .build();
+        }
         Path path = resolveFilePath(id, upload);
         if (path == null || !Files.exists(path)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found.");
@@ -158,7 +189,10 @@ public class FileStorageService {
 
     private Path resolveFilePath(String id, FileUpload upload) {
         if (upload != null && upload.getStoredFilename() != null) {
-            return uploadRoot.resolve(upload.getStoredFilename());
+            String stored = upload.getStoredFilename();
+            if (!stored.contains("/")) {
+                return uploadRoot.resolve(stored);
+            }
         }
         try (var stream = Files.list(uploadRoot)) {
             return stream
@@ -168,5 +202,54 @@ public class FileStorageService {
         } catch (IOException ex) {
             return null;
         }
+    }
+
+    private boolean isSupabaseStorageEnabled() {
+        return supabaseUrl != null && !supabaseUrl.isBlank()
+            && supabaseServiceRoleKey != null && !supabaseServiceRoleKey.isBlank()
+            && supabaseStorageBucket != null && !supabaseStorageBucket.isBlank();
+    }
+
+    private String resolveStoragePath(String storedFilename) {
+        if (isSupabaseStorageEnabled()) {
+            return "uploads/" + storedFilename;
+        }
+        return storedFilename;
+    }
+
+    private void uploadToSupabase(MultipartFile file, String storagePath) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + supabaseServiceRoleKey);
+            headers.set("apikey", supabaseServiceRoleKey);
+            if (file.getContentType() != null && !file.getContentType().isBlank()) {
+                headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+            }
+            headers.add("x-upsert", "true");
+            byte[] payload = file.getBytes();
+            String url = normalizeSupabaseUrl()
+                + "/storage/v1/object/"
+                + supabaseStorageBucket
+                + "/"
+                + storagePath;
+            restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");
+        }
+    }
+
+    private String buildSupabasePublicUrl(String storagePath) {
+        return normalizeSupabaseUrl()
+            + "/storage/v1/object/public/"
+            + supabaseStorageBucket
+            + "/"
+            + storagePath;
+    }
+
+    private String normalizeSupabaseUrl() {
+        if (supabaseUrl == null) {
+            return "";
+        }
+        return supabaseUrl.endsWith("/") ? supabaseUrl.substring(0, supabaseUrl.length() - 1) : supabaseUrl;
     }
 }

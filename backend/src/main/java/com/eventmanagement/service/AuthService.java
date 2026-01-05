@@ -20,23 +20,16 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final UserRepository userRepository;
     private final SupabaseAuthService supabaseAuthService;
-    private final SessionService sessionService;
     private final PasswordEncoder passwordEncoder;
-    private final boolean allowLocalTokens;
 
     public AuthService(
         UserRepository userRepository,
         SupabaseAuthService supabaseAuthService,
-        PasswordEncoder passwordEncoder,
-        SessionService sessionService,
-        @org.springframework.beans.factory.annotation.Value("${app.security.allow-local-tokens:false}")
-        boolean allowLocalTokens
+        PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.supabaseAuthService = supabaseAuthService;
         this.passwordEncoder = passwordEncoder;
-        this.sessionService = sessionService;
-        this.allowLocalTokens = allowLocalTokens;
     }
 
     public AuthResponse handleSupabaseAuth(String authHeader, String desiredRole) {
@@ -66,8 +59,7 @@ public class AuthService {
             }
 
             AuthUser authUser = buildAuthUser(user);
-            String sessionToken = sessionService.createSession(user.getId());
-            return new AuthResponse(sessionToken, "Bearer", 3600, authUser);
+            return new AuthResponse(token, "Bearer", 3600, authUser);
         } catch (ResponseStatusException e) {
             log.warn("Supabase auth failed: {}", e.getReason());
             throw e;
@@ -81,41 +73,11 @@ public class AuthService {
     }
 
     public AuthResponse handleCredentialsLogin(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail());
-        if (user == null || user.getPasswordHash() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please check your credentials and try again.");
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please check your credentials and try again.");
-        }
-
-        AuthUser authUser = buildAuthUser(user);
-        String sessionToken = sessionService.createSession(user.getId());
-        return new AuthResponse(sessionToken, "Bearer", 3600, authUser);
+        throw new ResponseStatusException(HttpStatus.GONE, "Use Supabase Auth instead.");
     }
 
     public AuthResponse registerUser(RegisterRequest request) {
-        User existingUser = userRepository.findByEmail(request.getEmail());
-        if (existingUser != null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "An account with this email already exists. Please sign in or use a different email.");
-        }
-
-        if (request.getFullName() == null || request.getFullName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Full name is required.");
-        }
-
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setFullName(request.getFullName());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(resolveRole(request.getRole()));
-        user = userRepository.save(user);
-
-        AuthUser authUser = buildAuthUser(user);
-        String sessionToken = sessionService.createSession(user.getId());
-        return new AuthResponse(sessionToken, "Bearer", 3600, authUser);
+        throw new ResponseStatusException(HttpStatus.GONE, "Use Supabase Auth instead.");
     }
 
     public AuthUser getCurrentUser(String authHeader) {
@@ -148,19 +110,6 @@ public class AuthService {
 
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
 
-        Long sessionUserId = sessionService.tryValidateSession(token);
-        if (sessionUserId != null) {
-            return sessionUserId;
-        }
-
-        if (allowLocalTokens && token.startsWith("local-")) {
-            try {
-                return Long.parseLong(token.substring(6));
-            } catch (NumberFormatException e) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid session.");
-            }
-        }
-
         try {
             SupabaseAuthService.SupabaseUser supabaseUser = supabaseAuthService.verifyToken(token);
             User user = userRepository.findByEmail(supabaseUser.email());
@@ -183,11 +132,7 @@ public class AuthService {
     }
 
     public void logout(String authHeader) {
-        if (authHeader == null || authHeader.isBlank()) {
-            return;
-        }
-        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-        sessionService.deleteSession(token);
+        return;
     }
 
     public User requireOrganizer(Long userId) {

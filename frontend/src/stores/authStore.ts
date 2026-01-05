@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api";
 import { resolveApiBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
 import { supabase } from "@/lib/supabase";
+import { normalizeDesiredRole, persistDesiredRole } from "@/lib/auth-role";
 
 interface AuthState {
   user: User | null;
@@ -35,23 +36,24 @@ const clearLegacyTokens = () => {
   sessionStorage.removeItem("token");
 };
 
-const prepareOAuthRole = async (role?: User["role"]) => {
-  if (!role) return;
-  await fetch(`${resolveApiBaseUrl()}${API_ROUTES.auth.oauthStart}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ role }),
-    credentials: "include",
-  });
+const prepareOAuthRole = (role?: User["role"]) => {
+  persistDesiredRole(role);
 };
 
-const syncSupabaseSession = async (accessToken: string): Promise<AuthResponse> => {
+const syncSupabaseSession = async (
+  accessToken: string,
+  desiredRole?: string | null
+): Promise<AuthResponse> => {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+  };
+  const normalizedRole = normalizeDesiredRole(desiredRole);
+  if (normalizedRole) {
+    headers["X-Desired-Role"] = normalizedRole;
+  }
   const response = await fetch(`${resolveApiBaseUrl()}${API_ROUTES.auth.supabase}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    credentials: "include",
+    headers,
   });
 
   if (!response.ok) {
@@ -85,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const authResponse = await syncSupabaseSession(data.session.access_token);
       set({
         user: authResponse.user,
-        token: authResponse.token,
+        token: data.session.access_token,
         isAuthenticated: true,
         isLoading: false,
         isHydrated: true,
@@ -101,13 +103,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (email: string, password: string, fullName: string, role?: User["role"]) => {
     set({ isLoading: true, error: null, notice: null });
     clearLegacyTokens();
-    try {
-      await prepareOAuthRole(role);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to prepare sign-up role";
-      set({ error: message, isLoading: false, isAuthenticated: false, isHydrated: true });
-      throw err;
-    }
+    prepareOAuthRole(role);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -133,10 +129,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const authResponse = await syncSupabaseSession(data.session.access_token);
+      const authResponse = await syncSupabaseSession(data.session.access_token, role);
       set({
         user: authResponse.user,
-        token: authResponse.token,
+        token: data.session.access_token,
         isAuthenticated: true,
         isLoading: false,
         isHydrated: true,

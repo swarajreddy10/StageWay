@@ -2,9 +2,7 @@ package com.eventmanagement.controller;
 
 import com.eventmanagement.dto.AuthResponse;
 import com.eventmanagement.dto.AuthUser;
-import com.eventmanagement.dto.RegisterRequest;
 import com.eventmanagement.service.AuthService;
-import com.eventmanagement.service.OAuthStateService;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,9 +26,6 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
-
-    @MockBean
-    private OAuthStateService oauthStateService;
 
     @Test
     void handleSupabaseAuth_returnsAuthResponse() throws Exception {
@@ -49,7 +42,6 @@ class AuthControllerTest {
             true
         );
         AuthResponse response = new AuthResponse("token", "Bearer", 3600, user);
-        when(oauthStateService.consumeState(any())).thenReturn(null);
         when(authService.handleSupabaseAuth("Bearer token", "HOST")).thenReturn(response);
 
         mockMvc.perform(
@@ -64,30 +56,12 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerUser_delegatesToService() throws Exception {
-        AuthUser user = new AuthUser(
-            2L,
-            "new@example.com",
-            "New User",
-            "ATTENDEE",
-            null,
-            null,
-            null,
-            null,
-            true,
-            true
-        );
-        AuthResponse response = new AuthResponse("token", "Bearer", 3600, user);
-        when(authService.registerUser(any(RegisterRequest.class))).thenReturn(response);
-
+    void registerUser_isGone() throws Exception {
         mockMvc.perform(
                 post("/api/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"email\":\"new@example.com\",\"fullName\":\"New User\",\"password\":\"Pass1234\",\"role\":\"ATTENDEE\"}")
             )
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.user.email").value("new@example.com"));
-
-        verify(authService).registerUser(any(RegisterRequest.class));
+            .andExpect(status().isGone());
     }
 }

@@ -1,5 +1,6 @@
 import type { ApiError } from "@/types/api";
 import { resolveApiBaseUrl } from "@/lib/api-base";
+import { supabase } from "@/lib/supabase";
 
 class ApiClient {
   private baseUrl?: string;
@@ -16,7 +17,7 @@ class ApiClient {
     const baseUrl = this.baseUrl ?? resolveApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
     const { authToken, ...fetchOptions } = options;
-    const token = authToken ?? this.getToken();
+    const token = authToken ?? (await this.getToken());
 
     const headers: Record<string, string> = {
       ...(this.defaultHeaders as Record<string, string>),
@@ -30,7 +31,7 @@ class ApiClient {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      credentials: fetchOptions.credentials ?? "include",
+      credentials: fetchOptions.credentials ?? "omit",
     });
 
     if (!response.ok) {
@@ -51,8 +52,16 @@ class ApiClient {
     return response.json();
   }
 
-  private getToken(): string | null {
-    return null;
+  private async getToken(): Promise<string | null> {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    try {
+      const { data } = await supabase.auth.getSession();
+      return data.session?.access_token ?? null;
+    } catch {
+      return null;
+    }
   }
 
   async get<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {

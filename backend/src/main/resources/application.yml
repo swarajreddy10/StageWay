@@ -52,36 +52,11 @@ spring:
     locations: classpath:db/migration
     clean-disabled: ${FLYWAY_CLEAN_DISABLED:true}
   
-  # Redis Configuration
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-    repositories:
-      enabled: false
-  
-  # Session Configuration
-  session:
-    store-type: redis
-    timeout: 3600s
-  
 # Application Configuration
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://192.168.*:3000,http://10.*:3000,http://172.16.*:3000}
 
-  security:
-    allow-local-tokens: ${ALLOW_LOCAL_TOKENS:false}
-    session-cookie-name: ${SESSION_COOKIE_NAME:stageway.session}
-    oauth-state-cookie-name: ${OAUTH_STATE_COOKIE_NAME:stageway.oauth}
-    secure-cookies: ${SECURE_COOKIES:false}
-  
   qr:
     secret: ${QR_SECRET:myQRSecretKeyThatIsAtLeast32CharactersLong}
     ttl: PT48H
@@ -90,6 +65,9 @@ app:
 supabase:
   url: ${SUPABASE_URL:}
   anon-key: ${SUPABASE_ANON_KEY:}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+  storage:
+    bucket: ${SUPABASE_STORAGE_BUCKET:}
 
 # Logging Configuration
 logging:
@@ -100,7 +78,6 @@ logging:
     org.springframework.boot: INFO
     org.springframework.web: WARN
     org.springframework.security: WARN
-    org.springframework.data.redis: WARN
     org.hibernate: WARN
     org.flywaydb: WARN
   pattern:
