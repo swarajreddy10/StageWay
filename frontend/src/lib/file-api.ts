@@ -23,7 +23,6 @@ export async function uploadFile(file: File, token?: string): Promise<FileAsset>
     method: "POST",
     headers,
     body: formData,
-    credentials: "include",
   });
 
   if (!response.ok) {

@@ -2,6 +2,8 @@
 
 This file summarizes what is done, what is left, and exactly what to configure per phase to run the system locally or in a simple environment.
 
+Note: The current codebase runs JWT-only auth (Supabase tokens) and no longer uses Redis sessions. See `docs/MVP_STABILIZATION.md` for the latest deploy steps.
+
 ## Completion Summary
 
 - **Backend Service**: Completed

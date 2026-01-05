@@ -23,6 +23,7 @@ import { Loader2, Save } from "lucide-react";
 import Image from "next/image";
 import { uploadFile } from "@/lib/file-api";
 import { useAuthStore } from "@/stores/authStore";
+import { supabase } from "@/lib/supabase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { COUNTRIES, CURRENCIES, getCurrencyByCountry } from "@/lib/countries-currencies";
 import type { CreateEventRequest, EventCategory } from "@/types/event";
@@ -261,7 +262,13 @@ export function EventForm({
     setIsUploading(true);
     setUploadStatus(null);
     try {
-      const asset = await uploadFile(bannerFile);
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setUploadStatus("Session expired. Sign in again to upload.");
+        return;
+      }
+      const asset = await uploadFile(bannerFile, token);
       const fileUrl = `${resolveFileBaseUrl()}${API_ROUTES.files}/${asset.id}`;
       setValue("bannerUrl", fileUrl, { shouldValidate: true });
       setUploadStatus("Banner uploaded. Preview updated.");
