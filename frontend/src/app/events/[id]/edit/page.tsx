@@ -12,6 +12,7 @@ import type { CreateEventRequest } from "@/types/event";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function EventEditPage() {
   const params = useParams();
@@ -19,7 +20,8 @@ export default function EventEditPage() {
   const eventId = Number(params.id);
   const { user, isAuthenticated, isHydrated } = useAuthStore();
   const { currentEvent, isLoading, fetchEvent, updateEvent } = useEvents();
-  const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const isHost = user?.role === "HOST";
+  const isAdmin = user?.role === "ADMIN";
   const [submitNotice, setSubmitNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -31,6 +33,10 @@ export default function EventEditPage() {
       router.push("/auth/signin");
       return;
     }
+    if (isAuthenticated && isAdmin) {
+      router.push("/admin/host-requests");
+      return;
+    }
     if (isAuthenticated && !isHost) {
       router.push("/host/request");
       return;
@@ -38,19 +44,22 @@ export default function EventEditPage() {
     if (eventId && !isNaN(eventId)) {
       fetchEvent(eventId);
     }
-  }, [isAuthenticated, isHydrated, isHost, eventId, router, fetchEvent]);
+  }, [isAuthenticated, isHydrated, isHost, isAdmin, eventId, router, fetchEvent]);
 
   const handleSubmit = async (data: CreateEventRequest) => {
     setSubmitError(null);
     setSubmitNotice("Saving changes...");
     try {
       await updateEvent(eventId, data);
+      toast.success("Event updated.");
       setSubmitNotice("Event updated. Redirecting...");
       router.push(`/events/${eventId}`);
     } catch (error) {
       console.error("Failed to update event:", error);
+      const message = error instanceof Error ? error.message : "Failed to update event.";
+      toast.error(message);
       setSubmitNotice(null);
-      setSubmitError(error instanceof Error ? error.message : "Failed to update event.");
+      setSubmitError(message);
     }
   };
 

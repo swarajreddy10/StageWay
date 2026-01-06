@@ -15,7 +15,8 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<EventAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [eventId] = useState<number | null>(null);
-  const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const isHost = user?.role === "HOST";
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!isHydrated) {
@@ -25,10 +26,14 @@ export default function AnalyticsPage() {
       router.push("/auth/signin");
       return;
     }
+    if (isAuthenticated && isAdmin) {
+      router.push("/admin/host-requests");
+      return;
+    }
     if (isAuthenticated && !isHost) {
       router.push("/host/request");
     }
-  }, [isAuthenticated, isHydrated, isHost, router]);
+  }, [isAuthenticated, isHydrated, isHost, isAdmin, router]);
 
   useEffect(() => {
     const fetchAnalytics = async (id: number) => {

@@ -77,9 +77,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             return "ATTENDEE";
         }
         String normalized = role.trim().toUpperCase();
-        if ("ORGANIZER".equals(normalized)) {
-            return "HOST";
+        if ("HOST".equals(normalized) || "ADMIN".equals(normalized)) {
+            return normalized;
         }
-        return normalized;
+        return "ATTENDEE";
     }
 }

@@ -27,7 +27,8 @@ export default function CheckInPage() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [attendeesLoading, setAttendeesLoading] = useState(false);
-  const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const isHost = user?.role === "HOST";
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!isHydrated) {
@@ -37,10 +38,14 @@ export default function CheckInPage() {
       router.push("/auth/signin");
       return;
     }
+    if (isAuthenticated && isAdmin) {
+      router.push("/admin/host-requests");
+      return;
+    }
     if (isAuthenticated && !isHost) {
       router.push("/host/request");
     }
-  }, [isAuthenticated, isHydrated, isHost, router]);
+  }, [isAuthenticated, isHydrated, isHost, isAdmin, router]);
 
   const fetchAttendees = useCallback(
     async (id: number) => {

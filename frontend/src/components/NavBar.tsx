@@ -16,6 +16,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useAuthStore } from "@/stores/authStore";
+import { toast } from "sonner";
 
 export default function NavBar() {
   const router = useRouter();
@@ -24,8 +25,11 @@ export default function NavBar() {
   const showUser = isHydrated && isAuthenticated && user;
   const userProfile = showUser ? user : null;
   const role = userProfile?.role;
-  const canCreate = role === "ADMIN" || role === "HOST";
-  const dashboardHref = canCreate ? "/host" : "/dashboard";
+  const isHost = role === "HOST";
+  const isAdmin = role === "ADMIN";
+  const canCreate = isHost;
+  const dashboardHref = isAdmin ? "/admin/host-requests" : isHost ? "/host" : "/dashboard";
+  const dashboardLabel = isAdmin ? "Admin" : "Dashboard";
 
   const brandMark = (
     <Link href="/" className="group flex items-center">
@@ -37,10 +41,17 @@ export default function NavBar() {
   );
 
   const handleSignOut = async () => {
-    await logout();
-    setMenuOpen(false);
-    router.push("/");
-    router.refresh();
+    try {
+      await logout();
+      toast.success("Signed out.");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Sign out failed.");
+    } finally {
+      setMenuOpen(false);
+      router.push("/");
+      router.refresh();
+    }
   };
 
   const getInitials = (name: string) => {
@@ -76,7 +87,7 @@ export default function NavBar() {
               href={dashboardHref}
               className="rounded-full px-3 py-1 transition hover:bg-white hover:text-foreground"
             >
-              Dashboard
+              {dashboardLabel}
             </Link>
           )}
           {canCreate && (
@@ -129,7 +140,7 @@ export default function NavBar() {
                 <DropdownMenuItem asChild>
                   <Link href={dashboardHref} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>{dashboardLabel}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -222,7 +233,7 @@ export default function NavBar() {
                     className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-foreground/80 transition hover:bg-white hover:text-foreground"
                   >
                     <User className="h-4 w-4" />
-                    Dashboard
+                    {dashboardLabel}
                   </Link>
                   {canCreate && (
                     <>

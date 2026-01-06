@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OAuthButtons } from "./OAuthButtons";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -45,14 +46,19 @@ export function LoginForm() {
     setLocalError(null);
     try {
       await login(data.email, data.password);
+      toast.success("Signed in.");
       const role = useAuthStore.getState().user?.role;
-      if (role === "HOST" || role === "ADMIN") {
+      if (role === "ADMIN") {
+        router.push("/admin/host-requests");
+      } else if (role === "HOST") {
         router.push("/host");
       } else {
         router.push("/dashboard");
       }
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Login failed");
+      const message = err instanceof Error ? err.message : "Login failed";
+      toast.error(message);
+      setLocalError(message);
     }
   };
 
@@ -95,7 +101,9 @@ export function LoginForm() {
               {...register("password")}
               disabled={isLoading}
             />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
           </div>
 
           {(error || localError) && (

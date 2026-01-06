@@ -63,7 +63,7 @@ public class EventController {
     }
 
     @GetMapping({"/events/mine", "/events/my"})
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public List<EventResponse> getMyEvents(
         @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
@@ -71,7 +71,7 @@ public class EventController {
     }
 
     @PostMapping("/events")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public EventResponse createEvent(
         @Validated(OnCreate.class) @RequestBody EventRequest request,
         @RequestHeader(value = "Authorization", required = false) String authHeader
@@ -80,7 +80,7 @@ public class EventController {
     }
 
     @PutMapping("/events/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public EventResponse updateEvent(
         @PathVariable Long id,
         @Validated(OnUpdate.class) @RequestBody EventRequest request,
@@ -90,7 +90,7 @@ public class EventController {
     }
 
     @DeleteMapping("/events/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public ResponseEntity<Void> deleteEvent(
         @PathVariable Long id,
         @RequestHeader(value = "Authorization", required = false) String authHeader
@@ -110,7 +110,7 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}/attendees")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public List<AttendeeSummary> getEventAttendees(
         @PathVariable Long id,
         @RequestHeader(value = "Authorization", required = false) String authHeader

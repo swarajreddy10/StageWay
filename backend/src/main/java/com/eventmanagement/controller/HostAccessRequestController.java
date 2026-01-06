@@ -33,7 +33,9 @@ public class HostAccessRequestController {
     ) {
         Long userId = authService.validateAuth(authHeader);
         String note = request != null ? request.note() : null;
-        return hostAccessRequestService.createRequest(userId, note);
+        String companyName = request != null ? request.companyName() : null;
+        String eventPlan = request != null ? request.eventPlan() : null;
+        return hostAccessRequestService.createRequest(userId, note, companyName, eventPlan);
     }
 
     @GetMapping("/me")

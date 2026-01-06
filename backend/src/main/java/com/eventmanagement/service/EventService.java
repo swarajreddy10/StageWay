@@ -459,7 +459,7 @@ public class EventService {
         Double priceMax,
         Boolean isFree
     ) {
-        Specification<Event> specification = Specification.where(null);
+        Specification<Event> specification = Specification.where(buildStatusSpecification("PUBLISHED"));
         if (searchValue != null) {
             specification = specification.and(buildSearchSpecification(searchValue));
         }
@@ -476,6 +476,14 @@ public class EventService {
             specification = specification.and(buildPriceSpecification(priceMin, priceMax, isFree));
         }
         return specification;
+    }
+
+    private Specification<Event> buildStatusSpecification(String status) {
+        String normalized = status != null ? status.trim().toUpperCase() : null;
+        if (normalized == null || normalized.isBlank()) {
+            return (root, query, builder) -> builder.conjunction();
+        }
+        return (root, query, builder) -> builder.equal(builder.upper(root.get("status")), normalized);
     }
 
     private Specification<Event> buildSearchSpecification(String searchValue) {

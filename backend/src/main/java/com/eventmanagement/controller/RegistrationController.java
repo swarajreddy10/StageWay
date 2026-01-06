@@ -77,7 +77,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/registrations/{id}/check-in")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public Registration checkInById(
         @PathVariable Long id,
         @RequestHeader(value = "Authorization", required = false) String authHeader
@@ -86,7 +86,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/registrations/check-in")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public Registration checkInByQr(
         @RequestBody @Valid CheckInRequest request,
         @RequestHeader(value = "Authorization", required = false) String authHeader
@@ -104,7 +104,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/checkins")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public CheckInResult checkInByQrData(
         @RequestBody @Valid CheckInPayload request,
         @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -114,7 +114,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/checkins/manual")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public CheckInResult checkInManually(
         @RequestBody @Valid ManualCheckInRequest request,
         @RequestHeader(value = "Authorization", required = false) String authHeader,

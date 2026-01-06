@@ -33,7 +33,13 @@ function AuthCallbackContent() {
             authState.setUser(authResponse.user);
             authState.setToken(session.access_token);
             const role = authResponse.user.role?.toUpperCase();
-            router.push(role === "HOST" || role === "ADMIN" ? "/host" : "/dashboard");
+            if (role === "ADMIN") {
+              router.push("/admin/host-requests");
+            } else if (role === "HOST") {
+              router.push("/host");
+            } else {
+              router.push("/dashboard");
+            }
           } else {
             console.error("Backend sync failed");
             await supabase.auth.signOut();

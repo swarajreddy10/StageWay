@@ -28,8 +28,12 @@ export default function DashboardPage() {
     }
     if (!isAuthenticated) {
       router.push("/auth/signin");
+      return;
     }
-  }, [isAuthenticated, isHydrated, router]);
+    if (user?.role === "ADMIN") {
+      router.push("/admin/host-requests");
+    }
+  }, [isAuthenticated, isHydrated, user, router]);
 
   if (!isHydrated) {
     return null;
@@ -84,6 +88,13 @@ export default function DashboardPage() {
                 Browse Events
               </Button>
             </Link>
+            {user.role === "HOST" && (
+              <Link href="/host">
+                <Button variant="outline" className="border-white/70 bg-white/70 hover:bg-white">
+                  Switch to Host Mode
+                </Button>
+              </Link>
+            )}
           </div>
         }
       />
@@ -103,10 +114,10 @@ export default function DashboardPage() {
           icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
           accent="sky"
         />
-        {(user.role === "HOST" || user.role === "ADMIN") && (
+        {user.role === "HOST" && (
           <StatCard
             label="Host Events"
-            value={user.role === "ADMIN" ? "Admin" : "Host"}
+            value="Host"
             helper="Create and manage events"
             icon={<Users className="h-4 w-4 text-muted-foreground" />}
             accent="lime"
@@ -123,7 +134,7 @@ export default function DashboardPage() {
             }
           />
         )}
-        {user.role !== "HOST" && user.role !== "ADMIN" && (
+        {user.role !== "HOST" && (
           <StatCard
             label="Become a Host"
             value="Request"

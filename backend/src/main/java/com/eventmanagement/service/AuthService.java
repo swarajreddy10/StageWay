@@ -49,10 +49,6 @@ public class AuthService {
         try {
             String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
             SupabaseAuthService.SupabaseUser supabaseUser = supabaseAuthService.verifyToken(token);
-            String requestedRole = resolveDesiredRole(desiredRole);
-            if (desiredRole == null || desiredRole.isBlank()) {
-                requestedRole = resolveDesiredRole(supabaseUser.role());
-            }
 
             User user = userRepository.findByEmail(supabaseUser.email());
             if (user == null) {
@@ -64,7 +60,7 @@ public class AuthService {
                 user = userRepository.save(user);
             } else {
                 String currentRole = normalizeStoredRole(user.getRole());
-                String targetRole = resolveLoginRole(currentRole, requestedRole, user.getEmail());
+                String targetRole = resolveLoginRole(currentRole, user.getEmail());
                 if (!currentRole.equals(targetRole)) {
                     log.info("Updated role for userId={} from {} to {}", user.getId(), currentRole, targetRole);
                     user.setRole(targetRole);
@@ -167,8 +163,8 @@ public class AuthService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found."));
         String role = user.getRole() != null ? user.getRole().toUpperCase() : "ATTENDEE";
-        if (!"ADMIN".equals(role) && !"ORGANIZER".equals(role) && !"HOST".equals(role)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Organizer access required.");
+        if (!"HOST".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Host access required.");
         }
         return user;
     }
@@ -180,7 +176,7 @@ public class AuthService {
                 return false;
             }
             String role = user.getRole() != null ? user.getRole().toUpperCase() : "ATTENDEE";
-            return "ADMIN".equals(role) || "ORGANIZER".equals(role) || "HOST".equals(role);
+            return "HOST".equals(role);
         } catch (Exception ex) {
             return false;
         }
@@ -223,10 +219,7 @@ public class AuthService {
             return "ATTENDEE";
         }
         String normalized = role.trim().toUpperCase();
-        if ("HOST".equals(normalized)) {
-            return "ORGANIZER";
-        }
-        if ("ORGANIZER".equals(normalized) || "ATTENDEE".equals(normalized)) {
+        if ("HOST".equals(normalized) || "ATTENDEE".equals(normalized)) {
             return normalized;
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported role selection.");
@@ -265,10 +258,10 @@ public class AuthService {
             return "ATTENDEE";
         }
         String normalized = role.trim().toUpperCase();
-        if ("ORGANIZER".equals(normalized)) {
-            return "HOST";
+        if ("HOST".equals(normalized) || "ADMIN".equals(normalized)) {
+            return normalized;
         }
-        return normalized;
+        return "ATTENDEE";
     }
 
     private String resolveDesiredRole(String desiredRole) {
@@ -276,8 +269,8 @@ public class AuthService {
             return "ATTENDEE";
         }
         String normalized = desiredRole.trim().toUpperCase();
-        if ("HOST".equals(normalized) || "ORGANIZER".equals(normalized)) {
-            return "ORGANIZER";
+        if ("HOST".equals(normalized)) {
+            return "HOST";
         }
         if ("ATTENDEE".equals(normalized)) {
             return "ATTENDEE";
@@ -296,15 +289,9 @@ public class AuthService {
         return role.trim().toUpperCase();
     }
 
-    private String resolveLoginRole(String currentRole, String requestedRole, String email) {
+    private String resolveLoginRole(String currentRole, String email) {
         if (isAdminEmail(email)) {
             return "ADMIN";
-        }
-        if (!allowSelfUpgrade) {
-            return currentRole;
-        }
-        if ("ATTENDEE".equals(currentRole) && "ORGANIZER".equals(requestedRole)) {
-            return "ORGANIZER";
         }
         return currentRole;
     }
