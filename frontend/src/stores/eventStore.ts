@@ -1,12 +1,12 @@
-import { create } from "zustand";
-import type { Event, EventFilters, CreateEventRequest } from "@/types/event";
 import {
-  createEvent as createEventApi,
-  deleteEvent as deleteEventApi,
-  fetchEvent as fetchEventApi,
-  fetchEventsPage,
-  updateEvent as updateEventApi,
+    createEvent as createEventApi,
+    deleteEvent as deleteEventApi,
+    fetchEvent as fetchEventApi,
+    fetchEventsPage,
+    updateEvent as updateEventApi,
 } from "@/lib/event-api";
+import type { CreateEventRequest, Event, EventFilters } from "@/types/event";
+import { create } from "zustand";
 
 interface PaginationInfo {
   page: number;
@@ -83,8 +83,12 @@ export const useEventStore = create<EventState>((set) => ({
         events: [event, ...state.events],
         isLoading: false,
       }));
+      
+      // Refresh events list to ensure landing page updates
+      await fetchEventsPage({ page: 0, size: 12 });
+      
       return event;
-    } catch (error: unknown) {
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create event";
       set({ error: message, isLoading: false });
       throw error;
@@ -95,12 +99,17 @@ export const useEventStore = create<EventState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const event = await updateEventApi(id, data);
+      
+      // Optimistic update - update state immediately
       set((state) => ({
         events: state.events.map((e) => (e.id === id ? event : e)),
         currentEvent: state.currentEvent?.id === id ? event : state.currentEvent,
         isLoading: false,
       }));
-    } catch (error: unknown) {
+      
+      // Refresh events list to ensure all pages are updated
+      await fetchEventsPage({ page: 0, size: 12 });
+    } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update event";
       set({ error: message, isLoading: false });
       throw error;
