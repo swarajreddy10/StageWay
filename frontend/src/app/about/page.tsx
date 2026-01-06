@@ -84,7 +84,7 @@ export default function AboutPage() {
                   variant="outline"
                   className="border-green/70 bg-light-green/70 hover:bg-orange-100"
                 >
-                  <Link href="/auth/signin">
+                  <Link href="/events">
                     Browse Events
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -130,7 +130,7 @@ export default function AboutPage() {
                   variant="outline"
                   className="border-green/70 bg-light-green/70 hover:bg-green-100"
                 >
-                  <Link href="/auth/signin">
+                  <Link href="/host/request">
                     Start Hosting
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -235,7 +235,7 @@ export default function AboutPage() {
                 className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
                 asChild
               >
-                <Link href="/auth/signin">
+                <Link href="/host/request">
                   Host an Event
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

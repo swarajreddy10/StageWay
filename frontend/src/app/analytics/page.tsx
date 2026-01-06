@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
       return;
     }
     if (isAuthenticated && !isHost) {
-      router.push("/dashboard");
+      router.push("/host/request");
     }
   }, [isAuthenticated, isHydrated, isHost, router]);
 

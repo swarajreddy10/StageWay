@@ -3,17 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Chrome } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { normalizeDesiredRole, persistDesiredRole } from "@/lib/auth-role";
 
-type OAuthButtonsProps = {
-  role?: "HOST" | "ATTENDEE";
-};
-
-export function OAuthButtons({ role }: OAuthButtonsProps) {
-  const desiredRole = normalizeDesiredRole(role);
-
+export function OAuthButtons() {
   const handleGoogleSignIn = async () => {
-    persistDesiredRole(desiredRole);
     const redirectTo = `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EventForm } from "@/components/events/EventForm";
 import { useEvents } from "@/hooks/useEvents";
@@ -17,6 +17,8 @@ export default function EventCreatePage() {
   const { user, isAuthenticated, isHydrated } = useAuthStore();
   const { createEvent, isLoading } = useEvents();
   const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const [submitNotice, setSubmitNotice] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -27,16 +29,21 @@ export default function EventCreatePage() {
       return;
     }
     if (isAuthenticated && !isHost) {
-      router.push("/dashboard");
+      router.push("/host/request");
     }
   }, [isAuthenticated, isHydrated, isHost, router]);
 
   const handleSubmit = async (data: CreateEventRequest) => {
+    setSubmitError(null);
+    setSubmitNotice("Creating event...");
     try {
       const event = await createEvent(data);
+      setSubmitNotice("Event created. Redirecting...");
       router.push(`/events/${event.id}`);
     } catch (error) {
       console.error("Failed to create event:", error);
+      setSubmitNotice(null);
+      setSubmitError(error instanceof Error ? error.message : "Failed to create event.");
     }
   };
 
@@ -66,7 +73,12 @@ export default function EventCreatePage() {
       />
 
       <div className="mt-8">
-        <EventForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <EventForm
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          submitNotice={submitNotice}
+          submitError={submitError}
+        />
       </div>
     </main>
   );

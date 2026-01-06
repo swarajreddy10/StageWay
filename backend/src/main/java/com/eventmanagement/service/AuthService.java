@@ -7,13 +7,20 @@ import com.eventmanagement.dto.ProfileUpdateRequest;
 import com.eventmanagement.dto.RegisterRequest;
 import com.eventmanagement.model.User;
 import com.eventmanagement.repository.UserRepository;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class AuthService {
@@ -21,15 +28,21 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SupabaseAuthService supabaseAuthService;
     private final PasswordEncoder passwordEncoder;
+    private final Set<String> adminEmails;
+    private final boolean allowSelfUpgrade;
 
     public AuthService(
         UserRepository userRepository,
         SupabaseAuthService supabaseAuthService,
-        PasswordEncoder passwordEncoder
+        PasswordEncoder passwordEncoder,
+        @Value("${app.security.admin-emails:}") String adminEmails,
+        @Value("${app.security.allow-self-upgrade:false}") boolean allowSelfUpgrade
     ) {
         this.userRepository = userRepository;
         this.supabaseAuthService = supabaseAuthService;
         this.passwordEncoder = passwordEncoder;
+        this.adminEmails = parseAdminEmails(adminEmails);
+        this.allowSelfUpgrade = allowSelfUpgrade;
     }
 
     public AuthResponse handleSupabaseAuth(String authHeader, String desiredRole) {
@@ -46,14 +59,15 @@ public class AuthService {
                 user = new User();
                 user.setEmail(supabaseUser.email());
                 user.setFullName(supabaseUser.name());
-                user.setRole(requestedRole);
+                user.setRole(resolveInitialRole(supabaseUser.email()));
                 user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
                 user = userRepository.save(user);
             } else {
                 String currentRole = normalizeStoredRole(user.getRole());
-                if (shouldUpgradeRole(currentRole, requestedRole)) {
-                    log.info("Upgraded role for userId={} from {} to {}", user.getId(), currentRole, requestedRole);
-                    user.setRole(requestedRole);
+                String targetRole = resolveLoginRole(currentRole, requestedRole, user.getEmail());
+                if (!currentRole.equals(targetRole)) {
+                    log.info("Updated role for userId={} from {} to {}", user.getId(), currentRole, targetRole);
+                    user.setRole(targetRole);
                     user = userRepository.save(user);
                 }
             }
@@ -104,6 +118,13 @@ public class AuthService {
     }
 
     public Long validateAuth(String authHeader) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long userId) {
+                return userId;
+            }
+        }
         if (authHeader == null || authHeader.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header.");
         }
@@ -125,6 +146,13 @@ public class AuthService {
     }
 
     public Long validateOptionalAuth(String authHeader) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Long userId) {
+                return userId;
+            }
+        }
         if (authHeader == null || authHeader.isBlank()) {
             return null;
         }
@@ -204,6 +232,25 @@ public class AuthService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported role selection.");
     }
 
+    public String resolveAdminRole(String role) {
+        if (role == null || role.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role is required.");
+        }
+        String normalized = role.trim().toUpperCase();
+        if ("ADMIN".equals(normalized)) {
+            return "ADMIN";
+        }
+        return resolveRole(normalized);
+    }
+
+    public User updateUserRole(Long userId, String role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+        String normalized = resolveAdminRole(role);
+        user.setRole(normalized);
+        return userRepository.save(user);
+    }
+
     public User createGuestUser() {
         User user = new User();
         user.setEmail("guest-" + UUID.randomUUID() + "@example.com");
@@ -249,7 +296,41 @@ public class AuthService {
         return role.trim().toUpperCase();
     }
 
-    private boolean shouldUpgradeRole(String currentRole, String requestedRole) {
-        return "ATTENDEE".equals(currentRole) && "ORGANIZER".equals(requestedRole);
+    private String resolveLoginRole(String currentRole, String requestedRole, String email) {
+        if (isAdminEmail(email)) {
+            return "ADMIN";
+        }
+        if (!allowSelfUpgrade) {
+            return currentRole;
+        }
+        if ("ATTENDEE".equals(currentRole) && "ORGANIZER".equals(requestedRole)) {
+            return "ORGANIZER";
+        }
+        return currentRole;
+    }
+
+    private String resolveInitialRole(String email) {
+        if (isAdminEmail(email)) {
+            return "ADMIN";
+        }
+        return "ATTENDEE";
+    }
+
+    private boolean isAdminEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        return adminEmails.contains(email.trim().toLowerCase());
+    }
+
+    private Set<String> parseAdminEmails(String value) {
+        if (value == null || value.isBlank()) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(value.split(","))
+            .map(String::trim)
+            .filter(item -> !item.isBlank())
+            .map(String::toLowerCase)
+            .collect(Collectors.toUnmodifiableSet());
     }
 }

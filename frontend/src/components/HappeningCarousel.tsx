@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,17 +58,15 @@ const slides = [
 
 export default function HappeningCarousel() {
   const [active, setActive] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const totalSlides = slides.length;
-  const current = slides[active];
 
   useEffect(() => {
-    if (totalSlides < 2 || isPaused) return;
+    if (totalSlides < 2) return;
     const interval = setInterval(() => {
       setActive((prev) => (prev + 1) % totalSlides);
     }, 3200);
     return () => clearInterval(interval);
-  }, [isPaused, totalSlides]);
+  }, [totalSlides]);
 
   const goPrev = () => {
     setActive((prev) => (prev - 1 + totalSlides) % totalSlides);
@@ -115,64 +113,64 @@ export default function HappeningCarousel() {
           </div>
         </div>
 
-        <div
-          className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-[0_28px_70px_rgba(15,23,42,0.14)]"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          onFocus={() => setIsPaused(true)}
-          onBlur={() => setIsPaused(false)}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.title}
-              className="relative aspect-16/7 w-full"
-              initial={{ opacity: 0.4, scale: 1.02 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <Image
-                src={current.image}
-                alt={current.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 1200px"
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
-                <span className="text-xs uppercase tracking-[0.3em] text-white/70">
-                  {current.date}
-                </span>
-                <h3 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-                  {current.title}
-                </h3>
-                <p className="mt-3 max-w-xl text-sm text-white/80 sm:text-base">
-                  {current.subtitle}
-                </p>
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-white/80">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
-                    <MapPin className="h-4 w-4" />
-                    {current.location}
+        <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-[0_28px_70px_rgba(15,23,42,0.14)]">
+          <div className="relative aspect-16/7 w-full">
+            {slides.map((slide, index) => (
+              <motion.div
+                key={slide.title}
+                className="absolute inset-0"
+                initial={false}
+                animate={{ opacity: index === active ? 1 : 0, scale: index === active ? 1 : 1.02 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                style={{ pointerEvents: index === active ? "auto" : "none" }}
+                aria-hidden={index !== active}
+              >
+                <Image
+                  src={slide.image}
+                  alt={slide.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 1200px"
+                  className="object-cover"
+                  priority={index === 0}
+                />
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
+                  <span className="text-xs uppercase tracking-[0.3em] text-white/70">
+                    {slide.date}
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
-                    {current.theme}
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
-                    Create and share
-                  </span>
+                  <h3 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+                    {slide.title}
+                  </h3>
+                  <p className="mt-3 max-w-xl text-sm text-white/80 sm:text-base">
+                    {slide.subtitle}
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-white/80">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
+                      <MapPin className="h-4 w-4" />
+                      {slide.location}
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
+                      {slide.theme}
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1">
+                      Create and share
+                    </span>
+                  </div>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Button
+                      asChild
+                      className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
+                    >
+                      <Link href="/events">
+                        Explore events
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button asChild className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-                    <Link href="/events">
-                      Explore events
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
 
           <div className="absolute bottom-5 right-6 flex items-center gap-2">
             {slides.map((slide, index) => (

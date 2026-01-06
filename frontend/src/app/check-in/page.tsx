@@ -38,7 +38,7 @@ export default function CheckInPage() {
       return;
     }
     if (isAuthenticated && !isHost) {
-      router.push("/dashboard");
+      router.push("/host/request");
     }
   }, [isAuthenticated, isHydrated, isHost, router]);
 

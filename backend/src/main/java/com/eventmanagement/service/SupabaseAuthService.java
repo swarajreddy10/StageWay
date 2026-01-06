@@ -7,12 +7,16 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.lang.Nullable;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 @Service
 public class SupabaseAuthService {
@@ -21,17 +25,22 @@ public class SupabaseAuthService {
     private final String supabaseAnonKey;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final JwtDecoder jwtDecoder;
+    private final String issuer;
 
     public SupabaseAuthService(
         @Value("${supabase.url}") String supabaseUrl,
         @Value("${supabase.anon-key}") String supabaseAnonKey,
         RestTemplate restTemplate,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper,
+        @Nullable JwtDecoder jwtDecoder
     ) {
         this.supabaseUrl = supabaseUrl;
         this.supabaseAnonKey = supabaseAnonKey;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.jwtDecoder = jwtDecoder;
+        this.issuer = resolveIssuer(supabaseUrl);
 
         boolean hasUrl = this.supabaseUrl != null && !this.supabaseUrl.isBlank();
         int keyLength = this.supabaseAnonKey == null ? 0 : this.supabaseAnonKey.length();
@@ -51,6 +60,10 @@ public class SupabaseAuthService {
             );
         }
         logTokenMetadata(accessToken);
+        SupabaseUser localUser = verifyWithJwt(accessToken);
+        if (localUser != null) {
+            return localUser;
+        }
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("apikey", supabaseAnonKey);
@@ -125,5 +138,54 @@ public class SupabaseAuthService {
         } catch (Exception e) {
             log.warn("Failed to decode Supabase token metadata: {}", e.getMessage());
         }
+    }
+
+    private SupabaseUser verifyWithJwt(String accessToken) {
+        if (jwtDecoder == null) {
+            return null;
+        }
+        try {
+            Jwt jwt = jwtDecoder.decode(accessToken);
+            if (issuer != null) {
+                String tokenIssuer = jwt.getIssuer() != null ? jwt.getIssuer().toString() : null;
+                if (tokenIssuer == null || !tokenIssuer.equals(issuer)) {
+                    return null;
+                }
+            }
+            String id = jwt.getSubject();
+            String email = jwt.getClaimAsString("email");
+            if (email == null || email.isBlank()) {
+                return null;
+            }
+            Map<String, Object> userMetadata = jwt.getClaim("user_metadata");
+            String name = resolveStringClaim(userMetadata, "full_name", email);
+            String role = resolveStringClaim(userMetadata, "role", null);
+            return new SupabaseUser(id, email, name, role);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private String resolveStringClaim(Map<String, Object> metadata, String key, String fallback) {
+        if (metadata == null) {
+            return fallback;
+        }
+        Object value = metadata.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        String text = value.toString();
+        if (text.isBlank()) {
+            return fallback;
+        }
+        return text;
+    }
+
+    private String resolveIssuer(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return null;
+        }
+        String trimmed = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return trimmed + "/auth/v1";
     }
 }

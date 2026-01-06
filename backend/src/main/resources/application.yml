@@ -57,6 +57,10 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://192.168.*:3000,http://10.*:3000,http://172.16.*:3000}
 
+  security:
+    admin-emails: ${APP_SECURITY_ADMIN_EMAILS:}
+    allow-self-upgrade: ${APP_SECURITY_ALLOW_SELF_UPGRADE:false}
+
   qr:
     secret: ${QR_SECRET:myQRSecretKeyThatIsAtLeast32CharactersLong}
     ttl: PT48H
