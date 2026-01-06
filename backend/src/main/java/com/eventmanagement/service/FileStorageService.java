@@ -1,8 +1,5 @@
 package com.eventmanagement.service;
 
-import com.eventmanagement.dto.FileAsset;
-import com.eventmanagement.model.FileUpload;
-import com.eventmanagement.repository.FileUploadRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,17 +10,22 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.eventmanagement.dto.FileAsset;
+import com.eventmanagement.model.FileUpload;
+import com.eventmanagement.repository.FileUploadRepository;
 
 @Service
 public class FileStorageService {
@@ -38,12 +40,13 @@ public class FileStorageService {
         ".jpg",
         ".jpeg",
         ".png",
-        ".heic",
-        ".heif"
+        ".webp",
+        ".heic"
     );
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
         "image/jpeg",
         "image/png",
+        "image/webp",
         "image/heic",
         "image/heif",
         "image/heic-sequence",
@@ -123,8 +126,14 @@ public class FileStorageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file id.");
         }
         FileUpload upload = fileUploadRepository.findById(id).orElse(null);
+        if (upload == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found.");
+        }
+
         enforceDownloadAccess(upload, authHeader);
-        if (upload != null && isSupabaseStorageEnabled()) {
+
+        // If Supabase storage is enabled, always redirect to Supabase URL
+        if (isSupabaseStorageEnabled()) {
             String fileUrl = upload.isPublic()
                 ? buildSupabasePublicUrl(upload.getStoredFilename())
                 : createSignedUrl(upload.getStoredFilename());
@@ -132,13 +141,15 @@ public class FileStorageService {
                 .header(HttpHeaders.LOCATION, fileUrl)
                 .build();
         }
+
+        // Fallback to local storage
         Path path = resolveFilePath(id, upload);
         if (path == null || !Files.exists(path)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found.");
         }
         try {
             byte[] bytes = Files.readAllBytes(path);
-            String contentType = upload != null ? upload.getContentType() : Files.probeContentType(path);
+            String contentType = upload.getContentType();
             if (contentType == null || contentType.isBlank()) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
@@ -186,7 +197,7 @@ public class FileStorageService {
         if (!contentTypeAllowed && !extensionAllowed) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Only JPG, PNG, and HEIC images are allowed."
+                "Only JPG, PNG, WebP, and HEIC images are allowed."
             );
         }
     }
@@ -226,8 +237,9 @@ public class FileStorageService {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + supabaseServiceRoleKey);
             headers.set("apikey", supabaseServiceRoleKey);
-            if (file.getContentType() != null && !file.getContentType().isBlank()) {
-                headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+            String contentType = file.getContentType();
+            if (contentType != null && !contentType.isBlank()) {
+                headers.setContentType(MediaType.parseMediaType(contentType));
             }
             headers.add("x-upsert", "true");
             byte[] payload = file.getBytes();
@@ -236,7 +248,10 @@ public class FileStorageService {
                 + supabaseStorageBucket
                 + "/"
                 + storagePath;
-            restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed: " + response.getStatusCode());
+            }
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");
         }
@@ -269,7 +284,9 @@ public class FileStorageService {
                 Map.class
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Object signedUrl = response.getBody().get("signedURL");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+                Object signedUrl = responseBody != null ? responseBody.get("signedURL") : null;
                 if (signedUrl != null) {
                     String signedValue = signedUrl.toString();
                     if (signedValue.startsWith("http://") || signedValue.startsWith("https://")) {
