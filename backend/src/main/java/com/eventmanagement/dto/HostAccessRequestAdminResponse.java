@@ -9,6 +9,8 @@ public record HostAccessRequestAdminResponse(
     String userName,
     String status,
     String note,
+    String companyName,
+    String eventPlan,
     OffsetDateTime createdAt,
     OffsetDateTime reviewedAt
 ) {}

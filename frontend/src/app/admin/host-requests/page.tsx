@@ -4,10 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import {
-  fetchHostAccessRequests,
-  reviewHostAccessRequest,
-} from "@/lib/host-requests-api";
+import { fetchHostAccessRequests, reviewHostAccessRequest } from "@/lib/host-requests-api";
 import type {
   HostAccessRequestAdmin,
   HostAccessRequestDecisionPayload,
@@ -18,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { toast } from "sonner";
 
 type FilterStatus = HostAccessRequestStatus | "ALL";
 
@@ -79,9 +77,11 @@ export default function AdminHostRequestsPage() {
     try {
       await reviewHostAccessRequest(requestId, { status });
       await loadRequests();
+      toast.success(status === "APPROVED" ? "Host access approved." : "Host access rejected.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to update request.";
       setError(message);
+      toast.error(message);
     } finally {
       setActionId(null);
     }
@@ -104,9 +104,7 @@ export default function AdminHostRequestsPage() {
   return (
     <main className="container mx-auto px-4 py-10">
       <PageHeader
-        badge={
-          <Badge className="bg-white/80 text-foreground border border-white/70">Admin</Badge>
-        }
+        badge={<Badge className="bg-white/80 text-foreground border border-white/70">Admin</Badge>}
         title="Host access requests"
         description="Review host access submissions and approve qualified organizers."
       />
@@ -143,9 +141,7 @@ export default function AdminHostRequestsPage() {
               >
                 <CardHeader className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <CardTitle className="text-lg">
-                      {request.fullName || "Unknown user"}
-                    </CardTitle>
+                    <CardTitle className="text-lg">{request.fullName || "Unknown user"}</CardTitle>
                     <Badge className={`border ${statusTone[request.status]}`}>
                       {request.status.toLowerCase()}
                     </Badge>
@@ -159,6 +155,22 @@ export default function AdminHostRequestsPage() {
                         Request note
                       </p>
                       <p className="mt-2">{request.note}</p>
+                    </div>
+                  )}
+                  {request.companyName && (
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm text-muted-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        Organization
+                      </p>
+                      <p className="mt-2">{request.companyName}</p>
+                    </div>
+                  )}
+                  {request.eventPlan && (
+                    <div className="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm text-muted-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        Event plan
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap">{request.eventPlan}</p>
                     </div>
                   )}
                   {request.status === "PENDING" && (

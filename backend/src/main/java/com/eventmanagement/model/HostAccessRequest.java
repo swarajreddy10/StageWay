@@ -29,6 +29,12 @@ public class HostAccessRequest {
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
 
+    @Column(name = "company_name", length = 200)
+    private String companyName;
+
+    @Column(name = "event_plan", columnDefinition = "TEXT")
+    private String eventPlan;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -70,6 +76,22 @@ public class HostAccessRequest {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getEventPlan() {
+        return eventPlan;
+    }
+
+    public void setEventPlan(String eventPlan) {
+        this.eventPlan = eventPlan;
     }
 
     public OffsetDateTime getCreatedAt() {

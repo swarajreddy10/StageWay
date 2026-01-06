@@ -8,7 +8,7 @@ test("User type structure", () => {
     id: number;
     email: string;
     fullName: string;
-    role: "ATTENDEE" | "ORGANIZER" | "ADMIN";
+    role: "ATTENDEE" | "HOST" | "ADMIN";
   }>();
 });
 

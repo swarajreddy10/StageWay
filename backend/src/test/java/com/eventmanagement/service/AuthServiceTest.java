@@ -73,7 +73,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void handleSupabaseAuth_upgradesAttendeeToOrganizer() {
+    void handleSupabaseAuth_doesNotUpgradeAttendeeToHost() {
         SupabaseAuthService.SupabaseUser supabaseUser =
             new SupabaseAuthService.SupabaseUser("supabase-id", "member@example.com", "Member", null);
         User existing = new User();
@@ -84,13 +84,11 @@ class AuthServiceTest {
 
         when(supabaseAuthService.verifyToken("token")).thenReturn(supabaseUser);
         when(userRepository.findByEmail("member@example.com")).thenReturn(existing);
-        when(userRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         AuthResponse response = authService.handleSupabaseAuth("Bearer token", "HOST");
 
-        verify(userRepository).save(userCaptor.capture());
-        assertThat(userCaptor.getValue().getRole()).isEqualTo("ORGANIZER");
-        assertThat(response.user().role()).isEqualTo("HOST");
+        verify(userRepository, never()).save(any());
+        assertThat(response.user().role()).isEqualTo("ATTENDEE");
     }
 
     @Test

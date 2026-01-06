@@ -33,7 +33,7 @@ export default function EventDetailPage() {
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationTone, setRegistrationTone] = useState<"error" | "success">("success");
 
-  const canEdit = user?.role === "HOST" || user?.role === "ADMIN";
+  const canEdit = user?.role === "HOST";
   const canRegister = !canEdit;
 
   useEffect(() => {

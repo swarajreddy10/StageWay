@@ -48,7 +48,8 @@ export async function fetchEventsPage(filters?: EventQuery): Promise<PaginatedRe
     ? `${API_ROUTES.events}?${queryParams.toString()}`
     : API_ROUTES.events;
 
-  const response = await apiClient.get<PaginatedResponse<Event>>(endpoint);
+  const requestOptions = typeof window === "undefined" ? { cache: "no-store" as const } : undefined;
+  const response = await apiClient.get<PaginatedResponse<Event>>(endpoint, requestOptions);
 
   return {
     ...response,

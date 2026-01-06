@@ -33,7 +33,8 @@ export default function HostPage() {
     totalRegistrations: 0,
   });
 
-  const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const isHost = user?.role === "HOST";
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!isHydrated) {
@@ -43,10 +44,14 @@ export default function HostPage() {
       router.push("/auth/signin");
       return;
     }
+    if (isAuthenticated && isAdmin) {
+      router.push("/admin/host-requests");
+      return;
+    }
     if (isAuthenticated && !isHost) {
       router.push("/host/request");
     }
-  }, [isAuthenticated, isHydrated, isHost, router]);
+  }, [isAuthenticated, isHydrated, isHost, isAdmin, router]);
 
   useEffect(() => {
     const loadHostEvents = async () => {

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
+import { Toaster } from "sonner";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import AuthProvider from "../components/AuthProvider";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </div>
         </AuthProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

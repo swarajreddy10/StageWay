@@ -31,7 +31,7 @@ public class HostAccessRequestService {
         this.authService = authService;
     }
 
-    public HostAccessRequestResponse createRequest(Long userId, String note) {
+    public HostAccessRequestResponse createRequest(Long userId, String note, String companyName, String eventPlan) {
         User user = requireUser(userId);
         if (hasHostAccess(user)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Host access already granted.");
@@ -46,7 +46,9 @@ public class HostAccessRequestService {
         HostAccessRequest request = new HostAccessRequest();
         request.setUserId(userId);
         request.setStatus(HostAccessRequestStatus.PENDING);
-        request.setNote(normalizeNote(note));
+        request.setNote(normalizeText(note));
+        request.setCompanyName(normalizeText(companyName));
+        request.setEventPlan(normalizeText(eventPlan));
         HostAccessRequest saved = requestRepository.save(request);
         return toResponse(saved);
     }
@@ -85,7 +87,7 @@ public class HostAccessRequestService {
         request.setReviewedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
         if (decision == HostAccessRequestStatus.APPROVED) {
-            authService.updateUserRole(request.getUserId(), "ORGANIZER");
+            authService.updateUserRole(request.getUserId(), "HOST");
         }
 
         HostAccessRequest saved = requestRepository.save(request);
@@ -97,6 +99,8 @@ public class HostAccessRequestService {
             request.getId(),
             request.getStatus().name(),
             request.getNote(),
+            request.getCompanyName(),
+            request.getEventPlan(),
             request.getCreatedAt(),
             request.getReviewedAt()
         );
@@ -111,6 +115,8 @@ public class HostAccessRequestService {
             user != null ? user.getFullName() : null,
             request.getStatus().name(),
             request.getNote(),
+            request.getCompanyName(),
+            request.getEventPlan(),
             request.getCreatedAt(),
             request.getReviewedAt()
         );
@@ -126,14 +132,14 @@ public class HostAccessRequestService {
             return false;
         }
         String role = user.getRole().trim().toUpperCase();
-        return "ADMIN".equals(role) || "HOST".equals(role) || "ORGANIZER".equals(role);
+        return "ADMIN".equals(role) || "HOST".equals(role);
     }
 
-    private String normalizeNote(String note) {
-        if (note == null) {
+    private String normalizeText(String value) {
+        if (value == null) {
             return null;
         }
-        String trimmed = note.trim();
+        String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
     }
 

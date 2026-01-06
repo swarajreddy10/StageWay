@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OAuthButtons } from "./OAuthButtons";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const registerSchema = z
   .object({
@@ -51,13 +52,26 @@ export function RegisterForm() {
     clearNotice();
     try {
       await registerUser(data.email, data.password, data.fullName);
-      const role = useAuthStore.getState().user?.role;
+      const authState = useAuthStore.getState();
+      const role = authState.user?.role;
+      const noticeMessage = authState.notice;
       if (role) {
-        router.push(role === "HOST" || role === "ADMIN" ? "/host" : "/dashboard");
+        toast.success("Account created.");
+        if (role === "ADMIN") {
+          router.push("/admin/host-requests");
+        } else if (role === "HOST") {
+          router.push("/host");
+        } else {
+          router.push("/dashboard");
+        }
+      } else if (noticeMessage) {
+        toast(noticeMessage);
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setLocalError(err instanceof Error ? err.message : "Registration failed");
+      const message = err instanceof Error ? err.message : "Registration failed";
+      toast.error(message);
+      setLocalError(message);
     }
   };
 

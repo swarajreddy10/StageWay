@@ -6,6 +6,8 @@ public record HostAccessRequestResponse(
     Long id,
     String status,
     String note,
+    String companyName,
+    String eventPlan,
     OffsetDateTime createdAt,
     OffsetDateTime reviewedAt
 ) {}

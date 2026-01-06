@@ -1,3 +1,7 @@
 package com.eventmanagement.dto;
 
-public record HostAccessRequestCreateRequest(String note) {}
+public record HostAccessRequestCreateRequest(
+    String note,
+    String companyName,
+    String eventPlan
+) {}

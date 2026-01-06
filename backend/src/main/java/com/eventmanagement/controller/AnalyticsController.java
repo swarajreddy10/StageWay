@@ -20,7 +20,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/analytics/overview")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public AnalyticsOverview getAnalyticsOverview(
         @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
@@ -28,7 +28,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/analytics/events/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZER','HOST')")
+    @PreAuthorize("hasRole('HOST')")
     public EventAnalytics getEventAnalytics(
         @PathVariable Long id,
         @RequestHeader(value = "Authorization", required = false) String authHeader
