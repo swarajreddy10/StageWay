@@ -154,28 +154,18 @@ export default function NavBar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="rounded-full bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-                  Get Started
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="rounded-2xl border border-white/70 bg-white/95 shadow-xl"
-                align="end"
+            <>
+              <Button
+                variant="outline"
+                asChild
+                className="rounded-full border-white/70 bg-white/70 hover:bg-white"
               >
-                <DropdownMenuItem asChild>
-                  <Link href="/events" className="cursor-pointer">
-                    Attend Events
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/host/request" className="cursor-pointer">
-                    Host Events
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <Link href="/auth/signin">Sign in</Link>
+              </Button>
+              <Button asChild className="rounded-full bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
+                <Link href="/auth/signup">Create account</Link>
+              </Button>
+            </>
           )}
         </div>
 
@@ -284,22 +274,22 @@ export default function NavBar() {
                     <Info className="h-4 w-4" />
                     About
                   </Link>
-                  <div className="pt-4 space-y-2">
-                    <Button variant="outline" asChild className="w-full rounded-full">
-                      <Link href="/events" onClick={() => setMenuOpen(false)}>
-                        Attend Events
-                      </Link>
-                    </Button>
-                    <Button className="w-full rounded-full bg-[#1E5A55] text-white" asChild>
-                      <Link href="/host/request" onClick={() => setMenuOpen(false)}>
-                        Host Events
-                      </Link>
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </SheetContent>
+                <div className="pt-4 space-y-2">
+                  <Button variant="outline" asChild className="w-full rounded-full">
+                    <Link href="/auth/signin" onClick={() => setMenuOpen(false)}>
+                      Sign in
+                    </Link>
+                  </Button>
+                  <Button className="w-full rounded-full bg-[#D8573B] text-white" asChild>
+                    <Link href="/auth/signup" onClick={() => setMenuOpen(false)}>
+                      Create account
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
         </Sheet>
       </div>
     </header>

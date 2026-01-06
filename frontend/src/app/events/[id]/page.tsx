@@ -33,8 +33,11 @@ export default function EventDetailPage() {
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationTone, setRegistrationTone] = useState<"error" | "success">("success");
 
-  const canEdit = user?.role === "HOST";
-  const canRegister = !canEdit;
+  const isHost = user?.role === "HOST";
+  const isAdmin = user?.role === "ADMIN";
+  const ownsEvent = isHost && currentEvent?.organizationId === user?.id;
+  const canEdit = ownsEvent;
+  const canRegister = !ownsEvent && !isAdmin;
 
   useEffect(() => {
     if (eventId && !isNaN(eventId)) {

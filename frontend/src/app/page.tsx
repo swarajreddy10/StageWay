@@ -1,13 +1,13 @@
-import Link from "next/link";
 import { ArrowRight, Calendar, ChartLine, CheckCircle2, Sparkles, Users2 } from "lucide-react";
-import { fetchEvents } from "../lib/event-api";
-import HeroSection from "../components/HeroSection";
+import Link from "next/link";
 import EventCarousel from "../components/EventCarousel";
 import HappeningCarousel from "../components/HappeningCarousel";
+import HeroSection from "../components/HeroSection";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { fetchEvents } from "../lib/event-api";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -312,7 +312,7 @@ export default async function HomePage() {
                       asChild
                       className="w-full bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
                     >
-                      <Link href="/host/request">Create an event</Link>
+                      <Link href="/auth/signin">Sign in to host</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -342,8 +342,8 @@ export default async function HomePage() {
                 asChild
                 className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
               >
-                <Link href="/events">
-                  Get started
+                <Link href="/auth/signin">
+                  Sign in / Sign up
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

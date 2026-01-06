@@ -53,8 +53,8 @@ export default function HeroSection({
                 size="lg"
                 className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
               >
-                <Link href="/host/request">
-                  Host an Event
+                <Link href="/auth/signin">
+                  Sign in / Register
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -64,7 +64,7 @@ export default function HeroSection({
                 asChild
                 className="border-white/70 bg-white/70 hover:bg-white"
               >
-                <Link href="/events">Explore Events</Link>
+                <Link href="/events">Browse Events</Link>
               </Button>
             </motion.div>
             <motion.div variants={fadeUp} className="flex flex-wrap gap-2">

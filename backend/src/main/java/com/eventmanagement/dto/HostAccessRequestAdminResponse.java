@@ -5,8 +5,8 @@ import java.time.OffsetDateTime;
 public record HostAccessRequestAdminResponse(
     Long id,
     Long userId,
-    String userEmail,
-    String userName,
+    String email,
+    String fullName,
     String status,
     String note,
     String companyName,

@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Chrome } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import googleIcon from "@/components/shared/Google icon.png";
 
 export function OAuthButtons() {
   const handleGoogleSignIn = async () => {
@@ -27,7 +28,7 @@ export function OAuthButtons() {
         className="w-full rounded-full border-white/70 bg-white/80 hover:bg-white"
         onClick={handleGoogleSignIn}
       >
-        <Chrome className="mr-2 h-4 w-4" />
+        <Image src={googleIcon} alt="Google" width={16} height={16} className="mr-2 h-4 w-4" />
         Continue with Google
       </Button>
     </div>
