@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -102,6 +102,8 @@ interface EventFormProps {
   isLoading?: boolean;
   isEditMode?: boolean;
   onAutoSave?: (data: Partial<CreateEventRequest>) => Promise<void>;
+  submitNotice?: string | null;
+  submitError?: string | null;
 }
 
 export function EventForm({
@@ -110,6 +112,8 @@ export function EventForm({
   isLoading,
   isEditMode,
   onAutoSave,
+  submitNotice,
+  submitError,
 }: EventFormProps) {
   const { isAuthenticated } = useAuthStore();
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -241,7 +245,9 @@ export function EventForm({
     setValue("currency", currency, { shouldValidate: true });
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (event?: MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    event?.stopPropagation();
     if (!bannerFile) {
       setUploadStatus("Select an image to upload.");
       return;
@@ -530,7 +536,7 @@ export function EventForm({
                     />
                     <Button
                       type="button"
-                      onClick={handleUpload}
+                      onClick={(event) => void handleUpload(event)}
                       disabled={isLoading || isUploading}
                       className="bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
                     >
@@ -650,6 +656,17 @@ export function EventForm({
         <div className="flex items-center gap-2">
           {!autoSaveStatus && isEditMode && onAutoSave && (
             <span className="text-sm text-muted-foreground">Auto-save enabled</span>
+          )}
+          {(submitNotice || submitError) && (
+            <div
+              className={`rounded-md px-3 py-2 text-sm ${
+                submitError
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {submitError || submitNotice}
+            </div>
           )}
         </div>
         <div className="flex gap-4">

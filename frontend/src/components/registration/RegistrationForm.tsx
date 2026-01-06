@@ -40,6 +40,8 @@ export function RegistrationForm({
   isLoading,
 }: RegistrationFormProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [formTone, setFormTone] = useState<"error" | "success" | "info">("info");
 
   const {
     register,
@@ -59,8 +61,10 @@ export function RegistrationForm({
   });
 
   const onFormSubmit = async (data: RegistrationFormData) => {
+    setFormMessage(null);
     if (data.attendees.length > availableSeats) {
-      alert(`Only ${availableSeats} seats available`);
+      setFormTone("error");
+      setFormMessage(`Only ${availableSeats} seats available.`);
       return;
     }
 
@@ -74,6 +78,11 @@ export function RegistrationForm({
           attendeeEmail: attendee.email,
         });
       }
+      setFormTone("success");
+      setFormMessage("Registration submitted. Check the page for your QR pass.");
+    } catch (error) {
+      setFormTone("error");
+      setFormMessage(error instanceof Error ? error.message : "Registration failed.");
     } finally {
       setSubmitting(false);
     }
@@ -179,6 +188,18 @@ export function RegistrationForm({
               <Plus className="mr-2 h-4 w-4" />
               Add Another Attendee
             </Button>
+          )}
+
+          {formMessage && (
+            <div
+              className={`rounded-md p-3 text-sm ${
+                formTone === "error"
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {formMessage}
+            </div>
           )}
 
           <Button

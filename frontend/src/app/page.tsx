@@ -312,7 +312,7 @@ export default async function HomePage() {
                       asChild
                       className="w-full bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
                     >
-                      <Link href="/events/new">Create an event</Link>
+                      <Link href="/host/request">Create an event</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -342,7 +342,7 @@ export default async function HomePage() {
                 asChild
                 className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
               >
-                <Link href="/auth/signup">
+                <Link href="/events">
                   Get started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

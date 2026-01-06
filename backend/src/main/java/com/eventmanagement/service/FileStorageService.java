@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +49,7 @@ public class FileStorageService {
         "image/heic-sequence",
         "image/heif-sequence"
     );
+    private static final int SIGNED_URL_TTL_SECONDS = 300;
 
     public FileStorageService(
         AuthService authService,
@@ -123,9 +125,11 @@ public class FileStorageService {
         FileUpload upload = fileUploadRepository.findById(id).orElse(null);
         enforceDownloadAccess(upload, authHeader);
         if (upload != null && isSupabaseStorageEnabled()) {
-            String publicUrl = buildSupabasePublicUrl(upload.getStoredFilename());
+            String fileUrl = upload.isPublic()
+                ? buildSupabasePublicUrl(upload.getStoredFilename())
+                : createSignedUrl(upload.getStoredFilename());
             return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.LOCATION, publicUrl)
+                .header(HttpHeaders.LOCATION, fileUrl)
                 .build();
         }
         Path path = resolveFilePath(id, upload);
@@ -244,6 +248,45 @@ public class FileStorageService {
             + supabaseStorageBucket
             + "/"
             + storagePath;
+    }
+
+    private String createSignedUrl(String storagePath) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + supabaseServiceRoleKey);
+            headers.set("apikey", supabaseServiceRoleKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            Map<String, Object> payload = Map.of("expiresIn", SIGNED_URL_TTL_SECONDS);
+            String url = normalizeSupabaseUrl()
+                + "/storage/v1/object/sign/"
+                + supabaseStorageBucket
+                + "/"
+                + storagePath;
+            ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(payload, headers),
+                Map.class
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object signedUrl = response.getBody().get("signedURL");
+                if (signedUrl != null) {
+                    String signedValue = signedUrl.toString();
+                    if (signedValue.startsWith("http://") || signedValue.startsWith("https://")) {
+                        return signedValue;
+                    }
+                    return normalizeSupabaseUrl() + signedValue;
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Signed URL failed.");
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Signed URL failed: " + ex.getMessage()
+            );
+        }
     }
 
     private String normalizeSupabaseUrl() {

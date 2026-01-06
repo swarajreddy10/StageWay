@@ -97,9 +97,14 @@ Required:
 - `SUPABASE_SERVICE_ROLE_KEY` = `YOUR_SUPABASE_SERVICE_ROLE_KEY` (required for uploads)
 - `SUPABASE_STORAGE_BUCKET` = `stageway-assets` (or your bucket name)
 
+Recommended (security):
+- `APP_SECURITY_ADMIN_EMAILS` = `admin1@example.com,admin2@example.com` (bootstrap admin access)
+
 Auth notes:
 - Backend is JWT-only; the frontend sends `Authorization: Bearer <supabase_access_token>`.
 - No session cookies or Redis are required.
+- Role upgrades are admin-only by default. Set `APP_SECURITY_ALLOW_SELF_UPGRADE=true` only for trusted staging.
+- Admins can promote users via `PUT /api/admin/users/{id}/role`.
 
 QR_SECRET notes:
 - 32+ characters is recommended so you do not ship the default insecure value.
@@ -111,6 +116,8 @@ Uploads use Supabase Storage (recommended):
 - Create a bucket (ex: `stageway-assets`)
 - Make it public for now (simple redirects from `/api/files/{id}`)
 - Set `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_STORAGE_BUCKET`
+If you keep the bucket private:
+- `/api/files/{id}` returns a signed URL for private assets.
 
 Local disk is only for dev:
 - Add a Render disk **only** if you intentionally want local storage
@@ -231,6 +238,8 @@ Backend:
 - `SUPABASE_STORAGE_BUCKET`
 - `CORS_ALLOWED_ORIGINS`
 - `QR_SECRET`
+- `APP_SECURITY_ADMIN_EMAILS`
+- `APP_SECURITY_ALLOW_SELF_UPGRADE` (optional)
 
 Frontend:
 - `NEXT_PUBLIC_API_BASE_URL`

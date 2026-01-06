@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { EventForm } from "@/components/events/EventForm";
 import { useEvents } from "@/hooks/useEvents";
@@ -20,6 +20,8 @@ export default function EventEditPage() {
   const { user, isAuthenticated, isHydrated } = useAuthStore();
   const { currentEvent, isLoading, fetchEvent, updateEvent } = useEvents();
   const isHost = user?.role === "HOST" || user?.role === "ADMIN";
+  const [submitNotice, setSubmitNotice] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -30,7 +32,7 @@ export default function EventEditPage() {
       return;
     }
     if (isAuthenticated && !isHost) {
-      router.push("/dashboard");
+      router.push("/host/request");
       return;
     }
     if (eventId && !isNaN(eventId)) {
@@ -39,11 +41,16 @@ export default function EventEditPage() {
   }, [isAuthenticated, isHydrated, isHost, eventId, router, fetchEvent]);
 
   const handleSubmit = async (data: CreateEventRequest) => {
+    setSubmitError(null);
+    setSubmitNotice("Saving changes...");
     try {
       await updateEvent(eventId, data);
+      setSubmitNotice("Event updated. Redirecting...");
       router.push(`/events/${eventId}`);
     } catch (error) {
       console.error("Failed to update event:", error);
+      setSubmitNotice(null);
+      setSubmitError(error instanceof Error ? error.message : "Failed to update event.");
     }
   };
 
@@ -124,6 +131,8 @@ export default function EventEditPage() {
         isLoading={isLoading}
         isEditMode
         onAutoSave={handleAutoSave}
+        submitNotice={submitNotice}
+        submitError={submitError}
       />
     </main>
   );

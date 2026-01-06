@@ -9,13 +9,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { OAuthButtons } from "./OAuthButtons";
 import { Loader2 } from "lucide-react";
 
@@ -30,7 +23,6 @@ const registerSchema = z
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
     fullName: z.string().min(3, "Name must be at least 3 characters"),
-    role: z.enum(["ATTENDEE", "HOST"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -43,18 +35,13 @@ export function RegisterForm() {
   const router = useRouter();
   const { register: registerUser, isLoading, error, notice, clearNotice } = useAuthStore();
   const [localError, setLocalError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<"ATTENDEE" | "HOST">("ATTENDEE");
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      role: "ATTENDEE",
-    },
   });
 
   const [passwordValue, setPasswordValue] = useState("");
@@ -63,7 +50,7 @@ export function RegisterForm() {
     setLocalError(null);
     clearNotice();
     try {
-      await registerUser(data.email, data.password, data.fullName, data.role);
+      await registerUser(data.email, data.password, data.fullName);
       const role = useAuthStore.getState().user?.role;
       if (role) {
         router.push(role === "HOST" || role === "ADMIN" ? "/host" : "/dashboard");
@@ -100,26 +87,6 @@ export function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="role">Account Type</Label>
-          <Select
-            value={selectedRole}
-            onValueChange={(value) => {
-              const role = value as "ATTENDEE" | "HOST";
-              setSelectedRole(role);
-              setValue("role", role);
-            }}
-          >
-            <SelectTrigger id="role">
-              <SelectValue placeholder="Select account type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ATTENDEE">Attendee</SelectItem>
-              <SelectItem value="HOST">Host</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="fullName">Full Name</Label>
           <Input
@@ -224,7 +191,7 @@ export function RegisterForm() {
         </div>
       </div>
 
-      <OAuthButtons role={selectedRole} />
+      <OAuthButtons />
 
       <div className="text-center text-sm">
         Already have an account?{" "}

@@ -123,6 +123,26 @@ export default function DashboardPage() {
             }
           />
         )}
+        {user.role !== "HOST" && user.role !== "ADMIN" && (
+          <StatCard
+            label="Become a Host"
+            value="Request"
+            helper="Apply for host access"
+            icon={<Users className="h-4 w-4 text-muted-foreground" />}
+            accent="lime"
+            footer={
+              <Link href="/host/request">
+                <Button
+                  variant="outline"
+                  className="w-full border-white/70 bg-white/70 hover:bg-white"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Request Access
+                </Button>
+              </Link>
+            }
+          />
+        )}
       </div>
 
       <div className="mt-10">

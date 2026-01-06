@@ -42,12 +42,14 @@ class AuthServiceTest {
         authService = new AuthService(
             userRepository,
             supabaseAuthService,
-            passwordEncoder
+            passwordEncoder,
+            "",
+            true
         );
     }
 
     @Test
-    void handleSupabaseAuth_createsHostWhenDesiredRoleHost() {
+    void handleSupabaseAuth_createsAttendeeByDefault() {
         SupabaseAuthService.SupabaseUser supabaseUser =
             new SupabaseAuthService.SupabaseUser("supabase-id", "host@example.com", "Host User", null);
         when(supabaseAuthService.verifyToken("token")).thenReturn(supabaseUser);
@@ -65,8 +67,8 @@ class AuthServiceTest {
 
         verify(userRepository).save(userCaptor.capture());
         User savedUser = userCaptor.getValue();
-        assertThat(savedUser.getRole()).isEqualTo("ORGANIZER");
-        assertThat(response.user().role()).isEqualTo("HOST");
+        assertThat(savedUser.getRole()).isEqualTo("ATTENDEE");
+        assertThat(response.user().role()).isEqualTo("ATTENDEE");
         assertThat(response.token()).isEqualTo("token");
     }
 

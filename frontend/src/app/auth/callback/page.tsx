@@ -6,7 +6,6 @@ import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/authStore";
 import { resolveApiBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
-import { consumeDesiredRole } from "@/lib/auth-role";
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -20,13 +19,9 @@ function AuthCallbackContent() {
 
       if (session) {
         try {
-          const desiredRole = consumeDesiredRole();
           const headers: Record<string, string> = {
             Authorization: `Bearer ${session.access_token}`,
           };
-          if (desiredRole) {
-            headers["X-Desired-Role"] = desiredRole;
-          }
           const response = await fetch(`${resolveApiBaseUrl()}${API_ROUTES.auth.supabase}`, {
             method: "POST",
             headers,

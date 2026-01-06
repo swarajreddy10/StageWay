@@ -4,7 +4,6 @@ import { apiClient } from "@/lib/api";
 import { resolveApiBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
 import { supabase } from "@/lib/supabase";
-import { normalizeDesiredRole, persistDesiredRole } from "@/lib/auth-role";
 
 interface AuthState {
   user: User | null;
@@ -15,12 +14,7 @@ interface AuthState {
   error: string | null;
   notice: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    fullName: string,
-    role?: User["role"]
-  ) => Promise<void>;
+  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   hydrateUser: () => Promise<void>;
@@ -36,21 +30,10 @@ const clearLegacyTokens = () => {
   sessionStorage.removeItem("token");
 };
 
-const prepareOAuthRole = (role?: User["role"]) => {
-  persistDesiredRole(role);
-};
-
-const syncSupabaseSession = async (
-  accessToken: string,
-  desiredRole?: string | null
-): Promise<AuthResponse> => {
+const syncSupabaseSession = async (accessToken: string): Promise<AuthResponse> => {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
   };
-  const normalizedRole = normalizeDesiredRole(desiredRole);
-  if (normalizedRole) {
-    headers["X-Desired-Role"] = normalizedRole;
-  }
   const response = await fetch(`${resolveApiBaseUrl()}${API_ROUTES.auth.supabase}`, {
     method: "POST",
     headers,
@@ -100,15 +83,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (email: string, password: string, fullName: string, role?: User["role"]) => {
+  register: async (email: string, password: string, fullName: string) => {
     set({ isLoading: true, error: null, notice: null });
     clearLegacyTokens();
-    prepareOAuthRole(role);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: { full_name: fullName },
       },
     });
 
@@ -129,7 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const authResponse = await syncSupabaseSession(data.session.access_token, role);
+      const authResponse = await syncSupabaseSession(data.session.access_token);
       set({
         user: authResponse.user,
         token: data.session.access_token,

@@ -30,6 +30,8 @@ export default function EventDetailPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [attendeesLoading, setAttendeesLoading] = useState(false);
   const qrSectionRef = useRef<HTMLDivElement | null>(null);
+  const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
+  const [registrationTone, setRegistrationTone] = useState<"error" | "success">("success");
 
   const canEdit = user?.role === "HOST" || user?.role === "ADMIN";
   const canRegister = !canEdit;
@@ -71,12 +73,19 @@ export default function EventDetailPage() {
   }, [fetchAttendees]);
 
   const handleRegister = async (data: { eventId: number; seatNumber?: string }) => {
+    setRegistrationMessage(null);
     try {
       const newRegistration = await registerForEvent(data);
       setRegistration(newRegistration);
       setShowRegistrationForm(false);
+      setRegistrationTone("success");
+      setRegistrationMessage("Registration complete. Scroll down to your QR pass.");
     } catch (error) {
       console.error("Registration error:", error);
+      setRegistrationTone("error");
+      setRegistrationMessage(
+        error instanceof Error ? error.message : "Registration failed. Please try again."
+      );
     }
   };
 
@@ -167,6 +176,18 @@ export default function EventDetailPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {canRegister && registrationMessage && (
+          <div
+            className={`rounded-2xl border border-white/70 px-4 py-3 text-sm shadow-sm ${
+              registrationTone === "error"
+                ? "bg-destructive/10 text-destructive"
+                : "bg-emerald-50 text-emerald-700"
+            }`}
+          >
+            {registrationMessage}
+          </div>
         )}
 
         {canRegister && showRegistrationForm && isAuthenticated && !hasRegistration && (

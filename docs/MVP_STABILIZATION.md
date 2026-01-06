@@ -7,8 +7,9 @@ This checklist matches the current code changes and what you still need to do.
 ## 1) What changed in the code (now)
 - Auth is JWT-only (Supabase access token in `Authorization` header).
 - Redis/session cookies removed.
-- File uploads go to Supabase Storage (public bucket) with DB metadata.
+- File uploads go to Supabase Storage (public bucket by default) with DB metadata.
 - Local email/SMPP checks removed.
+- Role upgrades are admin-only by default.
 
 ---
 
@@ -23,9 +24,11 @@ Required:
 - `SUPABASE_STORAGE_BUCKET`
 - `CORS_ALLOWED_ORIGINS` = `https://YOUR_VERCEL_DOMAIN`
 - `QR_SECRET` = `32+ chars`
+- `APP_SECURITY_ADMIN_EMAILS` = `admin1@example.com,admin2@example.com` (optional)
 
 Optional (runtime):
 - `SPRING_MAIN_LAZY_INITIALIZATION=true` (faster boot, slower first request)
+- `APP_SECURITY_ALLOW_SELF_UPGRADE=true` (staging only)
 
 ---
 
@@ -40,6 +43,8 @@ Storage:
 - Create bucket (ex: `stageway-assets`).
 - Set it to **public** for now (simplest).
 - Add `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_STORAGE_BUCKET` to Render.
+If you keep the bucket private:
+- `/api/files/{id}` returns signed URLs for private assets.
 
 ---
 
@@ -81,6 +86,10 @@ Frontend:
 3) Confirm the frontend is using the same Render base URL.
 4) Clear browser cache and sign in again (token refresh).
 
+### Need a host/admin account
+- Add your email to `APP_SECURITY_ADMIN_EMAILS`, redeploy, and sign in.
+- Admins can promote users via `PUT /api/admin/users/{id}/role`.
+
 ### Uploads fail
 - Ensure `SUPABASE_SERVICE_ROLE_KEY` and bucket name are set.
 - Bucket is public (or implement signed URLs later).
@@ -92,4 +101,3 @@ Frontend:
 - Add backend-side rate limiting and request logging.
 - Add environment-based feature flags for disabling optional endpoints.
 - Rotate any leaked secrets and remove `.env` from git history.
-

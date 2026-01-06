@@ -154,18 +154,12 @@ export default function NavBar() {
                 align="end"
               >
                 <DropdownMenuItem asChild>
-                  <Link href="/auth/signin" className="cursor-pointer">
-                    Sign In as Attendee
+                  <Link href="/events" className="cursor-pointer">
+                    Attend Events
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/auth/signup" className="cursor-pointer">
-                    Sign Up as Attendee
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/auth/signin" className="cursor-pointer">
+                  <Link href="/host/request" className="cursor-pointer">
                     Host Events
                   </Link>
                 </DropdownMenuItem>
@@ -281,12 +275,12 @@ export default function NavBar() {
                   </Link>
                   <div className="pt-4 space-y-2">
                     <Button variant="outline" asChild className="w-full rounded-full">
-                      <Link href="/auth/signin" onClick={() => setMenuOpen(false)}>
-                        Sign In
+                      <Link href="/events" onClick={() => setMenuOpen(false)}>
+                        Attend Events
                       </Link>
                     </Button>
                     <Button className="w-full rounded-full bg-[#1E5A55] text-white" asChild>
-                      <Link href="/auth/signin" onClick={() => setMenuOpen(false)}>
+                      <Link href="/host/request" onClick={() => setMenuOpen(false)}>
                         Host Events
                       </Link>
                     </Button>
