@@ -18,6 +18,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { HostEventCard } from "@/components/events/HostEventCard";
 import { motion } from "framer-motion";
 import { fadeUp, pageTransition, staggerContainer } from "@/lib/motion";
+import { ModeSwitch } from "@/components/shared/ModeSwitch";
 
 export default function HostPage() {
   const router = useRouter();
@@ -135,7 +136,8 @@ export default function HostPage() {
         title="Create, launch, and track."
         description="Manage your events, registrations, and analytics in one creative cockpit."
         actions={
-          <>
+          <div className="flex flex-wrap gap-3">
+            <ModeSwitch mode="HOST" />
             <Link href="/analytics">
               <Button variant="outline" className="border-white/70 bg-white/70 hover:bg-white">
                 <BarChart3 className="mr-2 h-4 w-4" />
@@ -148,7 +150,7 @@ export default function HostPage() {
                 Create Event
               </Button>
             </Link>
-          </>
+          </div>
         }
       />
 

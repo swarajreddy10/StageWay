@@ -103,6 +103,11 @@ public class RegistrationService {
         User attendee = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found."));
 
+        if (event.getOrganizationId() != null && event.getOrganizationId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Hosts cannot register for their own event.");
+        }
+
         Registration existing = registrationRepository.findByEventIdAndUserId(eventId, userId);
         if (existing != null) {
             return buildRegistrationResponse(existing, event);
@@ -316,6 +321,13 @@ public class RegistrationService {
         User attendee = resolveWaitlistUser(authHeader);
         Event event = eventRepository.findByIdForUpdate(request.getEventId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found."));
+
+        if (attendee.getId() != null
+            && event.getOrganizationId() != null
+            && event.getOrganizationId().equals(attendee.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "Hosts cannot join the waitlist for their own event.");
+        }
 
         Registration existing = registrationRepository.findByEventIdAndUserId(event.getId(), attendee.getId());
         if (existing != null) {

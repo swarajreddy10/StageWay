@@ -125,16 +125,16 @@ export default function AboutPage() {
                     <span className="text-sm">Automated email notifications to attendees</span>
                   </li>
                 </ul>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-green/70 bg-light-green/70 hover:bg-green-100"
-                >
-                  <Link href="/host/request">
-                    Start Hosting
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-green/70 bg-light-green/70 hover:bg-green-100"
+                  >
+                    <Link href="/auth/signin">
+                      Sign in to host
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
               </CardContent>
             </Card>
           </div>
@@ -230,16 +230,16 @@ export default function AboutPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button
-                size="lg"
-                className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
-                asChild
-              >
-                <Link href="/host/request">
-                  Host an Event
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+                <Button
+                  size="lg"
+                  className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
+                  asChild
+                >
+                  <Link href="/auth/signin">
+                    Sign in to host
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               <Button
                 variant="outline"
                 size="lg"

@@ -28,8 +28,8 @@ export default function Footer() {
               <Link href="/events">Browse Events</Link>
             </Button>
             <Button asChild className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-              <Link href="/host/request">
-                Host an Event
+              <Link href="/auth/signin">
+                Sign in / Register
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

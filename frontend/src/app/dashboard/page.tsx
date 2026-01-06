@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { useRegistrations } from "@/hooks/useRegistrations";
@@ -16,11 +16,17 @@ import { RegistrationCard } from "@/components/registration/RegistrationCard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { fadeUp, pageTransition, staggerContainer } from "@/lib/motion";
+import { fetchEvents } from "@/lib/event-api";
+import { EventCard } from "@/components/events/EventCard";
+import type { Event } from "@/types/event";
+import { ModeSwitch } from "@/components/shared/ModeSwitch";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isHydrated } = useAuthStore();
   const { registrations, isLoading } = useRegistrations();
+  const [suggestedEvents, setSuggestedEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -34,6 +40,32 @@ export default function DashboardPage() {
       router.push("/admin/host-requests");
     }
   }, [isAuthenticated, isHydrated, user, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    let isActive = true;
+    const loadEvents = async () => {
+      setEventsLoading(true);
+      try {
+        const events = await fetchEvents(undefined, 9);
+        if (isActive) {
+          setSuggestedEvents(events);
+        }
+      } catch (error) {
+        console.error("Failed to load events:", error);
+      } finally {
+        if (isActive) {
+          setEventsLoading(false);
+        }
+      }
+    };
+    loadEvents();
+    return () => {
+      isActive = false;
+    };
+  }, [isAuthenticated]);
 
   if (!isHydrated) {
     return null;
@@ -50,6 +82,9 @@ export default function DashboardPage() {
   const pastRegistrations = registrations.filter(
     (reg) => reg.event && new Date(reg.event.startDate) <= now
   );
+  const upcomingEvents = suggestedEvents
+    .filter((event) => new Date(event.startDate) > now)
+    .slice(0, 6);
 
   const getInitials = (name: string) =>
     name
@@ -89,11 +124,7 @@ export default function DashboardPage() {
               </Button>
             </Link>
             {user.role === "HOST" && (
-              <Link href="/host">
-                <Button variant="outline" className="border-white/70 bg-white/70 hover:bg-white">
-                  Switch to Host Mode
-                </Button>
-              </Link>
+              <ModeSwitch mode="ATTENDEE" />
             )}
           </div>
         }
@@ -190,20 +221,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-center py-12">
                 <p className="text-muted-foreground">Loading...</p>
               </div>
-            ) : upcomingRegistrations.length === 0 ? (
-              <EmptyState
-                title="No upcoming events"
-                description="Browse new events and fill your calendar."
-                icon={<Sparkles className="h-10 w-10 text-muted-foreground" />}
-                action={
-                  <Link href="/events">
-                    <Button className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-                      Browse Events
-                    </Button>
-                  </Link>
-                }
-              />
-            ) : (
+            ) : upcomingRegistrations.length > 0 ? (
               <motion.div
                 variants={staggerContainer}
                 initial="initial"
@@ -217,6 +235,29 @@ export default function DashboardPage() {
                   </motion.div>
                 ))}
               </motion.div>
+            ) : eventsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-muted-foreground">Loading events...</p>
+              </div>
+            ) : upcomingEvents.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} className="max-w-none" />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No upcoming events"
+                description="Browse new events and fill your calendar."
+                icon={<Sparkles className="h-10 w-10 text-muted-foreground" />}
+                action={
+                  <Link href="/events">
+                    <Button className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
+                      Browse Events
+                    </Button>
+                  </Link>
+                }
+              />
             )}
           </TabsContent>
 
