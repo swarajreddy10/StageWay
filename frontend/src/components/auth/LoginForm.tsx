@@ -7,6 +7,15 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OAuthButtons } from "./OAuthButtons";
@@ -48,55 +57,60 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/70 bg-white/80 p-8 shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
-      <div className="space-y-2 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          Welcome back
-        </p>
-        <h1 className="font-display text-3xl font-bold">Pick up the thread.</h1>
-        <p className="text-muted-foreground">Sign in to your account to continue.</p>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            {...register("email")}
-            disabled={isLoading}
-          />
-          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <a href="/auth/forgot" className="text-xs font-medium text-primary hover:underline">
-              Forgot password?
-            </a>
+    <Card className="w-full max-w-md rounded-3xl border border-white/70 bg-white/80 shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
+      <CardHeader className="space-y-2">
+        <CardTitle className="font-display text-3xl">Pick up the thread.</CardTitle>
+        <CardDescription>Sign in to your account to continue.</CardDescription>
+        <CardAction>
+          <Button variant="link" className="px-0" onClick={() => router.push("/auth/signup")}>
+            Sign Up
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...register("email")}
+              disabled={isLoading}
+            />
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="********"
-            {...register("password")}
-            disabled={isLoading}
-          />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-        </div>
 
-        {(error || localError) && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error || localError}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <a href="/auth/forgot" className="text-xs font-medium text-primary hover:underline">
+                Forgot password?
+              </a>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="********"
+              {...register("password")}
+              disabled={isLoading}
+            />
+            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
-        )}
 
+          {(error || localError) && (
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {error || localError}
+            </div>
+          )}
+        </form>
+      </CardContent>
+      <CardFooter className="flex-col gap-2">
         <Button
           type="submit"
           className="w-full bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
           disabled={isLoading}
+          onClick={handleSubmit(onSubmit)}
         >
           {isLoading ? (
             <>
@@ -107,25 +121,8 @@ export function LoginForm() {
             "Sign in"
           )}
         </Button>
-      </form>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white/90 px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-
-      <OAuthButtons />
-
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <a href="/auth/signup" className="text-primary hover:underline">
-          Sign up
-        </a>
-      </div>
-    </div>
+        <OAuthButtons />
+      </CardFooter>
+    </Card>
   );
 }

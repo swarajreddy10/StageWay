@@ -28,7 +28,12 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
@@ -38,22 +43,28 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class RegistrationService {
-    private static final Pattern REGISTRATION_QR_PATTERN = Pattern.compile("/registrations/(\\d+)/qr");
+    private static final Pattern SIGNED_QR_PATTERN = Pattern.compile("^REG-(\\d+)\\.(\\d+)\\.([A-Za-z0-9_-]+)$");
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final RegistrationRepository registrationRepository;
     private final AuthService authService;
     private final SeatService seatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final String qrSecret;
+    private final Duration qrTtl;
 
     public RegistrationService(
         EventRepository eventRepository,
@@ -61,7 +72,9 @@ public class RegistrationService {
         RegistrationRepository registrationRepository,
         AuthService authService,
         SeatService seatService,
-        SimpMessagingTemplate messagingTemplate
+        SimpMessagingTemplate messagingTemplate,
+        @Value("${app.qr.secret}") String qrSecret,
+        @Value("${app.qr.ttl:PT48H}") Duration qrTtl
     ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
@@ -69,6 +82,8 @@ public class RegistrationService {
         this.authService = authService;
         this.seatService = seatService;
         this.messagingTemplate = messagingTemplate;
+        this.qrSecret = qrSecret;
+        this.qrTtl = qrTtl == null ? Duration.ofHours(48) : qrTtl;
     }
 
     @Transactional
@@ -90,7 +105,7 @@ public class RegistrationService {
 
         Registration existing = registrationRepository.findByEventIdAndUserId(eventId, userId);
         if (existing != null) {
-            return buildRegistrationResponse(existing, event, httpRequest);
+            return buildRegistrationResponse(existing, event);
         }
 
         Integer capacity = event.getCapacity();
@@ -142,7 +157,7 @@ public class RegistrationService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Selected seat is already taken.");
         }
         publishRegistrationUpdate(event);
-        return buildRegistrationResponse(saved, event, httpRequest);
+        return buildRegistrationResponse(saved, event);
     }
 
     public List<RegistrationResponse> getRegistrations(String authHeader, HttpServletRequest httpRequest) {
@@ -160,8 +175,7 @@ public class RegistrationService {
             .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
             .map(registration -> buildRegistrationResponse(
                 registration,
-                eventMap.get(registration.getEventId()),
-                httpRequest
+                eventMap.get(registration.getEventId())
             ))
             .toList();
     }
@@ -183,7 +197,7 @@ public class RegistrationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied.");
         }
         Event event = eventRepository.findById(registration.getEventId()).orElse(null);
-        return buildRegistrationResponse(registration, event, httpRequest);
+        return buildRegistrationResponse(registration, event);
     }
 
     public void cancelRegistration(Long id, String authHeader) {
@@ -204,6 +218,11 @@ public class RegistrationService {
         authService.requireOrganizer(userId);
         Registration registration = registrationRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found."));
+        String status = registration.getStatus();
+        if (registration.getCheckedInAt() != null
+            || (status != null && status.equalsIgnoreCase("CHECKED_IN"))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Attendee already checked in.");
+        }
         registration.setCheckedInAt(OffsetDateTime.now(ZoneOffset.UTC));
         registration.setCheckedInBy(userId);
         registration.setStatus("CHECKED_IN");
@@ -239,7 +258,7 @@ public class RegistrationService {
 
         Registration registration = checkInById(registrationId, authHeader);
         Event event = eventRepository.findById(registration.getEventId()).orElse(null);
-        RegistrationResponse registrationResponse = buildRegistrationResponse(registration, event, httpRequest);
+        RegistrationResponse registrationResponse = buildRegistrationResponse(registration, event);
         CheckInInfo checkInInfo = new CheckInInfo(
             registration.getId(),
             registration.getId(),
@@ -263,7 +282,7 @@ public class RegistrationService {
 
         Registration registration = checkInById(request.getRegistrationId(), authHeader);
         Event event = eventRepository.findById(registration.getEventId()).orElse(null);
-        RegistrationResponse registrationResponse = buildRegistrationResponse(registration, event, httpRequest);
+        RegistrationResponse registrationResponse = buildRegistrationResponse(registration, event);
         CheckInInfo checkInInfo = new CheckInInfo(
             registration.getId(),
             registration.getId(),
@@ -281,7 +300,7 @@ public class RegistrationService {
         }
         registrationRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found."));
-        String payload = "REG-" + id;
+        String payload = buildSignedQrPayload(id);
         try {
             return buildQrPng(payload);
         } catch (IOException | WriterException ex) {
@@ -381,28 +400,37 @@ public class RegistrationService {
             return null;
         }
         String trimmed = code.trim();
-        if (trimmed.startsWith("REG-")) {
-            try {
-                return Long.parseLong(trimmed.substring(4));
-            } catch (NumberFormatException ex) {
-                return null;
-            }
+        Matcher matcher = SIGNED_QR_PATTERN.matcher(trimmed);
+        if (!matcher.matches()) {
+            return null;
         }
-        Matcher matcher = REGISTRATION_QR_PATTERN.matcher(trimmed);
-        if (matcher.find()) {
-            try {
-                return Long.parseLong(matcher.group(1));
-            } catch (NumberFormatException ex) {
-                return null;
-            }
+
+        Long registrationId;
+        long expiresAt;
+        try {
+            registrationId = Long.parseLong(matcher.group(1));
+            expiresAt = Long.parseLong(matcher.group(2));
+        } catch (NumberFormatException ex) {
+            return null;
         }
-        return null;
+
+        long now = Instant.now().getEpochSecond();
+        if (expiresAt < now) {
+            return null;
+        }
+
+        String payload = "REG-" + registrationId + "." + expiresAt;
+        String signature = matcher.group(3);
+        if (!isSignatureValid(payload, signature)) {
+            return null;
+        }
+
+        return registrationId;
     }
 
     private RegistrationResponse buildRegistrationResponse(
         Registration registration,
-        Event event,
-        HttpServletRequest httpRequest
+        Event event
     ) {
         RegistrationEventSummary summary = EventFormatter.toRegistrationSummary(event);
         OffsetDateTime cancelledAt = "CANCELLED".equalsIgnoreCase(registration.getStatus())
@@ -414,7 +442,7 @@ public class RegistrationService {
             registration.getUserId(),
             registration.getSeatNumber(),
             registration.getStatus(),
-            buildQrCodeUrl(httpRequest, registration.getId()),
+            buildSignedQrPayload(registration.getId()),
             registration.getCreatedAt(),
             cancelledAt,
             null,
@@ -426,21 +454,30 @@ public class RegistrationService {
         );
     }
 
-    private String buildQrCodeUrl(HttpServletRequest request, Long registrationId) {
-        if (request == null) {
-            return "REG-" + registrationId;
-        }
-        String baseUrl = buildBaseUrl(request);
-        return baseUrl + "/api/registrations/" + registrationId + "/qr";
+    private String buildSignedQrPayload(Long registrationId) {
+        long expiresAt = Instant.now().plus(qrTtl).getEpochSecond();
+        String payload = "REG-" + registrationId + "." + expiresAt;
+        String signature = signPayload(payload);
+        return payload + "." + signature;
     }
 
-    private String buildBaseUrl(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        String host = request.getServerName();
-        int port = request.getServerPort();
-        boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
-            || ("https".equalsIgnoreCase(scheme) && port == 443);
-        return scheme + "://" + host + (defaultPort ? "" : ":" + port);
+    private String signPayload(String payload) {
+        try {
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            mac.init(new SecretKeySpec(qrSecret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
+            byte[] digest = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (GeneralSecurityException ex) {
+            throw new IllegalStateException("QR signing failed.", ex);
+        }
+    }
+
+    private boolean isSignatureValid(String payload, String signature) {
+        String expected = signPayload(payload);
+        return MessageDigest.isEqual(
+            expected.getBytes(StandardCharsets.UTF_8),
+            signature.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     private WaitlistResponse buildWaitlistResponse(Registration registration, Event event) {

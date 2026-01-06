@@ -46,7 +46,7 @@ export const resolveFileBaseUrl = () => {
   }
 
   if (!fileBase) {
-    return resolveFromWindow();
+    return resolveApiBaseUrl();
   }
 
   try {
@@ -66,17 +66,16 @@ export const resolveAssetUrl = (value: string) => {
   }
 
   if (value.startsWith("/")) {
-    return value;
+    return `${resolveFileBaseUrl()}${value}`;
   }
 
   try {
     const parsed = new URL(value);
-    const normalizedPath = `${parsed.pathname}${parsed.search}`;
-    if (parsed.pathname.startsWith(`${API_ROUTES.files}/`)) {
-      return normalizedPath;
-    }
-    if (isLocalHost(parsed.hostname)) {
-      return normalizedPath;
+    if (typeof window !== "undefined") {
+      const normalizedPath = `${parsed.pathname}${parsed.search}`;
+      if (isLocalHost(parsed.hostname) && !isLocalHost(window.location.hostname)) {
+        return `${resolveFileBaseUrl()}${normalizedPath}`;
+      }
     }
   } catch {
     return value;

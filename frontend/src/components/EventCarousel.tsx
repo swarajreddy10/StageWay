@@ -20,13 +20,13 @@ export default function EventCarousel({ events }: EventCarouselProps) {
     return events.map((event, index) => (
       <motion.div
         key={event.id}
-        className="h-full"
+        className="h-full w-full max-w-[300px]"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: index * 0.05 }}
         whileHover={{ y: -6 }}
       >
-        <EventCard event={event} className="max-w-none" />
+        <EventCard event={event} />
       </motion.div>
     ));
   }, [events]);
