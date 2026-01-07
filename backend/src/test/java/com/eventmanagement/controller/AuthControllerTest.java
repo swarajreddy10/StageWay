@@ -54,14 +54,4 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.token").value("token"))
             .andExpect(jsonPath("$.user.role").value("HOST"));
     }
-
-    @Test
-    void registerUser_isGone() throws Exception {
-        mockMvc.perform(
-                post("/api/auth/register")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"email\":\"new@example.com\",\"fullName\":\"New User\",\"password\":\"Pass1234\",\"role\":\"ATTENDEE\"}")
-            )
-            .andExpect(status().isGone());
-    }
 }

@@ -3,6 +3,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Environment ###
+.env
+.env.local
+uploads/
+
 ### STS ###
 .apt_generated
 .classpath
@@ -30,3 +35,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log

@@ -1,12 +1,8 @@
 package com.eventmanagement.controller;
 
 import com.eventmanagement.dto.AuthResponse;
-import com.eventmanagement.dto.AuthRoleRequest;
 import com.eventmanagement.dto.AuthUser;
-import com.eventmanagement.dto.GoogleAuthRequest;
-import com.eventmanagement.dto.LoginRequest;
 import com.eventmanagement.dto.ProfileUpdateRequest;
-import com.eventmanagement.dto.RegisterRequest;
 import com.eventmanagement.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -28,11 +24,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/auth/oauth/start")
-    public ResponseEntity<Void> startOAuth(@RequestBody(required = false) @Valid AuthRoleRequest request) {
-        return ResponseEntity.noContent().build();
-    }
-
     @PostMapping("/auth/supabase")
     public ResponseEntity<AuthResponse> handleSupabaseAuth(
         @RequestHeader("Authorization") String authHeader,
@@ -40,21 +31,6 @@ public class AuthController {
     ) {
         AuthResponse response = authService.handleSupabaseAuth(authHeader, desiredRole);
         return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/auth/google")
-    public ResponseEntity<String> handleGoogleAuth(@RequestBody GoogleAuthRequest request) {
-        return ResponseEntity.status(HttpStatus.GONE).body("Use Supabase Auth instead");
-    }
-
-    @PostMapping("/auth/login")
-    public ResponseEntity<AuthResponse> handleCredentialsLogin(@RequestBody @Valid LoginRequest request) {
-        return ResponseEntity.status(HttpStatus.GONE).build();
-    }
-
-    @PostMapping({"/register", "/auth/register"})
-    public ResponseEntity<AuthResponse> registerUser(@RequestBody @Valid RegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.GONE).build();
     }
 
     @GetMapping("/auth/user")
