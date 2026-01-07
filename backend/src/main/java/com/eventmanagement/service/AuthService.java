@@ -2,9 +2,7 @@ package com.eventmanagement.service;
 
 import com.eventmanagement.dto.AuthResponse;
 import com.eventmanagement.dto.AuthUser;
-import com.eventmanagement.dto.LoginRequest;
 import com.eventmanagement.dto.ProfileUpdateRequest;
-import com.eventmanagement.dto.RegisterRequest;
 import com.eventmanagement.model.User;
 import com.eventmanagement.repository.UserRepository;
 import java.util.Arrays;
@@ -80,14 +78,6 @@ public class AuthService {
                 "Authentication failed: " + e.getMessage()
             );
         }
-    }
-
-    public AuthResponse handleCredentialsLogin(LoginRequest request) {
-        throw new ResponseStatusException(HttpStatus.GONE, "Use Supabase Auth instead.");
-    }
-
-    public AuthResponse registerUser(RegisterRequest request) {
-        throw new ResponseStatusException(HttpStatus.GONE, "Use Supabase Auth instead.");
     }
 
     public AuthUser getCurrentUser(String authHeader) {

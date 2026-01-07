@@ -1,7 +1,6 @@
 package com.eventmanagement.service;
 
 import com.eventmanagement.dto.AuthResponse;
-import com.eventmanagement.dto.RegisterRequest;
 import com.eventmanagement.model.User;
 import com.eventmanagement.repository.UserRepository;
 import java.util.UUID;
@@ -13,10 +12,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -107,16 +104,5 @@ class AuthServiceTest {
 
         verify(userRepository, never()).save(any());
         assertThat(response.user().role()).isEqualTo("ADMIN");
-    }
-
-    @Test
-    void registerUser_isGone() {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("host2@example.com");
-        request.setFullName("Host Two");
-        request.setPassword(UUID.randomUUID().toString());
-        request.setRole("HOST");
-
-        assertThrows(ResponseStatusException.class, () -> authService.registerUser(request));
     }
 }
