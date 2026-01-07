@@ -46,8 +46,8 @@ export default function EventCreatePage() {
       const event = await createEvent(data);
       toast.success("Event created successfully!");
       
-      // Navigate without page reload using shallow routing
-      router.push(`/events/${event.id}`, { scroll: false });
+      // Navigate without scrolling
+      router.push(`/events/${event.id}`);
       
       // Optional: Show success modal instead of navigation
       // setSubmitNotice("Event created! Redirecting...");
@@ -58,6 +58,8 @@ export default function EventCreatePage() {
       toast.error(message);
       setSubmitNotice(null);
       setSubmitError(message);
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
