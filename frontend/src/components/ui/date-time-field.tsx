@@ -1,13 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { ChevronDownIcon } from "lucide-react";
+import * as React from "react";
 
 interface DateTimeFieldProps {
   value?: string;
@@ -15,6 +15,8 @@ interface DateTimeFieldProps {
   label: string;
   disabled?: boolean;
   error?: string;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export function DateTimeField({
@@ -23,31 +25,89 @@ export function DateTimeField({
   label,
   disabled = false,
   error,
+  minDate,
+  maxDate,
 }: DateTimeFieldProps) {
   const [open, setOpen] = React.useState(false);
+  const [timeInput, setTimeInput] = React.useState("");
+  
   const parsedDate = value ? new Date(value) : undefined;
   const dateValue = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : undefined;
-  const timeValue = dateValue ? format(dateValue, "HH:mm:ss") : "10:00:00";
+  
+  // Initialize time input when date changes
+  React.useEffect(() => {
+    if (dateValue) {
+      setTimeInput(format(dateValue, "hh:mm a")); // 12-hour format with AM/PM
+    }
+  }, [dateValue]);
 
-  const formatLocalDateTime = (date: Date) => format(date, "yyyy-MM-dd'T'HH:mm:ss");
+  const formatLocalDateTime = (date: Date) => 
+    format(date, "yyyy-MM-dd'T'HH:mm:ss");
 
   const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      const [hours, minutes, seconds] = timeValue.split(":");
-      const combined = new Date(date);
-      combined.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds || "0"));
-      onChange(formatLocalDateTime(combined));
+    if (!date) return;
+    
+    // Combine with existing time or default to 10:00 AM
+    let hours = 10; // Default 10 AM
+    let minutes = 0;
+    
+    if (timeInput) {
+      const timeParts = timeInput.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (timeParts) {
+        let parsedHours = parseInt(timeParts[1]);
+        minutes = parseInt(timeParts[2]);
+        const period = timeParts[3]?.toUpperCase();
+        
+        // Convert 12-hour to 24-hour format
+        if (period === 'PM' && parsedHours !== 12) {
+          parsedHours += 12;
+        } else if (period === 'AM' && parsedHours === 12) {
+          parsedHours = 0;
+        }
+        
+        hours = parsedHours;
+      }
     }
+    
+    const combined = new Date(date);
+    combined.setHours(hours, minutes, 0, 0);
+    onChange(formatLocalDateTime(combined));
     setOpen(false);
   };
 
   const handleTimeChange = (time: string) => {
+    setTimeInput(time);
+    
     if (dateValue) {
-      const [hours, minutes, seconds] = time.split(":");
+      // Parse the new time
+      const timeParts = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (!timeParts) return;
+      
+      let hours = parseInt(timeParts[1]);
+      const minutes = parseInt(timeParts[2]);
+      const period = timeParts[3]?.toUpperCase();
+      
+      // Convert 12-hour to 24-hour format
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
       const combined = new Date(dateValue);
-      combined.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds || "0"));
+      combined.setHours(hours, minutes, 0, 0);
       onChange(formatLocalDateTime(combined));
     }
+  };
+
+  const validateTime = (time: string): boolean => {
+    const timeParts = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (!timeParts) return false;
+    
+    const hours = parseInt(timeParts[1]);
+    const minutes = parseInt(timeParts[2]);
+    
+    return hours >= 1 && hours <= 12 && minutes >= 0 && minutes <= 59;
   };
 
   return (
@@ -72,15 +132,24 @@ export function DateTimeField({
               captionLayout="dropdown"
               onSelect={handleDateChange}
               disabled={disabled}
+              fromDate={minDate}
+              toDate={maxDate}
             />
           </PopoverContent>
         </Popover>
         <Input
           type="time"
-          step="1"
-          value={timeValue}
+          step="60" // Step by minutes
+          value={timeInput}
           onChange={(e) => handleTimeChange(e.target.value)}
+          onBlur={(e) => {
+            const time = e.target.value;
+            if (!validateTime(time)) {
+              e.target.value = format(dateValue || new Date(), "hh:mm a");
+            }
+          }}
           disabled={disabled}
+          placeholder="10:00 AM"
           className="w-32 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
         />
       </div>

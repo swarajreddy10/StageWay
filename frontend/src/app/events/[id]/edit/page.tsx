@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { EventForm } from "@/components/events/EventForm";
-import { useEvents } from "@/hooks/useEvents";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useAuthStore } from "@/stores/authStore";
-import type { CreateEventRequest } from "@/types/event";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useEvents } from "@/hooks/useEvents";
+import { useAuthStore } from "@/stores/authStore";
+import type { CreateEventRequest } from "@/types/event";
 import { format } from "date-fns";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function EventEditPage() {
@@ -48,12 +48,14 @@ export default function EventEditPage() {
 
   const handleSubmit = async (data: CreateEventRequest) => {
     setSubmitError(null);
-    setSubmitNotice("Saving changes...");
+    setSubmitNotice("Updating event...");
     try {
       await updateEvent(eventId, data);
-      toast.success("Event updated.");
+      toast.success("Event updated successfully!");
       setSubmitNotice("Event updated. Redirecting...");
-      router.push(`/events/${eventId}`);
+      setTimeout(() => {
+        router.push(`/events/${eventId}`, { scroll: false });
+      }, 1500);
     } catch (error) {
       console.error("Failed to update event:", error);
       const message = error instanceof Error ? error.message : "Failed to update event.";
@@ -63,21 +65,9 @@ export default function EventEditPage() {
     }
   };
 
-  const handleAutoSave = async (data: Partial<CreateEventRequest>) => {
-    try {
-      await updateEvent(eventId, data);
-    } catch (error) {
-      console.error("Auto-save failed:", error);
-    }
-  };
+  if (!isHydrated) return null;
 
-  if (!isHydrated) {
-    return null;
-  }
-
-  if (!isAuthenticated || !isHost) {
-    return null;
-  }
+  if (!isAuthenticated || !isHost) return null;
 
   if (isLoading) {
     return (
@@ -138,8 +128,6 @@ export default function EventEditPage() {
         }}
         onSubmit={handleSubmit}
         isLoading={isLoading}
-        isEditMode
-        onAutoSave={handleAutoSave}
         submitNotice={submitNotice}
         submitError={submitError}
       />

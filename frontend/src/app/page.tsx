@@ -343,7 +343,7 @@ export default async function HomePage() {
                 className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
               >
                 <Link href="/auth/signin">
-                  Sign in / Sign up
+                  Sign in / Register
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

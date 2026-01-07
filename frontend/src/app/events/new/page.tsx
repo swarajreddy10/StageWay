@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { EventForm } from "@/components/events/EventForm";
-import { useEvents } from "@/hooks/useEvents";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { useAuthStore } from "@/stores/authStore";
-import type { CreateEventRequest } from "@/types/event";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useEvents } from "@/hooks/useEvents";
+import { useAuthStore } from "@/stores/authStore";
+import type { CreateEventRequest } from "@/types/event";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function EventCreatePage() {
@@ -44,9 +44,14 @@ export default function EventCreatePage() {
     setSubmitNotice("Creating event...");
     try {
       const event = await createEvent(data);
-      toast.success("Event created.");
-      setSubmitNotice("Event created. Redirecting...");
-      router.push(`/events/${event.id}`);
+      toast.success("Event created successfully!");
+      
+      // Navigate without page reload using shallow routing
+      router.push(`/events/${event.id}`, { scroll: false });
+      
+      // Optional: Show success modal instead of navigation
+      // setSubmitNotice("Event created! Redirecting...");
+      // setTimeout(() => router.push(`/events/${event.id}`), 1500);
     } catch (error) {
       console.error("Failed to create event:", error);
       const message = error instanceof Error ? error.message : "Failed to create event.";
