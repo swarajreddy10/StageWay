@@ -16,7 +16,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useDebounce } from "@/hooks/useDebounce";
 import { isBackendAssetUrl, resolveAssetUrl, resolveFileBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
 import { COUNTRIES, CURRENCIES, getCurrencyByCountry } from "@/lib/countries-currencies";
@@ -26,7 +25,7 @@ import { useAuthStore } from "@/stores/authStore";
 import type { CreateEventRequest, EventCategory } from "@/types/event";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Loader2, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, type MouseEvent } from "react";
 import { useForm } from "react-hook-form";
@@ -101,7 +100,6 @@ interface EventFormProps {
   onSubmit: (data: CreateEventRequest) => Promise<void>;
   isLoading?: boolean;
   isEditMode?: boolean;
-  onAutoSave?: (data: Partial<CreateEventRequest>) => Promise<void>;
   submitNotice?: string | null;
   submitError?: string | null;
 }
@@ -111,7 +109,6 @@ export function EventForm({
   onSubmit,
   isLoading,
   isEditMode,
-  onAutoSave,
   submitNotice,
   submitError,
 }: EventFormProps) {
@@ -119,8 +116,8 @@ export function EventForm({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const {
     register,
     handleSubmit,
@@ -186,59 +183,13 @@ export function EventForm({
     media: Boolean(errors.bannerUrl),
   };
 
-  const handleAutoSave = useDebounce(async (data: Partial<CreateEventRequest>) => {
-    if (!onAutoSave || !isEditMode) return;
-    try {
-      setAutoSaveStatus("Saving...");
-      const start = data.startDate ? new Date(data.startDate) : null;
-      const end = data.endDate ? new Date(data.endDate) : null;
-      const hasValidSchedule =
-        start &&
-        end &&
-        !Number.isNaN(start.getTime()) &&
-        !Number.isNaN(end.getTime()) &&
-        end > start;
-      // Format dates if valid and filter out empty strings
-      const formattedData: Partial<CreateEventRequest> = {
-        ...data,
-        startDate: hasValidSchedule ? start?.toISOString() : undefined,
-        endDate: hasValidSchedule ? end?.toISOString() : undefined,
-        price: Number.isFinite(data.price) ? data.price : 0,
-        currency: data.currency || "USD",
-        venueName: data.venueName?.trim() || undefined,
-        bannerUrl: data.bannerUrl?.trim() || undefined,
-        category: (data.category?.trim() as EventCategory | undefined) || undefined,
-      };
-      // Remove tags if empty string
-      if ("tags" in data && data.tags !== undefined) {
-        const tagsValue: string | string[] | undefined = data.tags as string | string[] | undefined;
-        if (typeof tagsValue === "string" && tagsValue.trim()) {
-          formattedData.tags = tagsValue
-            .split(",")
-            .map((t: string) => t.trim())
-            .filter(Boolean);
-        } else if (Array.isArray(tagsValue) && tagsValue.length > 0) {
-          formattedData.tags = tagsValue;
-        } else {
-          formattedData.tags = undefined;
-        }
-      }
-      await onAutoSave(formattedData);
-      setAutoSaveStatus("Saved");
-      setTimeout(() => setAutoSaveStatus(null), 2000);
-    } catch (error) {
-      setAutoSaveStatus("Failed to save");
-      console.error("Auto-save error:", error);
-    }
-  }, 2000);
-
+  // Track form changes
   useEffect(() => {
-    if (!isEditMode || !onAutoSave) return;
-    const subscription = watch((value) => {
-      handleAutoSave(value as Partial<CreateEventRequest>);
+    const subscription = watch(() => {
+      setHasUnsavedChanges(true);
     });
     return () => subscription.unsubscribe();
-  }, [watch, handleAutoSave, isEditMode, onAutoSave]);
+  }, [watch]);
 
   const handleCountryChange = (countryCode: string) => {
     setSelectedCountry(countryCode);
@@ -288,12 +239,14 @@ export function EventForm({
   };
 
   const onFormSubmit = async (data: EventFormData) => {
+    // Prevent default scroll behavior
+    const scrollPosition = window.scrollY;
+    
     // Validate dates
     const startDateTime = new Date(data.startDate);
     const endDateTime = new Date(data.endDate);
     
     if (startDateTime >= endDateTime) {
-      // Set error for end date
       setError('endDate', {
         type: 'manual',
         message: 'End time must be after start time'
@@ -321,7 +274,12 @@ export function EventForm({
               .filter(Boolean)
           : undefined,
     };
+    
     await onSubmit(submitData);
+    setHasUnsavedChanges(false);
+    
+    // Restore scroll position
+    window.scrollTo(0, scrollPosition);
   };
 
   return (
@@ -648,11 +606,10 @@ export function EventForm({
               <CardTitle>Publishing checklist</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              {autoSaveStatus && (
-                <div className="flex items-center gap-2">
-                  {autoSaveStatus === "Saving..." && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {autoSaveStatus === "Saved" && <Save className="h-4 w-4 text-green-600" />}
-                  <span>{autoSaveStatus}</span>
+              {hasUnsavedChanges && (
+                <div className="flex items-center gap-2 text-amber-600">
+                  <span className="h-2 w-2 rounded-full bg-amber-600" />
+                  <span>Unsaved changes</span>
                 </div>
               )}
               <Separator className="bg-white/60" />
@@ -668,9 +625,6 @@ export function EventForm({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {!autoSaveStatus && isEditMode && onAutoSave && (
-            <span className="text-sm text-muted-foreground">Auto-save enabled</span>
-          )}
           {(submitNotice || submitError) && (
             <div
               className={`rounded-md px-3 py-2 text-sm ${
@@ -695,7 +649,7 @@ export function EventForm({
                 Saving...
               </>
             ) : isEditMode ? (
-              "Update Event"
+              "Save Changes"
             ) : (
               "Create Event"
             )}

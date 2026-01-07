@@ -52,16 +52,16 @@ export default function EventEditPage() {
     try {
       await updateEvent(eventId, data);
       toast.success("Event updated successfully!");
-      setSubmitNotice("Event updated. Redirecting...");
-      setTimeout(() => {
-        router.push(`/events/${eventId}`, { scroll: false });
-      }, 1500);
+      setSubmitNotice(null);
+      // Don't navigate, stay on page
     } catch (error) {
       console.error("Failed to update event:", error);
       const message = error instanceof Error ? error.message : "Failed to update event.";
       toast.error(message);
       setSubmitNotice(null);
       setSubmitError(message);
+      // Scroll to top to show error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
