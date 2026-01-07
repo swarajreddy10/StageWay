@@ -1,9 +1,10 @@
-import "./globals.css";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
-import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
 import AuthProvider from "../components/AuthProvider";
+import Footer from "../components/Footer";
+import NavBar from "../components/NavBar";
+import QueryProvider from "../components/QueryProvider";
+import "./globals.css";
 
 const bodyFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -30,14 +31,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <AuthProvider>
-          <div className="app-shell">
-            <NavBar />
-            <div className="app-main">{children}</div>
-            <Footer />
-          </div>
-        </AuthProvider>
-        <Toaster richColors position="top-right" />
+        <QueryProvider>
+          <AuthProvider>
+            <div className="app-shell">
+              <NavBar />
+              <div className="app-main">{children}</div>
+              <Footer />
+            </div>
+          </AuthProvider>
+          <Toaster richColors position="top-right" />
+        </QueryProvider>
       </body>
     </html>
   );

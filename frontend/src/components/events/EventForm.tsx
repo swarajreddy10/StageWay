@@ -1,36 +1,36 @@
 "use client";
 
-import { useState, useEffect, type MouseEvent } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Save } from "lucide-react";
-import Image from "next/image";
-import { uploadFile } from "@/lib/file-api";
-import { useAuthStore } from "@/stores/authStore";
-import { supabase } from "@/lib/supabase";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/useDebounce";
-import { COUNTRIES, CURRENCIES, getCurrencyByCountry } from "@/lib/countries-currencies";
-import type { CreateEventRequest, EventCategory } from "@/types/event";
-import { format } from "date-fns";
 import { isBackendAssetUrl, resolveAssetUrl, resolveFileBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
-import { DateTimeField } from "@/components/ui/date-time-field";
+import { COUNTRIES, CURRENCIES, getCurrencyByCountry } from "@/lib/countries-currencies";
+import { uploadFile } from "@/lib/file-api";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/authStore";
+import type { CreateEventRequest, EventCategory } from "@/types/event";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { Loader2, Save } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState, type MouseEvent } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const sanitizeInput = (input: string): string => {
   return input.trim().replace(/[<>"']/g, "");
@@ -127,6 +127,7 @@ export function EventForm({
     formState: { errors },
     setValue,
     watch,
+    setError,
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -287,12 +288,25 @@ export function EventForm({
   };
 
   const onFormSubmit = async (data: EventFormData) => {
+    // Validate dates
+    const startDateTime = new Date(data.startDate);
+    const endDateTime = new Date(data.endDate);
+    
+    if (startDateTime >= endDateTime) {
+      // Set error for end date
+      setError('endDate', {
+        type: 'manual',
+        message: 'End time must be after start time'
+      });
+      return;
+    }
+    
     const submitData: CreateEventRequest = {
       name: data.name,
       description: data.description,
       category: data.category as EventCategory | undefined,
-      startDate: new Date(data.startDate).toISOString(),
-      endDate: new Date(data.endDate).toISOString(),
+      startDate: startDateTime.toISOString(),
+      endDate: endDateTime.toISOString(),
       location: data.location,
       venueName: data.venueName || undefined,
       capacity: data.capacity,
