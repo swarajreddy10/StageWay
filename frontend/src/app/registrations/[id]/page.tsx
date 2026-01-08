@@ -16,7 +16,7 @@ import type { Registration } from "@/types/registration";
 export default function RegistrationDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const registrationId = Number(params.id);
+  const registrationId = Number(params?.id);
   const { isAuthenticated, isHydrated } = useAuthStore();
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [isLoading, setIsLoading] = useState(false);

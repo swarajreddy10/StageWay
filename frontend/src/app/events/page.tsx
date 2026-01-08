@@ -9,7 +9,6 @@ import type { EventFilters } from "@/types/event";
 import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card } from "@/components/ui/card";
 import {
   InputGroup,
   InputGroupAddon,
@@ -76,7 +75,7 @@ export default function EventsPage() {
         className="mb-8"
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4 p-6 rounded-3xl border border-white/40 bg-white/60 backdrop-blur-sm shadow-sm">
         <EventFiltersComponent
           filters={filters}
           sortOrder={sortOrder}
@@ -86,26 +85,29 @@ export default function EventsPage() {
             setPage(0);
           }}
         />
-        <Card className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="min-w-[240px] flex-1">
-              <InputGroup className="rounded-full border-white/70 bg-white/90 px-3">
+        <div className="rounded-2xl border border-white/40 bg-white/60 backdrop-blur-sm p-5">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="min-w-[280px] flex-1">
+              <InputGroup className="rounded-xl border-2 border-[#1E5A55]/20 bg-white shadow-sm hover:border-[#1E5A55]/40 transition-colors">
+                <InputGroupAddon align="inline-start" className="pl-4">
+                  <Search className="h-5 w-5 text-[#1E5A55]" />
+                </InputGroupAddon>
                 <InputGroupInput
                   placeholder="Search events, hosts, or venues..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9"
+                  className="h-11 text-sm font-medium placeholder:text-muted-foreground/60 pl-2"
                 />
-                <InputGroupAddon align="inline-start">
-                  <Search className="h-4 w-4" />
-                </InputGroupAddon>
               </InputGroup>
             </div>
-            <InputGroupText className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
-              {pagination?.totalElements || 0} live events available
-            </InputGroupText>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1E5A55]/10 border border-[#1E5A55]/20">
+              <div className="h-2 w-2 rounded-full bg-[#1E5A55] animate-pulse" />
+              <InputGroupText className="text-xs font-semibold text-[#1E5A55] uppercase tracking-wider">
+                {pagination?.totalElements ? `${pagination.totalElements} Events Live` : 'Discover Events'}
+              </InputGroupText>
+            </div>
           </div>
-        </Card>
+        </div>
         <div className="min-w-0">
           <EventList events={sortedEvents} isLoading={isLoading} />
           {pagination && (

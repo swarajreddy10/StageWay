@@ -2,6 +2,7 @@ package com.eventmanagement.controller;
 
 import com.eventmanagement.dto.AnalyticsOverview;
 import com.eventmanagement.dto.EventAnalytics;
+import com.eventmanagement.dto.HostAnalytics;
 import com.eventmanagement.service.AnalyticsService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,5 +35,13 @@ public class AnalyticsController {
         @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
         return analyticsService.getEventAnalytics(id, authHeader);
+    }
+
+    @GetMapping("/analytics/host")
+    @PreAuthorize("hasRole('HOST')")
+    public HostAnalytics getHostAnalytics(
+        @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        return analyticsService.getHostAnalytics(authHeader);
     }
 }
