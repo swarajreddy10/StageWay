@@ -83,10 +83,6 @@ export const useEventStore = create<EventState>((set) => ({
         events: [event, ...state.events],
         isLoading: false,
       }));
-      
-      // Refresh events list to ensure landing page updates
-      await fetchEventsPage({ page: 0, size: 12 });
-      
       return event;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create event";
@@ -100,15 +96,11 @@ export const useEventStore = create<EventState>((set) => ({
     try {
       const event = await updateEventApi(id, data);
       
-      // Optimistic update - update state immediately
       set((state) => ({
         events: state.events.map((e) => (e.id === id ? event : e)),
         currentEvent: state.currentEvent?.id === id ? event : state.currentEvent,
         isLoading: false,
       }));
-      
-      // Refresh events list to ensure all pages are updated
-      await fetchEventsPage({ page: 0, size: 12 });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update event";
       set({ error: message, isLoading: false });

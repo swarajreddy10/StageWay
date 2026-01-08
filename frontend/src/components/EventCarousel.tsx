@@ -20,7 +20,7 @@ export default function EventCarousel({ events }: EventCarouselProps) {
     return events.map((event, index) => (
       <motion.div
         key={event.id}
-        className="h-full w-full max-w-[300px]"
+        className="h-full w-full min-w-[260px] max-w-[280px] sm:max-w-[300px]"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: index * 0.05 }}
@@ -60,8 +60,8 @@ export default function EventCarousel({ events }: EventCarouselProps) {
   if (!hasEvents) {
     return (
       <div className="card">
-        <h3>No events yet</h3>
-        <p className="meta">Create the first event to light up this space.</p>
+        <h3 className="text-base sm:text-lg">No events yet</h3>
+        <p className="meta text-sm">Create the first event to light up this space.</p>
       </div>
     );
   }
@@ -79,21 +79,21 @@ export default function EventCarousel({ events }: EventCarouselProps) {
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
           aria-label="Scroll events left"
           onClick={() => scrollBy(-1)}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
           aria-label="Scroll events right"
           onClick={() => scrollBy(1)}
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
       <div className="carousel-track" ref={trackRef}>

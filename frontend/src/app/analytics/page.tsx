@@ -3,18 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
-import { fetchEventAnalytics } from "@/lib/analytics-api";
-import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { fetchHostAnalytics } from "@/lib/analytics-api";
+import { HostAnalyticsDashboard } from "@/components/analytics/HostAnalyticsDashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import type { EventAnalytics } from "@/types/analytics";
+import type { HostAnalytics } from "@/types/analytics";
 
 export default function AnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, isHydrated, user } = useAuthStore();
-  const [analytics, setAnalytics] = useState<EventAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<HostAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [eventId] = useState<number | null>(null);
   const isHost = user?.role === "HOST";
   const isAdmin = user?.role === "ADMIN";
 
@@ -36,12 +35,12 @@ export default function AnalyticsPage() {
   }, [isAuthenticated, isHydrated, isHost, isAdmin, router]);
 
   useEffect(() => {
-    const fetchAnalytics = async (id: number) => {
-      if (!isAuthenticated) return;
+    const loadAnalytics = async () => {
+      if (!isAuthenticated || !isHost) return;
 
       setIsLoading(true);
       try {
-        const data = await fetchEventAnalytics(id);
+        const data = await fetchHostAnalytics();
         setAnalytics(data);
       } catch (error) {
         console.error("Failed to fetch analytics:", error);
@@ -50,10 +49,10 @@ export default function AnalyticsPage() {
       }
     };
 
-    if (isAuthenticated && eventId) {
-      fetchAnalytics(eventId);
+    if (isAuthenticated && isHost) {
+      loadAnalytics();
     }
-  }, [isAuthenticated, eventId]);
+  }, [isAuthenticated, isHost]);
 
   if (!isHydrated) {
     return (
@@ -81,7 +80,7 @@ export default function AnalyticsPage() {
         <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
-              Select an event to view analytics. Analytics will be available once you have events
+              Create events to view analytics. Analytics will be available once you have events
               with registrations.
             </p>
           </CardContent>
@@ -95,13 +94,13 @@ export default function AnalyticsPage() {
       <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-8 shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
         <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#1E5A55]/15 blur-3xl" />
         <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-[#D8573B]/15 blur-3xl" />
-        <h1 className="font-display text-3xl font-bold">Event Analytics</h1>
+        <h1 className="font-display text-3xl font-bold">Host Analytics</h1>
         <p className="mt-2 text-muted-foreground">
-          Track your event performance and attendee insights at a glance.
+          Comprehensive insights into your events performance and audience engagement.
         </p>
       </div>
 
-      <AnalyticsDashboard analytics={analytics} />
+      <HostAnalyticsDashboard analytics={analytics} />
     </main>
   );
 }

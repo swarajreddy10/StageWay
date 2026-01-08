@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export default function EventEditPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = Number(params.id);
+  const eventId = Number(params?.id);
   const { user, isAuthenticated, isHydrated } = useAuthStore();
   const { currentEvent, isLoading, fetchEvent, updateEvent } = useEvents();
   const isHost = user?.role === "HOST";

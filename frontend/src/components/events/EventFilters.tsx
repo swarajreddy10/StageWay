@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -138,13 +137,13 @@ export function EventFiltersComponent({
   };
 
   return (
-    <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 pb-4">
-        <div className="flex items-center gap-3">
-          <CardTitle className="text-lg font-semibold">Filters</CardTitle>
+    <div className="space-y-3 p-4 rounded-2xl border border-white/40 bg-white/60 backdrop-blur-sm">
+      <div className="flex flex-row items-center justify-between gap-2 pb-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Filters</h3>
           {hasActiveFilters && (
-            <Badge variant="outline" className="border-white/70 bg-white/70">
-              {activeFilters.length} active
+            <Badge variant="outline" className="border-white/70 bg-white/70 text-xs px-1.5 py-0">
+              {activeFilters.length}
             </Badge>
           )}
         </div>
@@ -153,18 +152,18 @@ export function EventFiltersComponent({
             variant="outline"
             size="sm"
             onClick={clearFilters}
-            className="border-white/70 bg-white/70 hover:bg-white"
+            className="border-white/70 bg-white/70 hover:bg-white h-7 text-xs px-2"
           >
-            <X className="mr-2 h-4 w-4" />
-            Clear all
+            <X className="mr-1 h-3 w-3" />
+            Clear
           </Button>
         )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-medium">
+      </div>
+      <div className="space-y-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex-1 min-w-[140px] space-y-1">
+              <Label htmlFor="category" className="text-xs font-medium">
                 Category
               </Label>
               <Select
@@ -175,11 +174,11 @@ export function EventFiltersComponent({
                   handleSubmit(onSubmit)();
                 }}
               >
-                <SelectTrigger className="bg-white/90">
-                  <SelectValue placeholder="All categories" />
+                <SelectTrigger className="bg-white/90 h-8 text-xs">
+                  <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">All categories</SelectItem>
+                  <SelectItem value="ALL">All</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -189,45 +188,25 @@ export function EventFiltersComponent({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-sm font-medium">
+            <div className="flex-1 min-w-[140px] space-y-1">
+              <Label htmlFor="location" className="text-xs font-medium">
                 Location
               </Label>
               <Input
                 id="location"
-                placeholder="City or venue"
+                placeholder="City"
                 {...register("location")}
                 onChange={(e) => {
                   register("location").onChange(e);
                   debouncedSubmit();
                 }}
-                className="bg-white/90"
+                className="bg-white/90 h-8 text-xs"
               />
             </div>
 
-            {onSortChange && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Sort by</Label>
-                <Select value={sortOrder} onValueChange={onSortChange}>
-                  <SelectTrigger className="bg-white/90">
-                    <SelectValue placeholder="Soonest first" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="soonest">Soonest first</SelectItem>
-                    <SelectItem value="latest">Latest first</SelectItem>
-                    <SelectItem value="price-low">Lowest price</SelectItem>
-                    <SelectItem value="price-high">Highest price</SelectItem>
-                    <SelectItem value="seats">Most seats left</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Date range</Label>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="flex-[1.5] min-w-[200px] space-y-1">
+              <Label className="text-xs font-medium">Date Range</Label>
+              <div className="flex gap-1">
                 <input type="hidden" {...register("dateFrom")} />
                 <input type="hidden" {...register("dateTo")} />
                 <Popover>
@@ -235,13 +214,14 @@ export function EventFiltersComponent({
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       className={cn(
-                        "justify-between border-white/70 bg-white/90 font-normal hover:bg-white",
+                        "flex-1 justify-between border-white/70 bg-white/90 font-normal hover:bg-white h-8 text-xs px-2",
                         dateFrom && "text-foreground"
                       )}
                     >
-                      <span>{formattedFrom}</span>
-                      <ChevronDownIcon className="h-4 w-4" />
+                      <span className="truncate">{formattedFrom}</span>
+                      <ChevronDownIcon className="h-3 w-3 ml-1 shrink-0" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -260,13 +240,14 @@ export function EventFiltersComponent({
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       className={cn(
-                        "justify-between border-white/70 bg-white/90 font-normal hover:bg-white",
+                        "flex-1 justify-between border-white/70 bg-white/90 font-normal hover:bg-white h-8 text-xs px-2",
                         dateTo && "text-foreground"
                       )}
                     >
-                      <span>{formattedTo}</span>
-                      <ChevronDownIcon className="h-4 w-4" />
+                      <span className="truncate">{formattedTo}</span>
+                      <ChevronDownIcon className="h-3 w-3 ml-1 shrink-0" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -283,47 +264,58 @@ export function EventFiltersComponent({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Price range</Label>
-              <div className="rounded-xl border border-white/70 bg-white/90 p-4">
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                  <span>₹0</span>
-                  <span className="font-medium text-foreground">
-                    {maxPriceValue === 10000
-                      ? "₹10,000+"
-                      : `₹${maxPriceValue.toLocaleString("en-IN")}`}
-                  </span>
-                </div>
-                <input
-                  id="priceMax"
-                  type="range"
-                  min={0}
-                  max={10000}
-                  step={100}
-                  value={maxPriceValue}
-                  onChange={(e) => handlePriceChange(Number(e.target.value))}
-                  className="w-full h-2 cursor-pointer accent-[#1E5A55]"
-                  aria-label="Maximum price"
-                />
-              </div>
+            <div className="flex-1 min-w-[160px] space-y-1">
+              <Label className="text-xs font-medium">Price (Max ₹{maxPriceValue === 10000 ? "10k+" : `${(maxPriceValue / 1000).toFixed(0)}k`})</Label>
+              <input
+                id="priceMax"
+                type="range"
+                min={0}
+                max={10000}
+                step={100}
+                value={maxPriceValue}
+                onChange={(e) => handlePriceChange(Number(e.target.value))}
+                className="w-full h-8 cursor-pointer accent-[#1E5A55]"
+                aria-label="Maximum price"
+              />
             </div>
 
-            <div className="flex items-center space-x-2 pt-8">
-              <Switch
-                id="isFree"
-                checked={!!isFree}
-                onCheckedChange={(checked) => {
-                  setValue("isFree", checked || undefined);
-                  handleSubmit(onSubmit)();
-                }}
-              />
-              <Label htmlFor="isFree" className="text-sm font-medium cursor-pointer">
-                Free only
-              </Label>
+            {onSortChange && (
+              <div className="flex-1 min-w-[120px] space-y-1">
+                <Label className="text-xs font-medium">Sort</Label>
+                <Select value={sortOrder} onValueChange={onSortChange}>
+                  <SelectTrigger className="bg-white/90 h-8 text-xs">
+                    <SelectValue placeholder="Soonest" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="soonest">Soonest</SelectItem>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="price-low">Low price</SelectItem>
+                    <SelectItem value="price-high">High price</SelectItem>
+                    <SelectItem value="seats">Most seats</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex items-end h-8">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isFree"
+                  checked={!!isFree}
+                  onCheckedChange={(checked) => {
+                    setValue("isFree", checked || undefined);
+                    handleSubmit(onSubmit)();
+                  }}
+                  className="scale-75"
+                />
+                <Label htmlFor="isFree" className="text-xs font-medium cursor-pointer whitespace-nowrap">
+                  Free only
+                </Label>
+              </div>
             </div>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

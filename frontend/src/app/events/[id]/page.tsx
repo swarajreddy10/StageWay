@@ -21,7 +21,7 @@ import { checkInRegistration } from "@/lib/registration-api";
 
 export default function EventDetailPage() {
   const params = useParams();
-  const eventId = Number(params.id);
+  const eventId = Number(params?.id);
   const { isAuthenticated, user } = useAuthStore();
   const { currentEvent, isLoading: eventLoading, fetchEvent } = useEvents();
   const { registerForEvent, isLoading: registrationLoading } = useRegistrations();

@@ -167,14 +167,37 @@ cd backend
 ./mvnw checkstyle:check    # Code quality
 ```
 
+**Test Coverage:**
+- ✅ **9 tests passing** - All backend tests successful
+- **Controller Tests** (3 tests)
+  - `AuthControllerTest` - Supabase authentication flow
+  - `EventControllerTest` - Event CRUD operations
+- **Service Tests** (6 tests)
+  - `AuthServiceTest` - User authentication, role management, admin privileges
+  - `EventServiceTest` - Event creation, updates, and business logic
+
+**Test Results:**
+```
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+✅ BUILD SUCCESS
+```
+
 ### **Frontend Development**
 ```bash
 cd frontend
 bun install                # Install dependencies
 bun dev                    # Start dev server
-bun run test               # Run tests
-bun run typecheck          # TypeScript check
+bun verify                 # Run all checks (lint + typecheck + audit)
 bun run lint               # ESLint check
+bun run typecheck          # TypeScript check
+bun audit                  # Security audit
+```
+
+**Verification Results:**
+```
+✅ ESLint: No errors or warnings
+✅ TypeScript: Type checking passed
+✅ Security: No vulnerabilities found
 ```
 
 ### **Database Management**

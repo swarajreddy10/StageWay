@@ -239,10 +239,6 @@ export function EventForm({
   };
 
   const onFormSubmit = async (data: EventFormData) => {
-    // Prevent default scroll behavior
-    const scrollPosition = window.scrollY;
-    
-    // Validate dates
     const startDateTime = new Date(data.startDate);
     const endDateTime = new Date(data.endDate);
     
@@ -277,9 +273,6 @@ export function EventForm({
     
     await onSubmit(submitData);
     setHasUnsavedChanges(false);
-    
-    // Restore scroll position
-    window.scrollTo(0, scrollPosition);
   };
 
   return (

@@ -22,34 +22,34 @@ function formatDate(value: string) {
 
 const experiencePillars = [
   {
-    title: "Plan with clarity",
-    description: "Shape lineups, schedules, and guest flow in minutes.",
+    title: "Event Creation",
+    description: "Build professional event pages with custom branding and ticketing in minutes.",
     icon: Calendar,
   },
   {
-    title: "Audience intelligence",
-    description: "Track demand and keep momentum high.",
+    title: "Analytics Dashboard",
+    description: "Track registrations, revenue, and engagement with real-time insights.",
     icon: ChartLine,
   },
   {
-    title: "Check-in, reimagined",
-    description: "Fast entry, happy guests, no bottlenecks.",
-    icon: Sparkles,
+    title: "QR Check-In",
+    description: "Seamless entry with QR code scanning and instant attendee verification.",
+    icon: CheckCircle2,
   },
 ];
 
 const flowSteps = [
   {
-    title: "Draft your experience",
-    description: "Dates, pricing, and a polished page.",
+    title: "Create Your Event",
+    description: "Set dates, pricing, capacity, and upload event banners.",
   },
   {
-    title: "Publish with confidence",
-    description: "Launch fast and stay flexible.",
+    title: "Manage Registrations",
+    description: "Accept registrations, handle waitlists, and send confirmations.",
   },
   {
-    title: "Track the room",
-    description: "See registrations and check-ins live.",
+    title: "Track Performance",
+    description: "Monitor check-ins, revenue, and attendee engagement in real-time.",
   },
 ];
 
@@ -83,26 +83,26 @@ export default async function HomePage() {
         nextEventLabel={nextEventLabel}
       />
 
-      <section className="relative py-12 md:py-16">
-        <div className="absolute inset-0 bg-white/60" />
+      <section className="relative py-12 md:py-16 lg:py-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/40" />
         <div className="container relative px-4 md:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-2">
-              <Badge className="bg-white/80 text-foreground border border-white/70">
-                Live right now
+              <Badge className="border-[#1E5A55]/20 bg-[#1E5A55]/10 text-[#1E5A55] font-semibold">
+                Featured Events
               </Badge>
-              <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-                Tonight&apos;s headline moments
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
+                Discover Upcoming Events
               </h2>
-              <p className="text-muted-foreground">Curated picks across the city.</p>
+              <p className="text-base text-muted-foreground">Browse and register for events happening near you.</p>
             </div>
             <Button
               variant="outline"
               asChild
-              className="border-white/70 bg-white/70 hover:bg-white"
+              className="border-2 border-[#1E5A55]/20 bg-white hover:bg-[#1E5A55]/5 font-semibold"
             >
               <Link href="/events">
-                Explore all
+                View All Events
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -111,30 +111,30 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="py-12 md:py-16">
+      <section className="py-12 md:py-16 lg:py-20">
         <div className="container px-4 md:px-8">
           <div className="mb-10 max-w-3xl space-y-3">
-            <Badge className="bg-white/80 text-foreground border border-white/70">
-              The StageWay edge
+            <Badge className="border-[#D8573B]/20 bg-[#D8573B]/10 text-[#D8573B] font-semibold">
+              Platform Features
             </Badge>
-            <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-              A live events studio, built in.
+            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
+              Everything You Need to Run Events
             </h2>
-            <p className="text-muted-foreground">Everything you need to move faster.</p>
+            <p className="text-base text-muted-foreground">Professional tools for event management, registration, and analytics.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {experiencePillars.map((pillar) => (
               <Card
                 key={pillar.title}
-                className="rounded-3xl border border-white/70 bg-white/80 shadow-sm"
+                className="border-2 border-[#1E5A55]/10 bg-gradient-to-br from-white to-[#1E5A55]/5 shadow-lg hover:shadow-xl transition-shadow"
               >
-                <CardHeader className="space-y-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80">
-                    <pillar.icon className="h-5 w-5 text-foreground" />
+                <CardHeader className="space-y-3 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1E5A55]/10">
+                    <pillar.icon className="h-6 w-6 text-[#1E5A55]" />
                   </div>
-                  <CardTitle className="text-xl">{pillar.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold">{pillar.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
+                <CardContent className="text-base text-muted-foreground p-6 pt-0">
                   {pillar.description}
                 </CardContent>
               </Card>
@@ -143,61 +143,61 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="py-12 md:py-16">
+      <section className="py-12 md:py-16 lg:py-20">
         <div className="container px-4 md:px-8">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-6">
-              <Badge className="bg-white/80 text-foreground border border-white/70">
-                End-to-end flow
+              <Badge className="border-[#1E5A55]/20 bg-[#1E5A55]/10 text-[#1E5A55] font-semibold">
+                How It Works
               </Badge>
-              <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-                From idea to check-in.
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
+                Simple Event Management Workflow
               </h2>
-              <p className="text-muted-foreground">A tight flow for every team.</p>
+              <p className="text-base text-muted-foreground">From creation to analytics in three easy steps.</p>
               <div className="grid gap-4">
                 {flowSteps.map((step, index) => (
                   <div
                     key={step.title}
-                    className="flex gap-4 rounded-2xl border border-white/70 bg-white/80 p-4"
+                    className="flex gap-4 rounded-xl border-2 border-[#1E5A55]/10 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-muted-foreground">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1E5A55] text-sm font-bold text-white">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-semibold">{step.title}</p>
-                      <p className="text-sm text-muted-foreground">{step.description}</p>
+                      <p className="font-bold text-base">{step.title}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-              <CardHeader>
-                <CardTitle className="text-2xl">Stage pulse</CardTitle>
-                <p className="text-sm text-muted-foreground">Live signals across the room.</p>
+            <Card className="border-2 border-[#D8573B]/10 bg-gradient-to-br from-white to-[#D8573B]/5 shadow-xl">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl font-bold">Platform Insights</CardTitle>
+                <p className="text-base text-muted-foreground">Real-time event performance metrics.</p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold">Attendance readiness</span>
-                    <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+              <CardContent className="space-y-4 p-6 pt-0">
+                <div className="grid gap-3 rounded-xl border-2 border-[#1E5A55]/10 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm">Check-In Rate</span>
+                    <span className="text-sm font-bold text-[#1E5A55]">
                       92%
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted/70">
-                    <div className="h-full w-[92%] bg-[#1E5A55]" />
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full w-[92%] bg-[#1E5A55] rounded-full" />
                   </div>
                 </div>
-                <div className="grid gap-3 rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold">Registrations this week</span>
-                    <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                <div className="grid gap-3 rounded-xl border-2 border-[#D8573B]/10 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm">Registration Growth</span>
+                    <span className="text-sm font-bold text-[#D8573B]">
                       +24%
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-foreground" />
-                    Momentum is climbing across cities.
+                    <CheckCircle2 className="h-4 w-4 text-[#D8573B]" />
+                    Strong momentum this week
                   </div>
                 </div>
                 <Button
@@ -212,10 +212,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="py-12 md:py-16">
+      <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="container px-4 md:px-8">
           <Tabs defaultValue="attendee" className="space-y-6">
-            <TabsList className="flex w-full flex-wrap justify-start gap-2 border border-white/70 bg-white/70">
+            <TabsList className="flex w-full flex-wrap justify-start gap-2 border-2 border-gray-200 bg-white p-1">
               <TabsTrigger value="attendee" className="gap-2">
                 <Users2 className="h-4 w-4" />
                 Attendee mode
@@ -310,7 +310,7 @@ export default async function HomePage() {
                     </div>
                     <Button
                       asChild
-                      className="w-full bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
+                      className="w-full bg-[#d69b6d] text-white shadow-lg hover:bg-[#261d10]"
                     >
                       <Link href="/auth/signin">Sign in to host</Link>
                     </Button>
@@ -324,18 +324,18 @@ export default async function HomePage() {
 
       <section className="py-12 md:py-16">
         <div className="container px-4 md:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-10 shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#1E5A55]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[#D8573B]/20 blur-3xl" />
-            <div className="flex flex-col items-center gap-6 text-center">
-              <Badge className="bg-white/80 text-foreground border border-white/70">
-                Ready to launch
+          <div className="relative overflow-hidden rounded-2xl border-2 border-[#1E5A55]/20 bg-gradient-to-br from-[#1E5A55]/5 to-[#D8573B]/5 p-10 md:p-16 shadow-2xl">
+            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#1E5A55]/30 blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[#D8573B]/30 blur-3xl" />
+            <div className="flex flex-col items-center gap-6 text-center relative">
+              <Badge className="border-[#1E5A55]/20 bg-white text-[#1E5A55] font-bold text-sm px-4 py-1.5">
+                Get Started Today
               </Badge>
-              <h2 className="font-display text-3xl font-semibold md:text-4xl">
-                Your next live event deserves a flagship experience.
+              <h2 className="text-3xl font-semibold md:text-4xl lg:text-5xl max-w-3xl">
+                Start Managing Professional Events
               </h2>
-              <p className="text-muted-foreground max-w-2xl">
-                Registration, check-in, and insights—built to feel premium.
+              <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
+                Join event organizers using StageWay for seamless event management.
               </p>
               <Button
                 size="lg"

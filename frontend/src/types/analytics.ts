@@ -30,6 +30,51 @@ export type AnalyticsOverview = {
   checkedInRegistrations: number;
 };
 
+export type HostAnalytics = {
+  overview: AnalyticsOverview;
+  topEvents: EventPerformance[];
+  categoryBreakdown: CategoryStats[];
+  revenueTimeline: RevenuePoint[];
+  registrationStatus: StatusDistribution[];
+  engagement: EngagementMetrics;
+};
+
+export type EventPerformance = {
+  eventId: number;
+  eventName: string;
+  registrations: number;
+  checkedIn: number;
+  checkInRate: number;
+  revenue: number;
+  currency: string;
+};
+
+export type CategoryStats = {
+  category: string;
+  eventCount: number;
+  totalRegistrations: number;
+  avgCheckInRate: number;
+};
+
+export type RevenuePoint = {
+  month: string;
+  revenue: number;
+  registrations: number;
+};
+
+export type StatusDistribution = {
+  status: string;
+  count: number;
+  percentage: number;
+};
+
+export type EngagementMetrics = {
+  avgRegistrationsPerEvent: number;
+  avgCheckInRate: number;
+  cancellationRate: number;
+  peakRegistrationHour: number;
+};
+
 export type PlatformAnalytics = {
   totalEvents: number;
   totalRegistrations: number;
