@@ -14,22 +14,22 @@ export default function SignInPage() {
             <Sparkles className="mr-2 h-3 w-3" />
             StageWay Access
           </Badge>
-          <h1 className="font-display text-4xl font-bold">Welcome back to the backstage.</h1>
+          <h1 className="font-display text-4xl font-bold">Welcome back to StageWay.</h1>
           <p className="text-muted-foreground">
-            Manage your event lineup, check registrations in real time, and keep the crowd in sync.
+            Discover amazing events, register instantly, and manage your event journey all in one place.
           </p>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Secure sign-in with flexible access options
+              Browse and register for events instantly
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Live check-in dashboard access
+              Get QR codes for seamless check-in
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Personalized event recommendations
+              Track your registrations and event history
             </div>
           </div>
         </div>

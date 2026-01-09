@@ -28,28 +28,41 @@ class ApiClient {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers,
-      credentials: fetchOptions.credentials ?? "omit",
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
-    if (!response.ok) {
-      const error: ApiError = await response.json().catch(() => ({
-        message: response.statusText,
-        statusCode: response.status,
-      }));
-      const errorMessage = error.message || response.statusText;
-      throw new Error(errorMessage);
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+        credentials: fetchOptions.credentials ?? "omit",
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error: ApiError = await response.json().catch(() => ({
+          message: response.statusText,
+          statusCode: response.status,
+        }));
+        const errorMessage = error.message || response.statusText;
+        throw new Error(errorMessage);
+      }
+
+      // Handle empty responses
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        return {} as T;
+      }
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout - backend may be starting up, please try again');
+      }
+      throw error;
     }
-
-    // Handle empty responses
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return {} as T;
-    }
-
-    return response.json();
   }
 
   private async getToken(): Promise<string | null> {
