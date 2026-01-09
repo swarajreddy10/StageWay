@@ -39,8 +39,9 @@ export default function Footer() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="font-display text-2xl font-semibold uppercase tracking-[0.3em] text-foreground">
-                StageWay
+              <span className="text-2xl font-bold">
+                <span className="text-[#D8573B]">Stage</span>
+                <span className="text-black">Way</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">

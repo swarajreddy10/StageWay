@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, User, LogOut, Calendar, Plus, QrCode, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 export default function NavBar() {
   const router = useRouter();
-  const { user, isAuthenticated, isHydrated, logout } = useAuthStore();
+  const { user, isAuthenticated, isHydrated, logout, notice, clearNotice } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const showUser = isHydrated && isAuthenticated && user;
   const userProfile = showUser ? user : null;
@@ -30,6 +30,13 @@ export default function NavBar() {
   const canCreate = isHost;
   const dashboardHref = isAdmin ? "/admin/host-requests" : isHost ? "/host" : "/dashboard";
   const dashboardLabel = isAdmin ? "Admin" : "Dashboard";
+
+  useEffect(() => {
+    if (notice) {
+      toast.info(notice, { duration: 5000 });
+      clearNotice();
+    }
+  }, [notice, clearNotice]);
 
   const brandMark = (
     <Link href="/" className="group flex items-center">

@@ -91,17 +91,28 @@ export function RegisterForm() {
   const passwordStrength = getPasswordStrength(passwordValue);
 
   return (
-    <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/70 bg-white/80 p-8 shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
-      <div className="space-y-2 text-center">
+    <div className="w-full max-w-md space-y-4 rounded-3xl border border-white/70 bg-white/80 p-6 shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
+      <div className="space-y-1 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
           New here?
         </p>
         <h1 className="font-display text-3xl font-bold">Create your StageWay.</h1>
-        <p className="text-muted-foreground">Enter your information to get started.</p>
+        <p className="text-sm text-muted-foreground">Sign up to get started.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
+      <OAuthButtons />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white/90 px-2 text-muted-foreground">or</span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="space-y-1.5">
           <Label htmlFor="fullName">Full Name</Label>
           <Input
             id="fullName"
@@ -110,10 +121,10 @@ export function RegisterForm() {
             {...register("fullName")}
             disabled={isLoading}
           />
-          {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
+          {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -122,10 +133,10 @@ export function RegisterForm() {
             {...register("email")}
             disabled={isLoading}
           />
-          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="password">Password</Label>
           <Input
             id="password"
@@ -137,8 +148,8 @@ export function RegisterForm() {
             disabled={isLoading}
           />
           {passwordValue && (
-            <div className="space-y-1">
-              <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            <div className="space-y-0.5">
+              <div className="flex h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
                   className={`h-full transition-all ${
                     passwordStrength.strength <= 2
@@ -154,10 +165,10 @@ export function RegisterForm() {
               </p>
             </div>
           )}
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
           <Input
             id="confirmPassword"
@@ -167,17 +178,17 @@ export function RegisterForm() {
             disabled={isLoading}
           />
           {errors.confirmPassword && (
-            <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+            <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
           )}
         </div>
 
         {(error || localError) && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
             {error || localError}
           </div>
         )}
         {notice && !error && !localError && (
-          <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</div>
+          <div className="rounded-md bg-emerald-50 p-2 text-xs text-emerald-700">{notice}</div>
         )}
 
         <Button
@@ -196,18 +207,7 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white/90 px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-
-      <OAuthButtons />
-
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <a href="/auth/signin" className="text-primary hover:underline">
           Sign in
