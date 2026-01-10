@@ -1,5 +1,5 @@
 
-# 🎭 StageWay - Event Management Platform
+# 🎫 StageWay - Event Management Platform
 
 A modern full-stack platform for creating, managing, and attending events with seamless registration and QR code check-in functionality.
 
