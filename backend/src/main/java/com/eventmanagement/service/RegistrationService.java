@@ -47,7 +47,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -62,7 +62,7 @@ public class RegistrationService {
     private final RegistrationRepository registrationRepository;
     private final AuthService authService;
     private final SeatService seatService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RegistrationUpdatePublisher registrationUpdatePublisher;
     private final String qrSecret;
     private final Duration qrTtl;
 
@@ -72,7 +72,7 @@ public class RegistrationService {
         RegistrationRepository registrationRepository,
         AuthService authService,
         SeatService seatService,
-        SimpMessagingTemplate messagingTemplate,
+        RegistrationUpdatePublisher registrationUpdatePublisher,
         @Value("${app.qr.secret}") String qrSecret,
         @Value("${app.qr.ttl:PT48H}") Duration qrTtl
     ) {
@@ -81,7 +81,7 @@ public class RegistrationService {
         this.registrationRepository = registrationRepository;
         this.authService = authService;
         this.seatService = seatService;
-        this.messagingTemplate = messagingTemplate;
+        this.registrationUpdatePublisher = registrationUpdatePublisher;
         this.qrSecret = qrSecret;
         this.qrTtl = qrTtl == null ? Duration.ofHours(48) : qrTtl;
     }
@@ -157,7 +157,7 @@ public class RegistrationService {
 
         Registration saved;
         try {
-            saved = registrationRepository.save(registration);
+            saved = saveRegistration(registration);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Selected seat is already taken.");
         }
@@ -214,7 +214,7 @@ public class RegistrationService {
         }
 
         registration.setStatus("CANCELLED");
-        Registration saved = registrationRepository.save(registration);
+        Registration saved = saveRegistration(registration);
         eventRepository.findById(saved.getEventId()).ifPresent(this::publishRegistrationUpdate);
     }
 
@@ -231,7 +231,7 @@ public class RegistrationService {
         registration.setCheckedInAt(OffsetDateTime.now(ZoneOffset.UTC));
         registration.setCheckedInBy(userId);
         registration.setStatus("CHECKED_IN");
-        Registration saved = registrationRepository.save(registration);
+        Registration saved = saveRegistration(registration);
         eventRepository.findById(saved.getEventId()).ifPresent(this::publishRegistrationUpdate);
         return saved;
     }
@@ -344,7 +344,7 @@ public class RegistrationService {
         registration.setUserId(attendee.getId());
         registration.setStatus("WAITLISTED");
         registration.setWaitlistPosition((int) position);
-        Registration saved = registrationRepository.save(registration);
+        Registration saved = saveRegistration(registration);
         publishRegistrationUpdate(event);
 
         return buildWaitlistResponse(saved, event, position);
@@ -554,23 +554,20 @@ public class RegistrationService {
         if (event.getId() == null) {
             return;
         }
-        long confirmedCount = registrationRepository.countByEventIdAndStatusIn(
-            event.getId(),
-            seatService.confirmedStatuses()
-        );
-        long waitlistCount = registrationRepository.countByEventIdAndStatusIn(
-            event.getId(),
-            Arrays.asList("WAITLISTED")
-        );
-        long availableSeats = seatService.buildSeatAvailability(event).availableSeats();
-        RegistrationUpdate update = new RegistrationUpdate(
-            event.getId(),
-            confirmedCount,
-            waitlistCount,
-            availableSeats,
-            OffsetDateTime.now(ZoneOffset.UTC)
-        );
-        messagingTemplate.convertAndSend("/topic/events/" + event.getId() + "/registrations", update);
+        seatService.evictSeatAvailability(event.getId());
+        registrationUpdatePublisher.publish(event);
+    }
+
+    private Registration saveRegistration(Registration registration) {
+        try {
+            return registrationRepository.save(registration);
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Registration was modified concurrently. Please retry the action.",
+                ex
+            );
+        }
     }
 
     private byte[] buildQrPng(String value) throws WriterException, IOException {

@@ -25,9 +25,9 @@ interface AuthState {
 }
 
 const clearLegacyTokens = () => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem("token");
-  sessionStorage.removeItem("token");
+  if (typeof globalThis.localStorage === "undefined") return;
+  globalThis.localStorage.removeItem("token");
+  globalThis.sessionStorage.removeItem("token");
 };
 
 const syncSupabaseSession = async (accessToken: string): Promise<AuthResponse> => {
@@ -159,15 +159,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   hydrateUser: async () => {
     set({ isHydrated: true });
-    const startTime = Date.now();
     try {
       const response = await apiClient.get<User>(API_ROUTES.auth.user);
       set({ user: response, isAuthenticated: true });
-    } catch (error) {
-      const elapsed = Date.now() - startTime;
-      if (elapsed > 5000 && error instanceof Error && error.message.includes('timeout')) {
-        set({ notice: 'Backend is starting up, this may take a moment...' });
-      }
+    } catch {
       set({ user: null, token: null, isAuthenticated: false });
     }
   },

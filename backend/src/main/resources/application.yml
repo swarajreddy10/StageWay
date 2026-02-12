@@ -1,8 +1,14 @@
 server:
   port: ${PORT:8081}
+  http2:
+    enabled: true
   tomcat:
     max-swallow-size: 20MB
     max-http-form-post-size: 20MB
+    keep-alive-timeout: 60000
+    max-connections: 1000
+    max-threads: 200
+    min-spare-threads: 20
   max-http-header-size: 20MB
 
 spring:
@@ -23,35 +29,21 @@ spring:
   
   # Database Configuration
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 60000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-  
-  # JPA Configuration - Let Flyway handle schema
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     show-sql: false
-    open-in-view: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-  
-  # Flyway Configuration
+    database-platform: org.hibernate.dialect.H2Dialect
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-    clean-disabled: ${FLYWAY_CLEAN_DISABLED:true}
-  
+    enabled: false
+
 # Application Configuration
 app:
   cors:
@@ -67,11 +59,12 @@ app:
 
 # Supabase Configuration
 supabase:
-  url: ${SUPABASE_URL:}
-  anon-key: ${SUPABASE_ANON_KEY:}
-  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+  url: https://demo.supabase.co
+  anon-key: demo-anon-key
+  service-role-key: demo-service-role-key
+  jwt-secret: demo-jwt-secret
   storage:
-    bucket: ${SUPABASE_STORAGE_BUCKET:}
+    bucket: demo-bucket
 
 # Logging Configuration
 logging:

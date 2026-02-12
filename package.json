@@ -1,0 +1,14 @@
+{
+  "name": "stageway-testsprite",
+  "version": "1.0.0",
+  "description": "TestSprite MCP integration for StageWay event management platform",
+  "scripts": {
+    "test:ai": "testsprite run --config testsprite.config.json",
+    "test:setup": "testsprite setup",
+    "test:watch": "testsprite watch"
+  },
+  "devDependencies": {
+    "@testsprite/mcp-server": "^1.0.0",
+    "@testsprite/cli": "^1.0.0"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "project": {
+    "name": "StageWay Event Management",
+    "url": "http://localhost:3000",
+    "api_base": "http://localhost:8081/api"
+  },
+  "test_scenarios": [
+    {
+      "name": "User Registration Flow",
+      "priority": "critical",
+      "steps": [
+        "Navigate to signup page",
+        "Fill registration form",
+        "Verify email confirmation",
+        "Login with new credentials"
+      ]
+    },
+    {
+      "name": "Event Creation Flow", 
+      "priority": "critical",
+      "steps": [
+        "Login as host user",
+        "Navigate to create event",
+        "Fill event details form",
+        "Set capacity and pricing",
+        "Publish event",
+        "Verify event appears in listings"
+      ]
+    },
+    {
+      "name": "Event Registration Flow",
+      "priority": "critical", 
+      "steps": [
+        "Browse available events",
+        "Select event to register",
+        "Fill attendee information",
+        "Complete registration",
+        "Receive QR code confirmation"
+      ]
+    },
+    {
+      "name": "QR Check-in Flow",
+      "priority": "high",
+      "steps": [
+        "Login as event host",
+        "Navigate to check-in page", 
+        "Scan attendee QR code",
+        "Verify check-in success",
+        "Update attendee status"
+      ]
+    },
+    {
+      "name": "Load Testing - Concurrent Registrations",
+      "priority": "high",
+      "concurrent_users": 50,
+      "steps": [
+        "Simulate 50 users registering simultaneously",
+        "Verify no connection timeouts",
+        "Check database consistency",
+        "Validate seat allocation accuracy"
+      ]
+    }
+  ],
+  "environments": {
+    "development": {
+      "frontend_url": "http://localhost:3000",
+      "backend_url": "http://localhost:8081"
+    }
+  },
+  "test_data": {
+    "test_users": [
+      {
+        "email": "testhost@example.com",
+        "password": "TestPass123!",
+        "role": "HOST"
+      },
+      {
+        "email": "testuser@example.com", 
+        "password": "TestPass123!",
+        "role": "USER"
+      }
+    ],
+    "test_events": [
+      {
+        "name": "AI Testing Conference 2024",
+        "capacity": 100,
+        "price": 50.00,
+        "currency": "USD"
+      }
+    ]
+  }
+}

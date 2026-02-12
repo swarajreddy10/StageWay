@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -35,6 +36,9 @@ public class Registration {
     private Long checkedInBy;
     @Column(name = "waitlist_position")
     private Integer waitlistPosition;
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version;
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -101,6 +105,12 @@ public class Registration {
     }
     public void setWaitlistPosition(Integer waitlistPosition) {
         this.waitlistPosition = waitlistPosition;
+    }
+    public Integer getVersion() {
+        return version;
+    }
+    public void setVersion(Integer version) {
+        this.version = version;
     }
     public OffsetDateTime getCreatedAt() {
         return createdAt;

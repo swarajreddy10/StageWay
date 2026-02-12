@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { useAuthStore } from "@/stores/authStore";
+import { useBackendStatus, useBackendStatusStore } from "@/hooks/useBackendStatus";
 
 interface AuthContextType {
   session: Session | null;
@@ -20,6 +21,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const hydrateUser = useAuthStore((state) => state.hydrateUser);
+  const backendStatus = useBackendStatusStore((s) => s.status);
+
+  // Start the backend health probe (runs once at app mount)
+  useBackendStatus();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -43,9 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Only hydrate the user from backend after it's confirmed awake
   useEffect(() => {
-    hydrateUser().catch(() => undefined);
-  }, [hydrateUser]);
+    if (backendStatus === "awake") {
+      hydrateUser().catch(() => undefined);
+    }
+  }, [backendStatus, hydrateUser]);
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({

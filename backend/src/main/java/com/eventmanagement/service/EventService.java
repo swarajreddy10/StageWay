@@ -28,9 +28,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @Service
 public class EventService {
@@ -51,6 +54,10 @@ public class EventService {
         this.seatService = seatService;
     }
 
+    @Cacheable(
+        cacheNames = "eventsByFilter",
+        key = "'events:' + (#search ?: 'null') + ':' + (#category ?: 'null') + ':' + (#dateFrom ?: 'null') + ':' + (#dateTo ?: 'null') + ':' + (#location ?: 'null') + ':' + (#priceMin ?: 'null') + ':' + (#priceMax ?: 'null') + ':' + (#isFree ?: 'null') + ':' + #page + ':' + #size"
+    )
     public PagedResponse<EventResponse> getAllEvents(
         String search,
         String category,
@@ -114,6 +121,7 @@ public class EventService {
             .toList();
     }
 
+    @CacheEvict(cacheNames = "eventsByFilter", allEntries = true)
     public EventResponse createEvent(EventRequest request, String authHeader) {
         Long userId = authService.validateAuth(authHeader);
         User organizer = authService.requireOrganizer(userId);
@@ -151,9 +159,11 @@ public class EventService {
         applyPriceUpdate(event, request, true);
 
         Event saved = eventRepository.save(event);
+        seatService.evictSeatAvailability(saved.getId());
         return buildEventResponse(saved, 0);
     }
 
+    @CacheEvict(cacheNames = "eventsByFilter", allEntries = true)
     public EventResponse updateEvent(Long id, EventRequest request, String authHeader) {
         Long userId = authService.validateAuth(authHeader);
         User organizer = authService.requireOrganizer(userId);
@@ -213,7 +223,17 @@ public class EventService {
             event.setTags(resolveTags(request));
         }
 
-        Event saved = eventRepository.save(event);
+        Event saved;
+        try {
+            saved = eventRepository.save(event);
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Event was updated by another transaction, please refresh and retry.",
+                ex
+            );
+        }
+        seatService.evictSeatAvailability(saved.getId());
         long confirmedCount = registrationRepository.countByEventIdAndStatusIn(
             saved.getId(),
             seatService.confirmedStatuses()
@@ -231,6 +251,7 @@ public class EventService {
         return buildEventResponse(event, confirmedCount);
     }
 
+    @CacheEvict(cacheNames = "eventsByFilter", allEntries = true)
     public void deleteEvent(Long id, String authHeader) {
         Long userId = authService.validateAuth(authHeader);
         Event event = eventRepository.findById(id)
@@ -240,6 +261,7 @@ public class EventService {
         requireEventOwnership(organizer, event);
 
         eventRepository.delete(event);
+        seatService.evictSeatAvailability(id);
     }
 
     public SeatAvailability getSeatAvailability(Long id) {
@@ -288,16 +310,10 @@ public class EventService {
     }
 
     private OffsetDateTime resolveEventStart(EventRequest request) {
-        if (request.getStartDate() != null && !request.getStartDate().isBlank()) {
-            return normalizeToUtc(parseDateTime(request.getStartDate()));
-        }
         return normalizeToUtc(request.getStartsAt());
     }
 
     private OffsetDateTime resolveEventEnd(EventRequest request) {
-        if (request.getEndDate() != null && !request.getEndDate().isBlank()) {
-            return normalizeToUtc(parseDateTime(request.getEndDate()));
-        }
         return normalizeToUtc(request.getEndsAt());
     }
 
@@ -349,10 +365,6 @@ public class EventService {
     }
 
     private String resolveBannerUrl(EventRequest request) {
-        String bannerUrl = normalizeOptionalText(request.getBannerUrl());
-        if (bannerUrl != null) {
-            return bannerUrl;
-        }
         return normalizeOptionalText(request.getBannerImageUrl());
     }
 
@@ -390,7 +402,7 @@ public class EventService {
     }
 
     private boolean hasBannerUpdate(EventRequest request) {
-        return request.getBannerUrl() != null || request.getBannerImageUrl() != null;
+        return request.getBannerImageUrl() != null;
     }
 
     private boolean hasPriceUpdate(EventRequest request) {

@@ -50,8 +50,8 @@ class EventServiceTest {
     @Test
     void createEvent_requiresName() {
         EventRequest request = new EventRequest();
-        request.setStartDate("2026-01-12T10:00:00Z");
-        request.setEndDate("2026-01-12T12:00:00Z");
+        request.setStartsAt(OffsetDateTime.parse("2026-01-12T10:00:00Z"));
+        request.setEndsAt(OffsetDateTime.parse("2026-01-12T12:00:00Z"));
 
         when(authService.validateAuth(any())).thenReturn(1L);
         when(authService.requireOrganizer(1L)).thenReturn(new User());
@@ -68,8 +68,8 @@ class EventServiceTest {
     void createEvent_requiresValidDates() {
         EventRequest request = new EventRequest();
         request.setName("Test Event");
-        request.setStartDate("2026-01-12T12:00:00Z");
-        request.setEndDate("2026-01-12T10:00:00Z");
+        request.setStartsAt(OffsetDateTime.parse("2026-01-12T12:00:00Z"));
+        request.setEndsAt(OffsetDateTime.parse("2026-01-12T10:00:00Z"));
 
         when(authService.validateAuth(any())).thenReturn(1L);
         when(authService.requireOrganizer(1L)).thenReturn(new User());
@@ -86,8 +86,8 @@ class EventServiceTest {
     void createEvent_defaultsOrganizerFields() {
         EventRequest request = new EventRequest();
         request.setName("Launch Day");
-        request.setStartDate("2026-01-12T10:00:00Z");
-        request.setEndDate("2026-01-12T12:00:00Z");
+        request.setStartsAt(OffsetDateTime.parse("2026-01-12T10:00:00Z"));
+        request.setEndsAt(OffsetDateTime.parse("2026-01-12T12:00:00Z"));
         request.setCapacity(0);
 
         User organizer = new User();

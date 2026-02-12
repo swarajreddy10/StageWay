@@ -1,4 +1,7 @@
-import { ArrowRight, Calendar, ChartLine, CheckCircle2, Sparkles, Users2 } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { ArrowRight, Calendar, ChartLine, CheckCircle2, Loader2, Sparkles, Users2 } from "lucide-react";
 import Link from "next/link";
 import EventCarousel from "../components/EventCarousel";
 import HappeningCarousel from "../components/HappeningCarousel";
@@ -8,6 +11,8 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { fetchEvents } from "../lib/event-api";
+import { useBackendStatusStore } from "../hooks/useBackendStatus";
+import type { Event } from "@/types/event";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -53,16 +58,23 @@ const flowSteps = [
   },
 ];
 
-export default async function HomePage() {
-  let events = [] as Awaited<ReturnType<typeof fetchEvents>>;
+export default function HomePage() {
+  const backendStatus = useBackendStatusStore((s) => s.status);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  try {
-    events = await fetchEvents();
-  } catch {
-    events = [];
-  }
+  useEffect(() => {
+    if (backendStatus !== "awake" || hasFetched) return;
+    setHasFetched(true);
 
-  const getEventStart = (event: (typeof events)[number]) =>
+    fetchEvents()
+      .then((data) => setEvents(data))
+      .catch(() => setEvents([]))
+      .finally(() => setIsLoadingEvents(false));
+  }, [backendStatus, hasFetched]);
+
+  const getEventStart = (event: Event) =>
     event.startsAt ?? event.startDate ?? event.createdAt;
 
   const sorted = [...events].sort(
@@ -107,7 +119,13 @@ export default async function HomePage() {
               </Link>
             </Button>
           </div>
-          <EventCarousel events={featured.slice(0, 5)} />
+          {isLoadingEvents ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <EventCarousel events={featured.slice(0, 5)} />
+          )}
         </div>
       </section>
 
@@ -255,17 +273,25 @@ export default async function HomePage() {
                     <CardTitle className="text-xl">Popular this week</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm text-muted-foreground">
-                    {featured.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3"
-                      >
-                        <span className="font-semibold text-foreground">{event.name}</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                          {formatDate(getEventStart(event))}
-                        </span>
+                    {isLoadingEvents ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
-                    ))}
+                    ) : featured.length === 0 ? (
+                      <p className="py-4 text-center text-sm text-muted-foreground">Events coming soon</p>
+                    ) : (
+                      featured.slice(0, 3).map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3"
+                        >
+                          <span className="font-semibold text-foreground">{event.name}</span>
+                          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                            {formatDate(getEventStart(event))}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               </div>
