@@ -12,6 +12,7 @@ export function OAuthButtons() {
       provider: "google",
       options: {
         redirectTo,
+        queryParams: { prompt: "select_account" },
       },
     });
 
