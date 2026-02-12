@@ -25,9 +25,9 @@ interface AuthState {
 }
 
 const clearLegacyTokens = () => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem("token");
-  sessionStorage.removeItem("token");
+  if (typeof globalThis.localStorage === "undefined") return;
+  globalThis.localStorage.removeItem("token");
+  globalThis.sessionStorage.removeItem("token");
 };
 
 const syncSupabaseSession = async (accessToken: string): Promise<AuthResponse> => {
