@@ -10,6 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,7 +29,11 @@ public class SeatService {
         return CONFIRMED_STATUSES;
     }
 
+    @Cacheable(cacheNames = "seatAvailability", key = "#event?.id ?: 'null'")
     public SeatAvailability buildSeatAvailability(Event event) {
+        if (event == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event cannot be null");
+        }
         Integer capacity = event.getCapacity();
         if (capacity == null || capacity <= 0) {
             return new SeatAvailability(event.getId(), 0, 0, Arrays.asList());
@@ -80,5 +86,12 @@ public class SeatService {
             nextSeat++;
         }
         return takenSeats;
+    }
+
+    @CacheEvict(cacheNames = "seatAvailability", key = "#eventId")
+    public void evictSeatAvailability(Long eventId) {
+        if (eventId == null) {
+            return;
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.eventmanagement.dto;
 
 import com.eventmanagement.dto.validation.OnCreate;
+import com.eventmanagement.dto.validation.OnUpdate;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -18,8 +19,6 @@ public class EventRequest {
     private String description;
     @Size(max = 120, message = "Category must be at most 120 characters.")
     private String category;
-    private String startDate;
-    private String endDate;
     @Size(max = 500, message = "Location must be at most 500 characters.")
     private String location;
     @Size(max = 200, message = "Venue name must be at most 200 characters.")
@@ -32,8 +31,8 @@ public class EventRequest {
     private Double price;
     @Size(max = 3, message = "Currency must be a 3-letter code.")
     private String currency;
-    @Size(max = 500, message = "Banner URL must be at most 500 characters.")
-    private String bannerUrl;
+    @Size(max = 500, message = "Banner image URL must be at most 500 characters.")
+    private String bannerImageUrl;
     private List<String> tags;
     private OffsetDateTime startsAt;
     private OffsetDateTime endsAt;
@@ -44,8 +43,6 @@ public class EventRequest {
     private String venueAddress;
     @Size(max = 120, message = "City must be at most 120 characters.")
     private String city;
-    @Size(max = 500, message = "Banner image URL must be at most 500 characters.")
-    private String bannerImageUrl;
     @Size(max = 120, message = "Price range must be at most 120 characters.")
     private String priceRange;
     @Size(max = 200, message = "Organizer name must be at most 200 characters.")
@@ -68,18 +65,6 @@ public class EventRequest {
     }
     public void setCategory(String category) {
         this.category = category;
-    }
-    public String getStartDate() {
-        return startDate;
-    }
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
-    }
-    public String getEndDate() {
-        return endDate;
-    }
-    public void setEndDate(String endDate) {
-        this.endDate = endDate;
     }
     public String getLocation() {
         return location;
@@ -110,12 +95,6 @@ public class EventRequest {
     }
     public void setCurrency(String currency) {
         this.currency = currency;
-    }
-    public String getBannerUrl() {
-        return bannerUrl;
-    }
-    public void setBannerUrl(String bannerUrl) {
-        this.bannerUrl = bannerUrl;
     }
     public List<String> getTags() {
         return tags;

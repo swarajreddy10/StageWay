@@ -13,6 +13,23 @@
     <module name="EmptyBlock"/>
     <module name="LeftCurly"/>
     <module name="RightCurly"/>
+    <module name="MethodLength">
+      <property name="max" value="220"/>
+      <property name="skipConstructor" value="true"/>
+    </module>
+    <module name="ParameterName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="MemberName">
+      <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+    </module>
+    <module name="ConstantName"/>
+    <module name="FinalLocalVariable"/>
+    <module name="RegexpMultiline">
+      <property name="format" value="System\\.out\\.print|System\\.err\\.print"/>
+      <property name="message" value="Avoid using System.out/err logging, use the logger instead."/>
+      <property name="ignoreComments" value="true"/>
+    </module>
   </module>
   <module name="LineLength">
     <property name="max" value="120"/>

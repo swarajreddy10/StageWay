@@ -159,15 +159,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   hydrateUser: async () => {
     set({ isHydrated: true });
-    const startTime = Date.now();
     try {
       const response = await apiClient.get<User>(API_ROUTES.auth.user);
       set({ user: response, isAuthenticated: true });
-    } catch (error) {
-      const elapsed = Date.now() - startTime;
-      if (elapsed > 5000 && error instanceof Error && error.message.includes('timeout')) {
-        set({ notice: 'Backend is starting up, this may take a moment...' });
-      }
+    } catch {
       set({ user: null, token: null, isAuthenticated: false });
     }
   },

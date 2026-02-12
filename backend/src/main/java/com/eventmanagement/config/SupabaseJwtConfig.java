@@ -1,8 +1,8 @@
 package com.eventmanagement.config;
 
 import java.time.Duration;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import org.springframework.context.annotation.Primary;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,22 +15,12 @@ import org.springframework.web.client.RestTemplate;
 public class SupabaseJwtConfig {
 
     @Bean
-    @ConditionalOnProperty(name = "supabase.url")
-    public JwtDecoder supabaseJwtDecoder(
-        @Value("${supabase.url}") String supabaseUrl,
-        RestTemplateBuilder builder
-    ) {
-        String baseUrl = supabaseUrl.endsWith("/")
-            ? supabaseUrl.substring(0, supabaseUrl.length() - 1)
-            : supabaseUrl;
-        String jwksUrl = baseUrl + "/auth/v1/.well-known/jwks.json";
-        RestOperations restOperations = builder
-            .setConnectTimeout(Duration.ofSeconds(3))
-            .setReadTimeout(Duration.ofSeconds(5))
-            .build();
-        return NimbusJwtDecoder.withJwkSetUri(jwksUrl)
-            .restOperations(restOperations)
-            .build();
+    @Primary
+    public JwtDecoder supabaseJwtDecoder() {
+        // Mock JWT decoder for demo mode
+        return token -> {
+            throw new org.springframework.security.oauth2.jwt.JwtException("Demo mode - JWT validation disabled");
+        };
     }
 
     @Bean

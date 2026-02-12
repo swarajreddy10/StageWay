@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -34,6 +35,9 @@ public class Event {
     private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version;
     @Column(name = "venue_name", length = 200)
     private String venueName;
     @Column(name = "venue_address", length = 300)
@@ -111,6 +115,10 @@ public class Event {
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
+    public Integer getVersion() {
+        return version;
+    }
+    // Version field managed by JPA - no public setter to prevent optimistic locking issues
     public String getVenueName() {
         return venueName;
     }
