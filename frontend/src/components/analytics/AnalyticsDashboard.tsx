@@ -13,7 +13,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+        <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Registrations</CardTitle>
           </CardHeader>
@@ -22,7 +22,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+        <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Checked In</CardTitle>
           </CardHeader>
@@ -34,7 +34,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+        <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Check-ins</CardTitle>
           </CardHeader>
@@ -46,7 +46,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
         </Card>
 
         {analytics.revenue && (
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+          <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
             </CardHeader>

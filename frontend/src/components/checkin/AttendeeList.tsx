@@ -45,7 +45,7 @@ export function AttendeeList({ attendees, onCheckIn, isLoading }: AttendeeListPr
   };
 
   return (
-    <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+    <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
       <CardHeader>
         <CardTitle>Attendees ({attendees.length})</CardTitle>
       </CardHeader>
@@ -67,7 +67,7 @@ export function AttendeeList({ attendees, onCheckIn, isLoading }: AttendeeListPr
             filteredAttendees.map((attendee) => (
               <div
                 key={attendee.id}
-                className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm"
+                className="flex items-center justify-between rounded-2xl border border-white/[0.08] bg-[#0e1018] p-4 shadow-sm"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">

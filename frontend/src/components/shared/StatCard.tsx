@@ -14,7 +14,7 @@ interface StatCardProps {
 
 const accentStyles: Record<NonNullable<StatCardProps["accent"]>, string> = {
   coral: "bg-[#D8573B]/8",
-  sky: "bg-[#1E5A55]/10",
+  sky: "bg-[#7c5af5]/10",
   lime: "bg-[#F0B34B]/12",
 };
 
@@ -30,7 +30,7 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-sm",
+        "relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm",
         className
       )}
     >

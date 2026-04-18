@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { BarChart3, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { fetchHostAnalytics } from "@/lib/analytics-api";
 import { HostAnalyticsDashboard } from "@/components/analytics/HostAnalyticsDashboard";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import type { HostAnalytics } from "@/types/analytics";
 
 export default function AnalyticsPage() {
@@ -18,89 +18,59 @@ export default function AnalyticsPage() {
   const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-    if (!isAuthenticated) {
-      router.push("/auth/signin");
-      return;
-    }
-    if (isAuthenticated && isAdmin) {
-      router.push("/admin/host-requests");
-      return;
-    }
-    if (isAuthenticated && !isHost) {
-      router.push("/host/request");
-    }
+    if (!isHydrated) return;
+    if (!isAuthenticated) { router.push("/auth/signin"); return; }
+    if (isAdmin) { router.push("/admin/host-requests"); return; }
+    if (!isHost) { router.push("/host/request"); }
   }, [isAuthenticated, isHydrated, isHost, isAdmin, router]);
 
   useEffect(() => {
-    const loadAnalytics = async () => {
-      if (!isAuthenticated || !isHost) return;
-
-      setIsLoading(true);
-      try {
-        const data = await fetchHostAnalytics();
-        setAnalytics(data);
-      } catch (error) {
-        console.error("Failed to fetch analytics:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isAuthenticated && isHost) {
-      loadAnalytics();
-    }
+    if (!isAuthenticated || !isHost) return;
+    setIsLoading(true);
+    fetchHostAnalytics()
+      .then(setAnalytics)
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, [isAuthenticated, isHost]);
 
-  if (!isHydrated) {
-    return (
-      <main className="container mx-auto flex items-center justify-center px-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </main>
-    );
-  }
-
-  if (!isAuthenticated || !isHost) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <main className="container mx-auto flex items-center justify-center px-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </main>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <main className="container mx-auto px-4 py-8">
-        <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              Create events to view analytics. Analytics will be available once you have events
-              with registrations.
-            </p>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+  if (!isHydrated) return (
+    <main className="flex min-h-screen items-center justify-center bg-[#060810]">
+      <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+    </main>
+  );
+  if (!isAuthenticated || !isHost) return null;
 
   return (
-    <main className="container mx-auto px-4 py-10">
-      <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-8 shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#1E5A55]/15 blur-3xl" />
-        <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-[#D8573B]/15 blur-3xl" />
-        <h1 className="font-display text-3xl font-bold">Host Analytics</h1>
-        <p className="mt-2 text-muted-foreground">
-          Comprehensive insights into your events performance and audience engagement.
-        </p>
+    <main className="min-h-screen bg-[#060810]">
+      {/* Header */}
+      <div className="border-b border-white/[0.07]">
+        <div className="container px-4 py-8 md:px-8">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                <BarChart3 className="h-4 w-4 text-white/50" />
+              </div>
+              <h1 className="font-display text-2xl font-bold text-white">Host Analytics</h1>
+            </div>
+            <p className="text-white/40 text-sm ml-12">Comprehensive insights into your events&apos; performance and audience engagement.</p>
+          </motion.div>
+        </div>
       </div>
 
-      <HostAnalyticsDashboard analytics={analytics} />
+      <div className="container px-4 py-8 md:px-8">
+        {isLoading ? (
+          <div className="flex justify-center py-24">
+            <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+          </div>
+        ) : !analytics ? (
+          <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] p-12 text-center">
+            <BarChart3 className="h-9 w-9 text-white/15 mx-auto mb-4" />
+            <p className="text-white/40 text-sm">Create events to view analytics. Data will appear once you have events with registrations.</p>
+          </div>
+        ) : (
+          <HostAnalyticsDashboard analytics={analytics} />
+        )}
+      </div>
     </main>
   );
 }

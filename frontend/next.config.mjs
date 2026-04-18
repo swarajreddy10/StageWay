@@ -32,6 +32,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'i.imgur.com',
       },
+      {
+        // Cloudflare R2 public bucket (stageway-assets)
+        protocol: 'https',
+        hostname: '*.r2.dev',
+      },
+      {
+        // Cloudflare R2 custom domain (set when R2 is configured)
+        protocol: 'https',
+        hostname: 'assets.stageway.app',
+      },
     ],
   },
   async headers() {

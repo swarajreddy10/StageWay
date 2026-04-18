@@ -78,7 +78,7 @@ export default function RegistrationDetailPage() {
   return (
     <main className="container mx-auto px-4 py-10">
       <Link href="/registrations">
-        <Button variant="outline" className="mb-6 border-white/70 bg-white/70 hover:bg-white">
+        <Button variant="outline" className="mb-6 border-white/[0.08] bg-[#141720] hover:bg-[#1c2030]">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Registrations
         </Button>
@@ -86,7 +86,7 @@ export default function RegistrationDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+          <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <CardTitle className="text-2xl">{registration.event?.name}</CardTitle>
@@ -142,7 +142,7 @@ export default function RegistrationDetailPage() {
               eventName={registration.event?.name}
             />
           ) : (
-            <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+            <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">QR code not available</p>
               </CardContent>

@@ -248,9 +248,11 @@ public class FileStorageService {
                 + supabaseStorageBucket
                 + "/"
                 + storagePath;
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed: " + response.getStatusCode());
+                throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed: " + response.getStatusCode());
             }
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");

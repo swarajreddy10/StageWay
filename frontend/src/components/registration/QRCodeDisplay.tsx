@@ -62,12 +62,12 @@ export function QRCodeDisplay({ qrCode, registrationId, eventName }: QRCodeDispl
   };
 
   return (
-    <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+    <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
       <CardHeader>
         <CardTitle>Your QR Code</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-4">
-        <div className="rounded-2xl border border-white/70 bg-white p-4 shadow-lg">
+        <div className="rounded-2xl border border-white/[0.08] bg-white p-4 shadow-lg">
           <QRCodeSVG value={qrCode} size={256} level="H" />
           <QRCodeCanvas ref={qrCanvasRef} value={qrCode} size={256} level="H" className="hidden" />
         </div>
@@ -78,7 +78,7 @@ export function QRCodeDisplay({ qrCode, registrationId, eventName }: QRCodeDispl
           onClick={handleDownload}
           disabled={isDownloading}
           variant="outline"
-          className="border-white/70 bg-white/70 hover:bg-white"
+          className="border-white/[0.08] bg-[#141720] hover:bg-[#1c2030]"
         >
           <Download className="mr-2 h-4 w-4" />
           {isDownloading ? "Downloading..." : "Download QR Code"}

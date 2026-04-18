@@ -13,74 +13,38 @@ server:
 
 spring:
   application:
-    name: event-management-backend
-  config:
-    import: optional:file:.env.properties,optional:file:backend/.env.properties
+    name: stageway-backend
   main:
     banner-mode: "off"
-  
-  # File Upload Configuration
   servlet:
     multipart:
       enabled: true
       max-file-size: 20MB
       max-request-size: 20MB
       file-size-threshold: 2MB
-  
-  # Database Configuration
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    database-platform: org.hibernate.dialect.H2Dialect
-  flyway:
-    enabled: false
 
-# Application Configuration
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://192.168.*:3000,http://10.*:3000,http://172.16.*:3000}
-
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
   security:
     admin-emails: ${APP_SECURITY_ADMIN_EMAILS:}
-    allow-self-upgrade: ${APP_SECURITY_ALLOW_SELF_UPGRADE:false}
-
+    allow-self-upgrade: false
   qr:
-    secret: ${QR_SECRET:myQRSecretKeyThatIsAtLeast32CharactersLong}
+    secret: ${QR_SECRET}
     ttl: PT48H
 
-# Supabase Configuration
 supabase:
-  url: https://demo.supabase.co
-  anon-key: demo-anon-key
-  service-role-key: demo-service-role-key
-  jwt-secret: demo-jwt-secret
+  url: ${SUPABASE_URL}
+  anon-key: ${SUPABASE_ANON_KEY}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+  jwt-secret: ${SUPABASE_JWT_SECRET:}
   storage:
-    bucket: demo-bucket
+    bucket: ${SUPABASE_STORAGE_BUCKET:}
 
-# Logging Configuration
 logging:
-  level:
-    root: INFO
-    com.eventmanagement: INFO
-    org.springframework: WARN
-    org.springframework.boot: INFO
-    org.springframework.web: WARN
-    org.springframework.security: WARN
-    org.hibernate: WARN
-    org.flywaydb: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%X{requestId}] - %msg%n"
 
-# Management Endpoints
 management:
   endpoints:
     web:

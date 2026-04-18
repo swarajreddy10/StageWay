@@ -1,44 +1,39 @@
 "use client";
 
 import { Suspense } from "react";
+import { motion } from "framer-motion";
 import { RegisterForm } from "@/components/auth/RegisterForm";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function SignUpPage() {
   return (
-    <main className="min-h-screen px-4 py-12">
-      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-2 lg:items-center">
-        <div className="hidden lg:flex flex-col gap-6 rounded-3xl border border-white/70 bg-white/80 p-10 shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
-          <Badge className="w-fit bg-[#D8573B] text-white">
-            <Sparkles className="mr-2 h-3 w-3" />
-            Join StageWay
-          </Badge>
-          <h1 className="font-display text-4xl font-bold">Build the events people remember.</h1>
-          <p className="text-muted-foreground">
-            Create your account and start hosting, tracking, and celebrating every registration.
-          </p>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#D8573B]" />
-              Launch in minutes with templates
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#D8573B]" />
-              QR check-ins and instant confirmations
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#D8573B]" />
-              Real-time analytics out of the box
-            </div>
+    <main className="relative min-h-screen bg-[#060810] flex items-center justify-center px-4 py-16 overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,transparent_40%,rgba(0,0,0,0.7)_100%)]" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-8">
+          <div className="mb-7 text-center space-y-1.5">
+            <span className="font-display text-xl font-bold tracking-[0.06em] text-white uppercase">
+              Stageway
+            </span>
+            <p className="text-white/35 text-sm">Create your account</p>
           </div>
-        </div>
-        <div className="flex justify-center">
-          <Suspense fallback={<div className="text-center">Loading...</div>}>
+          <Suspense fallback={<div className="h-64 skeleton" />}>
             <RegisterForm />
           </Suspense>
         </div>
-      </div>
+      </motion.div>
     </main>
   );
 }

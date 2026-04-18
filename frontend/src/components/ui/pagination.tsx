@@ -26,7 +26,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         size="icon"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 0}
-        className="rounded-full border-white/70 bg-white/80"
+        className="rounded-full border-white/[0.08] bg-[#0e1018]"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -38,8 +38,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           onClick={() => onPageChange(page)}
           className={
             currentPage === page
-              ? "rounded-full bg-[#1E5A55] text-white"
-              : "rounded-full border-white/70 bg-white/80"
+              ? "rounded-full bg-[#7c5af5] text-white"
+              : "rounded-full border-white/[0.08] bg-[#0e1018]"
           }
         >
           {page + 1}
@@ -51,7 +51,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         size="icon"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages - 1}
-        className="rounded-full border-white/70 bg-white/80"
+        className="rounded-full border-white/[0.08] bg-[#0e1018]"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

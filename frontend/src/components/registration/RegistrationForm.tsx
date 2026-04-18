@@ -95,7 +95,7 @@ export function RegistrationForm({
       : `${availableSeats} seat${availableSeats !== 1 ? "s" : ""} left`;
 
   return (
-    <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+    <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -104,9 +104,9 @@ export function RegistrationForm({
               Add attendee details and secure your seats.
             </p>
           </div>
-          <Badge className="border border-white/70 bg-white/80 text-foreground">{seatsLabel}</Badge>
+          <Badge className="border border-white/[0.08] bg-[#0e1018] text-foreground">{seatsLabel}</Badge>
         </div>
-        <Separator className="bg-white/60" />
+        <Separator className="bg-white/[0.07]" />
         <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
           <div>
             <span className="font-semibold text-foreground">{fields.length}</span> attendee
@@ -126,7 +126,7 @@ export function RegistrationForm({
                 animate="animate"
                 exit={{ opacity: 0, y: -12 }}
                 transition={pageTransition}
-                className="space-y-3 rounded-2xl border border-white/70 bg-white/60 p-4"
+                className="space-y-3 rounded-xl border border-white/[0.07] bg-[#141720] p-4"
               >
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">Attendee {index + 1}</h4>
@@ -181,7 +181,7 @@ export function RegistrationForm({
             <Button
               type="button"
               variant="outline"
-              className="w-full border-white/70 bg-white/70 hover:bg-white"
+              className="w-full border-white/[0.08] bg-[#141720] hover:bg-[#1c2030]"
               onClick={() => append({ name: "", email: "" })}
               disabled={isLoading || submitting}
             >
@@ -195,7 +195,7 @@ export function RegistrationForm({
               className={`rounded-md p-3 text-sm ${
                 formTone === "error"
                   ? "bg-destructive/10 text-destructive"
-                  : "bg-emerald-50 text-emerald-700"
+                  : "bg-white/[0.06] text-white/70"
               }`}
             >
               {formMessage}
@@ -204,7 +204,7 @@ export function RegistrationForm({
 
           <Button
             type="submit"
-            className="w-full bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
+            className="w-full bg-[#7c5af5] text-white font-semibold hover:bg-[#6040e0] shadow-btn-violet"
             disabled={isLoading || submitting || availableSeats === 0}
           >
             {isLoading || submitting ? (

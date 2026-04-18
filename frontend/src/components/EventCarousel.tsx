@@ -79,7 +79,7 @@ export default function EventCarousel({ events }: EventCarouselProps) {
           type="button"
           variant="outline"
           size="icon"
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/[0.08] bg-[#0e1018] hover:bg-[#141720]"
           aria-label="Scroll events left"
           onClick={() => scrollBy(-1)}
         >
@@ -89,7 +89,7 @@ export default function EventCarousel({ events }: EventCarouselProps) {
           type="button"
           variant="outline"
           size="icon"
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/80 hover:bg-white"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/[0.08] bg-[#0e1018] hover:bg-[#141720]"
           aria-label="Scroll events right"
           onClick={() => scrollBy(1)}
         >

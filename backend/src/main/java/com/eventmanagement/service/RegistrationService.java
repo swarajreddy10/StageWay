@@ -9,7 +9,6 @@ import com.eventmanagement.dto.ManualCheckInRequest;
 import com.eventmanagement.dto.RegistrationEventSummary;
 import com.eventmanagement.dto.RegistrationRequest;
 import com.eventmanagement.dto.RegistrationResponse;
-import com.eventmanagement.dto.RegistrationUpdate;
 import com.eventmanagement.dto.SeatAvailability;
 import com.eventmanagement.dto.WaitlistRequest;
 import com.eventmanagement.dto.WaitlistResponse;
@@ -139,8 +138,10 @@ public class RegistrationService {
         Registration registration = new Registration();
         registration.setEventId(eventId);
         registration.setUserId(userId);
-        registration.setAttendeeName(request.getAttendeeName() != null ? request.getAttendeeName() : attendee.getFullName());
-        registration.setAttendeeEmail(request.getAttendeeEmail() != null ? request.getAttendeeEmail() : attendee.getEmail());
+        registration.setAttendeeName(
+            request.getAttendeeName() != null ? request.getAttendeeName() : attendee.getFullName());
+        registration.setAttendeeEmail(
+            request.getAttendeeEmail() != null ? request.getAttendeeEmail() : attendee.getEmail());
         if (!hasCapacity) {
             registration.setStatus("CONFIRMED");
         } else if (isFull) {
@@ -233,6 +234,7 @@ public class RegistrationService {
         registration.setStatus("CHECKED_IN");
         Registration saved = saveRegistration(registration);
         eventRepository.findById(saved.getEventId()).ifPresent(this::publishRegistrationUpdate);
+        registrationUpdatePublisher.publishCheckIn(saved);
         return saved;
     }
 
@@ -370,8 +372,12 @@ public class RegistrationService {
             .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
             .map(registration -> {
                 User user = userMap.get(registration.getUserId());
-                String fullName = registration.getAttendeeName() != null ? registration.getAttendeeName() : (user != null ? user.getFullName() : "Unknown attendee");
-                String email = registration.getAttendeeEmail() != null ? registration.getAttendeeEmail() : (user != null ? user.getEmail() : "unknown@example.com");
+                String fullName = registration.getAttendeeName() != null
+                    ? registration.getAttendeeName()
+                    : (user != null ? user.getFullName() : "Unknown attendee");
+                String email = registration.getAttendeeEmail() != null
+                    ? registration.getAttendeeEmail()
+                    : (user != null ? user.getEmail() : "unknown@example.com");
                 return new AttendeeSummary(
                     registration.getId(),
                     registration.getUserId(),

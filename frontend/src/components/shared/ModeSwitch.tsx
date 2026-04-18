@@ -20,7 +20,7 @@ export function ModeSwitch({ mode }: ModeSwitchProps) {
   const isHostMode = mode === "HOST";
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-[#141720] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
       <span className={!isHostMode ? "text-foreground" : ""}>Attendee</span>
       <Switch
         checked={isHostMode}

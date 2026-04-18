@@ -60,7 +60,7 @@ function AuthCallbackContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="rounded-3xl border border-white/70 bg-white/80 px-10 py-8 text-center shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
+      <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-10 py-8 text-center ">
         <h2 className="font-display text-2xl font-semibold">Completing sign in...</h2>
         <p className="mt-2 text-muted-foreground">Syncing your account details.</p>
       </div>
@@ -73,7 +73,7 @@ export default function AuthCallback() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center px-4">
-          <div className="rounded-3xl border border-white/70 bg-white/80 px-10 py-8 text-center shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
+          <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-10 py-8 text-center ">
             <h2 className="font-display text-2xl font-semibold">Loading...</h2>
           </div>
         </div>

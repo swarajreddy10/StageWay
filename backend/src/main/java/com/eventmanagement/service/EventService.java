@@ -56,7 +56,11 @@ public class EventService {
 
     @Cacheable(
         cacheNames = "eventsByFilter",
-        key = "'events:' + (#search ?: 'null') + ':' + (#category ?: 'null') + ':' + (#dateFrom ?: 'null') + ':' + (#dateTo ?: 'null') + ':' + (#location ?: 'null') + ':' + (#priceMin ?: 'null') + ':' + (#priceMax ?: 'null') + ':' + (#isFree ?: 'null') + ':' + #page + ':' + #size"
+        key = "'events:' + (#search ?: 'null') + ':' + (#category ?: 'null')"
+            + " + ':' + (#dateFrom ?: 'null') + ':' + (#dateTo ?: 'null')"
+            + " + ':' + (#location ?: 'null') + ':' + (#priceMin ?: 'null')"
+            + " + ':' + (#priceMax ?: 'null') + ':' + (#isFree ?: 'null')"
+            + " + ':' + #page + ':' + #size"
     )
     public PagedResponse<EventResponse> getAllEvents(
         String search,

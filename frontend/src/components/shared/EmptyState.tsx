@@ -12,7 +12,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, icon, action, className }: EmptyStateProps) {
   return (
-    <Card className={cn("rounded-3xl border border-white/70 bg-white/80 shadow-sm", className)}>
+    <Card className={cn("rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm", className)}>
       <CardContent className="py-12 text-center">
         {icon && (
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center">{icon}</div>

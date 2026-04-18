@@ -71,8 +71,11 @@ export default function EventEditPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto flex items-center justify-center px-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <main className="container mx-auto flex items-center justify-center px-4 py-24">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+          <p className="text-sm text-white/30">Loading event…</p>
+        </div>
       </main>
     );
   }
@@ -81,9 +84,9 @@ export default function EventEditPage() {
     return (
       <main className="container mx-auto px-4 py-12">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Event not found</h1>
+          <h1 className="mb-4 text-2xl font-bold text-white">Event not found</h1>
           <Link href="/host">
-            <Button variant="outline">Back to Dashboard</Button>
+            <Button variant="ghost" className="text-white/50 hover:text-white">Back to Dashboard</Button>
           </Link>
         </div>
       </main>
@@ -93,7 +96,7 @@ export default function EventEditPage() {
   return (
     <main className="container mx-auto px-4 py-10">
       <Link href={`/events/${eventId}`}>
-        <Button variant="outline" className="mb-6 border-white/70 bg-white/70 hover:bg-white">
+        <Button variant="ghost" className="mb-6 text-white/50 hover:text-white hover:bg-white/[0.05]">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Event
         </Button>
@@ -101,7 +104,9 @@ export default function EventEditPage() {
 
       <PageHeader
         badge={
-          <Badge className="bg-white/80 text-foreground border border-white/70">Edit Event</Badge>
+          <Badge className="border-white/[0.10] bg-white/[0.05] text-white/55 text-xs font-bold uppercase tracking-wider">
+            Edit Event
+          </Badge>
         }
         title="Edit Event"
         description={`Update the details for ${currentEvent.name}`}
@@ -128,6 +133,7 @@ export default function EventEditPage() {
         }}
         onSubmit={handleSubmit}
         isLoading={isLoading}
+        isEditMode
         submitNotice={submitNotice}
         submitError={submitError}
       />

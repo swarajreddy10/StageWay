@@ -2,19 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Ticket, Calendar, Loader2 } from "lucide-react";
+import { RegistrationGridSkeleton } from "@/components/registration/RegistrationCardSkeleton";
+import Link from "next/link";
 import { useRegistrations } from "@/hooks/useRegistrations";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegistrationCard } from "@/components/registration/RegistrationCard";
 import { Pagination } from "@/components/ui/pagination";
-import { motion } from "framer-motion";
-import { fadeUp, pageTransition, staggerContainer } from "@/lib/motion";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function RegistrationsPage() {
   const router = useRouter();
@@ -22,203 +21,126 @@ export default function RegistrationsPage() {
   const { registrations, isLoading, cancelRegistration } = useRegistrations();
   const [activeTab, setActiveTab] = useState("all");
   const [page, setPage] = useState(0);
-  const pageSize = 6;
+  const pageSize = 9;
 
   useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-    if (!isAuthenticated) {
-      router.push("/auth/signin");
-    }
-  }, [isAuthenticated, isHydrated, router]);
+    if (isHydrated && !isAuthenticated) router.push("/auth/signin");
+  }, [isHydrated, isAuthenticated, router]);
 
-  const handleCancel = async (id: number) => {
-    if (confirm("Are you sure you want to cancel this registration?")) {
-      try {
-        await cancelRegistration(id);
-      } catch (error) {
-        console.error("Failed to cancel registration:", error);
-      }
-    }
-  };
-
-  const now = new Date();
-  const upcomingRegistrations = registrations.filter(
-    (registration) => registration.event && new Date(registration.event.startDate) > now
-  );
-  const pastRegistrations = registrations.filter(
-    (registration) => registration.event && new Date(registration.event.startDate) <= now
-  );
-
-  const filteredRegistrations = useMemo(() => {
+  // Stable "now" so useMemo doesn't re-run on every render
+  const now = useMemo(() => new Date(), []);
+  const filtered = useMemo(() => {
     switch (activeTab) {
-      case "upcoming":
-        return upcomingRegistrations;
-      case "past":
-        return pastRegistrations;
-      case "waitlisted":
-        return registrations.filter((registration) => registration.status === "WAITLISTED");
-      case "cancelled":
-        return registrations.filter((registration) => registration.status === "CANCELLED");
-      default:
-        return registrations;
+      case "upcoming": return registrations.filter((r) => r.event && new Date(r.event.startDate) > now);
+      case "past":     return registrations.filter((r) => r.event && new Date(r.event.startDate) <= now);
+      case "cancelled":return registrations.filter((r) => r.status === "CANCELLED");
+      default:         return registrations.filter((r) => r.status !== "CANCELLED");
     }
-  }, [activeTab, upcomingRegistrations, pastRegistrations, registrations]);
+  }, [registrations, activeTab, now]);
 
-  if (!isHydrated) {
-    return null;
-  }
+  const paginated  = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isHydrated) return <main className="flex min-h-screen items-center justify-center bg-[#060810]"><Loader2 className="h-8 w-8 animate-spin text-white/20" /></main>;
+  if (!isAuthenticated) return null;
 
-  if (isLoading) {
-    return (
-      <main className="container mx-auto flex items-center justify-center px-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </main>
-    );
-  }
-
-  const totalPages = Math.max(1, Math.ceil(filteredRegistrations.length / pageSize));
-  const pageRegistrations = filteredRegistrations.slice(
-    page * pageSize,
-    page * pageSize + pageSize
-  );
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const STATUS_COUNTS: Record<string, number> = {
+    all:       registrations.filter((r) => r.status !== "CANCELLED").length,
+    upcoming:  registrations.filter((r) => r.event && new Date(r.event.startDate) > now).length,
+    past:      registrations.filter((r) => r.event && new Date(r.event.startDate) <= now).length,
+    cancelled: registrations.filter((r) => r.status === "CANCELLED").length,
   };
 
   return (
-    <main className="container mx-auto px-4 py-10">
-      <PageHeader
-        badge={
-          <Badge className="bg-white/80 text-foreground border border-white/70">
-            My Registrations
-          </Badge>
-        }
-        title="Manage your event registrations"
-        description="Tickets, QR codes, and updates - all in one place."
-        actions={
-          <Link href="/events">
-            <Button className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-              Browse Events
-            </Button>
-          </Link>
-        }
-      />
-
-      {registrations.length === 0 ? (
-        <EmptyState
-          title="No registrations yet"
-          description="Start exploring events to register."
-          icon={<Ticket className="h-10 w-10 text-muted-foreground" />}
-          action={
-            <Link href="/events">
-              <Button className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]">
-                Browse Events
-              </Button>
-            </Link>
-          }
-        />
-      ) : (
-        <div className="mt-8">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => {
-              setActiveTab(value);
-              setPage(0);
-            }}
-          >
-            <TabsList className="flex w-full flex-wrap justify-start gap-2 border border-white/70 bg-white/70">
-              <TabsTrigger value="all" className="gap-2">
-                All
-                <Badge variant="outline" className="border-white/70 bg-white/80 text-xs">
+    <main className="min-h-screen bg-[#060810]">
+      {/* Page header */}
+      <div className="border-b border-white/[0.06]">
+        <div className="container px-4 py-8 md:px-8">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="font-display text-2xl font-bold text-white">My Passes</h1>
+              {registrations.length > 0 && (
+                <Badge className="bg-white/[0.07] text-white/55 border-white/[0.12] text-[10px] font-bold">
                   {registrations.length}
                 </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="upcoming" className="gap-2">
-                Upcoming
-                <Badge variant="outline" className="border-white/70 bg-white/80 text-xs">
-                  {upcomingRegistrations.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="past" className="gap-2">
-                Past
-                <Badge variant="outline" className="border-white/70 bg-white/80 text-xs">
-                  {pastRegistrations.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="waitlisted" className="gap-2">
-                Waitlisted
-                <Badge variant="outline" className="border-white/70 bg-white/80 text-xs">
-                  {
-                    registrations.filter((registration) => registration.status === "WAITLISTED")
-                      .length
-                  }
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="cancelled" className="gap-2">
-                Cancelled
-                <Badge variant="outline" className="border-white/70 bg-white/80 text-xs">
-                  {
-                    registrations.filter((registration) => registration.status === "CANCELLED")
-                      .length
-                  }
-                </Badge>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value={activeTab} className="mt-6">
-              {filteredRegistrations.length === 0 ? (
-                <EmptyState
-                  title="No registrations in this view"
-                  description="Try another filter to see more."
-                />
-              ) : (
-                <>
-                  <motion.div
-                    variants={staggerContainer}
-                    initial="initial"
-                    animate="animate"
-                    transition={pageTransition}
-                    className="grid gap-6 md:grid-cols-2"
-                  >
-                    {pageRegistrations.map((registration) => (
-                      <motion.div key={registration.id} variants={fadeUp}>
-                        <RegistrationCard
-                          registration={registration}
-                          showQr={registration.status === "CONFIRMED"}
-                          actions={
-                            registration.status === "CONFIRMED" ? (
-                              <Button
-                                variant="destructive"
-                                onClick={() => handleCancel(registration.id)}
-                              >
-                                Cancel
-                              </Button>
-                            ) : null
-                          }
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                  {filteredRegistrations.length > pageSize && (
-                    <Pagination
-                      currentPage={page}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  )}
-                </>
               )}
-            </TabsContent>
-          </Tabs>
+            </div>
+            <p className="text-white/40 text-sm">Your event registrations and QR passes.</p>
+          </motion.div>
         </div>
-      )}
+      </div>
+
+      <div className="container px-4 py-8 md:px-8">
+        {isLoading ? (
+          <RegistrationGridSkeleton count={9} />
+        ) : registrations.length === 0 ? (
+          <EmptyState
+            title="No registrations yet"
+            description="Register for events to see your passes here."
+            icon={<Ticket className="h-10 w-10 text-white/20" />}
+            action={<Button asChild className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet"><Link href="/events">Browse Events</Link></Button>}
+          />
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+            <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setPage(0); }}>
+              <TabsList className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-0.5 mb-6">
+                {[
+                  { value: "all",       label: "All" },
+                  { value: "upcoming",  label: "Upcoming" },
+                  { value: "past",      label: "Past" },
+                  { value: "cancelled", label: "Cancelled" },
+                ].map(({ value, label }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/40 rounded-md px-3 py-1.5 text-sm"
+                  >
+                    {label}
+                    {STATUS_COUNTS[value] > 0 && (
+                      <Badge className="ml-1.5 bg-white/[0.08] text-white/50 border-none text-[10px] px-1.5 py-0">
+                        {STATUS_COUNTS[value]}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {["all", "upcoming", "past", "cancelled"].map((tab) => (
+                <TabsContent key={tab} value={tab}>
+                  {paginated.length === 0 ? (
+                    <EmptyState
+                      title={`No ${tab} registrations`}
+                      description={tab === "upcoming" ? "Browse events and register to see them here." : "Nothing here yet."}
+                      icon={<Calendar className="h-8 w-8 text-white/20" />}
+                      action={tab === "upcoming" ? (
+                        <Button asChild variant="ghost" className="border border-white/[0.08] text-white/50 hover:text-white">
+                          <Link href="/events">Browse Events</Link>
+                        </Button>
+                      ) : undefined}
+                    />
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-grid">
+                      {paginated.map((r) => (
+                        <RegistrationCard
+                          key={r.id}
+                          registration={r}
+                          onCancel={r.status === "CONFIRMED" ? () => cancelRegistration(r.id) : undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
     </main>
   );
 }

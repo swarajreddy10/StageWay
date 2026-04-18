@@ -14,7 +14,6 @@ import com.eventmanagement.dto.StatusDistribution;
 import com.eventmanagement.dto.TimeSlotPoint;
 import com.eventmanagement.dto.TrendPoint;
 import com.eventmanagement.model.Event;
-import com.eventmanagement.model.Registration;
 import com.eventmanagement.model.User;
 import com.eventmanagement.repository.EventRepository;
 import com.eventmanagement.repository.RegistrationRepository;
@@ -22,7 +21,6 @@ import com.eventmanagement.util.PriceParser;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -218,7 +216,9 @@ public class AnalyticsService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         
         for (Event event : events) {
-            if (event.getStartsAt() == null) continue;
+            if (event.getStartsAt() == null) {
+                continue;
+            }
             
             String month = event.getStartsAt().toLocalDate().format(formatter);
             PriceInfo priceInfo = resolvePriceInfo(event);
