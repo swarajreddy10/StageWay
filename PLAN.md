@@ -73,7 +73,7 @@
 - [x] `bun run lint` passes (warnings cleaned, StageScene lint blocker fixed).
 - [x] `bun run typecheck` passes (tsconfig ambient-type leakage fixed).
 - [x] `bun test` passes for default suite (integration tests are now explicitly opt-in via `RUN_INTEGRATION_TESTS=true`).
-- [~] Security audit remains a separate gate: `bun run security:audit` reports dependency vulnerabilities requiring upgrade sprint.
+- [x] `bun run security:audit` passes after dependency hardening (Next.js upgraded to `16.2.6`, vulnerable transitives resolved).
 
 ### Backend quality gates
 - [x] `./mvnw -q checkstyle:check` passes.
@@ -498,7 +498,7 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - [ ] Environment variables verified in Vercel dashboard
 - [ ] Environment variables verified on OCI host/runtime
 - [x] Run `bun run verify` (lint + typecheck) — passes after frontend quality cleanup.
-- [~] Run `bun run security:audit` — fails with known dependency vulnerabilities; upgrade plan required.
+- [x] Run `bun run security:audit` — passes after frontend dependency upgrade sprint.
 - [x] Run `./mvnw checkstyle:check` — passes (verified 2026-05-24).
 - [~] Run `./mvnw test` — passes with required env vars injected; needs stable test defaults for zero-config local run.
 - [ ] Smoke test full user journey: sign up → browse events → register → QR → check-in
@@ -511,10 +511,10 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
   - local: Spring Boot + Supabase services + same env contract
   - prod: Spring Boot container on OCI host with same env contract
 - [ ] Add test-safe backend defaults/profile for required auth/storage placeholders so `mvn test` runs clean locally without manual env hacks.
-- [ ] Stabilize frontend test baseline:
-  - isolate integration tests that require backend
-  - harden browser API mocks
-  - make CI deterministic
+- [x] Stabilize frontend test baseline:
+  - integration tests are opt-in (`RUN_INTEGRATION_TESTS=true`)
+  - browser API mocks hardened for Bun runtime
+  - CI now runs explicit quality gate (`verify` + tests) and separate security audit job
 - [ ] Resolve duplicate/fragmented client infrastructure (single QueryClient source, remove dead client state bootstrapping).
 - [ ] Add minimal E2E happy-path coverage (auth → browse → register → check-in) and run in CI.
 
@@ -584,7 +584,7 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 
 **Next session priorities (in order):**
 
-1. **Fix quality gates first** — make `bun run verify`, `bun test`, and `mvn test` deterministic and green.
+1. **Finalize backend test determinism** — make `mvn test` green without manual env injection.
 2. **OCI Always Free bootstrap** — provision A1 VM in home region and validate free-tier resource fit.
 3. **OCI Terraform foundation** — define OCI modules/stacks and reproducible infra recovery workflow.
 4. **Phase 9.6 SSOT cleanup** — remove stale infra guidance and enforce one documented stack/runtime path.
