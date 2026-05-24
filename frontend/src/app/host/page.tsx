@@ -9,7 +9,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { fetchAnalyticsOverview } from "@/lib/analytics-api";
 import { fetchHostEvents } from "@/lib/event-api";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pagination } from "@/components/ui/pagination";
 import { HostEventCard } from "@/components/events/HostEventCard";

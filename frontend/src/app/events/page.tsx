@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, X, Calendar, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import { EventGridSkeleton } from "@/components/events/EventCardSkeleton";
-import { Button } from "@/components/ui/button";
 import { EventList } from "@/components/events/EventList";
 import { EventFiltersComponent } from "@/components/events/EventFilters";
 import { Pagination } from "@/components/ui/pagination";

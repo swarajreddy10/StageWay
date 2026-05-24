@@ -15,7 +15,9 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
-    "verify": "bun run lint && bun run typecheck && bun audit",
+    "verify": "bun run lint && bun run typecheck",
+    "verify:full": "bun run verify && bun audit",
+    "security:audit": "bun audit",
     "auth:smoke": "node scripts/auth-smoke.mjs"
   },
   "dependencies": {

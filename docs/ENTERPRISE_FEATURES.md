@@ -74,9 +74,9 @@ incremental upgrades that fit the current codebase and improve enterprise readin
 ## 11) File storage hardening (object storage + CDN + scanning)
 - Why: Reliable delivery and safer uploads at scale.
 - Fit: File upload/download already exists in `FileStorageService`.
-- Integration approach: Store metadata in Postgres, move files to S3/Azure Blob,
+- Integration approach: Store metadata in Postgres, move files to S3/OCI Object Storage,
   issue signed URLs, and add virus scanning.
-- Tech: AWS S3 or Azure Blob, CloudFront/Azure CDN, ClamAV.
+- Tech: AWS S3 or OCI Object Storage, CloudFront/OCI CDN, ClamAV.
 
 ## 12) Observability and SLA readiness
 - Why: Enterprises require SLAs, incident response, and monitoring.

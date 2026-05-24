@@ -82,10 +82,13 @@ function SilverParticles({ count }: { count: number }) {
   const mesh  = useRef<THREE.InstancedMesh>(null!);
   const dummy = useRef(new THREE.Object3D());
 
-  const data = useRef<ReturnType<typeof makeParticleData>>(null!);
-  if (!data.current) data.current = makeParticleData(count);
+  const data = useRef<ReturnType<typeof makeParticleData> | null>(null);
+  if (data.current == null) {
+    data.current = makeParticleData(count);
+  }
 
   useFrame(({ clock }) => {
+    if (data.current == null) return;
     const t = clock.getElapsedTime();
     const d = data.current;
     for (let i = 0; i < count; i++) {

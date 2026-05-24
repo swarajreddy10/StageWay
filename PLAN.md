@@ -12,6 +12,7 @@
 **Backend:** Spring Boot 3.2.4, Java 21, Supabase JWT auth, PostgreSQL via Supabase, Flyway migrations (V1–V13), Caffeine cache, HMAC-SHA256 QR check-in, WebSocket (STOMP/SockJS at `/ws`, real-time check-in on `/topic/checkins/{eventId}`), optimistic locking on Event + Registration.
 **Frontend:** Next.js 16.1.1, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Zustand, TanStack Query, Framer Motion, Recharts, Three.js (R3F 9.5 + drei 10.7).
 **Current deployment:** Frontend → Vercel. Backend → Render free (cold starts). DB/Auth → Supabase. Files → Supabase Storage (half-wired).
+**Audit baseline:** 2026-05-24 (repo-wide verification rerun and status correction).
 
 **UI Stack additions (April 2026):**
 - `lenis@1.3.23` — smooth scroll (replaces `scroll-behavior: smooth`)
@@ -19,66 +20,188 @@
 
 **Decided stack going forward:**
 - Frontend: Vercel (keep)
-- Backend: OCI ARM Ampere A1 VM (4 cores, 24GB RAM, free forever) via Docker
+- Backend runtime: OCI Compute A1 VM (`VM.Standard.A1.Flex`) with Docker
+- Provisioning/IaC: Terraform (`oracle/oci` provider + OCI Resource Manager)
 - Database + Auth: Supabase (keep, already wired)
-- File storage: Cloudflare R2 (replace Supabase Storage — zero egress, S3-compatible)
-- CDN + DNS: Cloudflare free (proxy domain)
+- File storage: OCI Object Storage (replace Supabase Storage in phased rollout)
+- Secrets: OCI Vault (or env-file + restricted OS permissions until Vault cutover)
+- DNS/TLS: OCI DNS + reverse proxy TLS
+- Monitoring: OCI Monitoring + Logging
 - Cache: Caffeine in-memory (sufficient, already running in prod)
 - Three.js stack: `three` + `@react-three/fiber` + `@react-three/drei` + `@react-three/postprocessing`
+
+---
+
+## 2026-05-24 Strategy Pivot — OCI Always Free Backend (Active)
+> OCI Always Free track is the active backend plan.
+
+### OCI Always Free baseline (verified)
+- Compute: Ampere A1 Always Free allowance equivalent to **4 OCPUs + 24 GB RAM** (`3,000 OCPU-hours` and `18,000 GB-hours` per month).
+- Block storage: **200 GB** combined boot + block volume in home region.
+- Object storage: **20 GB total** (combined tiers) + **50,000 Object Storage API requests/month** in Always Free-only state.
+- Networking: **10 TB/month outbound data transfer**.
+- Load balancing: **one Always Free flexible load balancer** (10 Mbps min/max) and one Network Load Balancer.
+- Always Free compute caveat: idle instances can be reclaimed by Oracle; design for recovery and reproducibility.
+
+### Cost-efficient backend architecture (OCI)
+- [ ] Single VM first: one `VM.Standard.A1.Flex` instance, start at `2 OCPU / 12 GB` and scale vertically only when needed.
+- [ ] Run backend + reverse proxy in Docker Compose on the VM.
+- [ ] Keep DB/Auth in Supabase (already externalized) to avoid additional paid OCI data services.
+- [ ] File strategy:
+  - default: keep using existing storage path until OCI Object Storage migration is ready
+  - OCI target: use Object Storage within Always Free limits, with lifecycle/cleanup policy
+- [ ] Use OCI Bastion/SSH hardening and least-privilege IAM policies.
+
+### Scale plan without over-engineering
+- [ ] Stage 1 (default): vertical scale inside free envelope up to `4 OCPU / 24 GB`.
+- [ ] Stage 2 (only if traffic requires): split into two A1 instances (for example `2+2 OCPU`) behind Always Free LB (10 Mbps).
+- [ ] Stage 3 (if exceeding free envelope consistently): evaluate paid OCI or move to paid managed container path.
+
+### Terraform and operations model (OCI)
+- [ ] Use `terraform-provider-oci` for infra definitions (`infra/` modules + env roots).
+- [ ] Use OCI Resource Manager for state/job management and drift detection where possible.
+- [ ] Ensure infra is reproducible to recover from reclaimed idle resources quickly.
+- [ ] Add alarms for CPU, memory, 5xx, and instance health using OCI Monitoring.
+- [ ] Keep quotas/guardrails with compartment quotas to prevent accidental paid resource creation.
+
+---
+
+## 2026-05-24 Verification Snapshot (Ground Truth)
+> This section supersedes stale "all green" notes until items are re-verified.
+
+### Frontend quality gates
+- [x] `bun run lint` passes (warnings cleaned, StageScene lint blocker fixed).
+- [x] `bun run typecheck` passes (tsconfig ambient-type leakage fixed).
+- [x] `bun test` passes for default suite (integration tests are now explicitly opt-in via `RUN_INTEGRATION_TESTS=true`).
+- [~] Security audit remains a separate gate: `bun run security:audit` reports dependency vulnerabilities requiring upgrade sprint.
+
+### Backend quality gates
+- [x] `./mvnw -q checkstyle:check` passes.
+- [~] `./mvnw -q test` passes **when required env vars are present** (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `QR_SECRET`); fails without test-safe defaults.
+
+### Architecture and documentation consistency
+- [ ] Single-source-of-truth docs still drift from runtime reality (legacy Redis/Cloudinary/Railway/Heroku/Kafka/Upstash references remain in docs/scripts).
+- [ ] Single backend parity (local dev and prod on same OCI-target architecture) is not fully documented/automated yet.
+
+### Verified official references (used for this plan update)
+- Tailwind docs: https://tailwindcss.com/docs/content-configuration
+- Tailwind dark mode: https://tailwindcss.com/docs/dark-mode
+- shadcn/ui docs: https://ui.shadcn.com/docs
+- shadcn CLI docs: https://ui.shadcn.com/docs/cli
+- Motion for React docs: https://motion.dev/docs/react
+- Next.js Image remote patterns: https://nextjs.org/docs/app/api-reference/components/image
+- Spring Boot externalized config: https://docs.spring.io/spring-boot/reference/features/external-config.html
+- Spring Security CORS: https://docs.spring.io/spring-security/reference/servlet/integrations/cors.html
+- Spring Security WebSocket: https://docs.spring.io/spring-security/reference/7.0/servlet/integrations/websocket.html
+- Supabase JWT/Auth docs: https://supabase.com/docs/guides/auth/jwts
+- OCI Free Tier docs:
+  - https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm
+  - https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
+  - https://www.oracle.com/cloud/free/faq/
+  - https://www.oracle.com/cloud/pricing/
+- OCI scaling/ops docs:
+  - https://docs.public.content.oci.oraclecloud.com/iaas/Content/Compute/Tasks/autoscalinginstancepools.htm
+  - https://docs.oracle.com/en-us/iaas/Content/General/service-limits/overview.htm
+  - https://docs.public.content.oci.oraclecloud.com/en-us/iaas/Content/Quotas/home.htm
+  - https://docs.oracle.com/iaas/Content/ResourceManager/Concepts/resource-manager-and-terraform.htm
+  - https://docs.oracle.com/iaas/Content/ResourceManager/Tasks/detect-drift.htm
+  - https://docs.oracle.com/en-us/iaas/Content/Balance/Tasks/managingloadbalancer_topic-Creating_Load_Balancers.htm
+  - https://docs.oracle.com/en-us/iaas/Content/Logging/Concepts/loggingoverview.htm
+  - https://docs.public.oneportal.content.oci.oraclecloud.com/en-us/iaas/Content/Monitoring/Concepts/monitoringoverview.htm
+- Terraform docs (official):
+  - https://docs.oracle.com/iaas/Content/ResourceManager/Concepts/resource-manager-and-terraform.htm
+  - https://docs.oracle.com/iaas/Content/ResourceManager/Tasks/detect-drift.htm
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs
+  - https://developer.hashicorp.com/terraform/language/files/dependency-lock
+  - https://developer.hashicorp.com/terraform/cli/commands/fmt
+  - https://developer.hashicorp.com/terraform/cli/commands/validate
+  - https://developer.hashicorp.com/terraform/cli/commands/test
+  - https://developer.hashicorp.com/terraform/language/modules/develop/structure
+  - https://developer.hashicorp.com/terraform/language/state/sensitive-data
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_instance
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/objectstorage_bucket
+  - https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/load_balancer_load_balancer
+- OWASP ASVS and cheat sheets:
+  - https://devguide.owasp.org/en/03-requirements/05-asvs/
+  - https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html
+  - https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html
+  - https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
 
 ---
 
 ## Phase 0 — Infrastructure & Deployment
 > **DO LAST** — implement everything locally first, deploy when all phases 1–9 are complete.
 
-### 0.1 Oracle Cloud (OCI)
-- [ ] Sign up at cloud.oracle.com (credit card for verification only, no charges)
-- [ ] Create `VM.Standard.A1.Flex` instance — 4 OCPUs, 24GB RAM, Ubuntu 22.04 ARM
-- [ ] Download SSH key pair, note public IP
-- [ ] SSH in, install Docker: `curl -fsSL https://get.docker.com | sh`
-- [ ] Install nginx: `sudo apt install -y nginx`
-- [ ] Open OCI Security List: TCP ingress on ports 80, 443, 8081
-- [ ] Verify Docker works: `docker run hello-world`
+### 0.0 Cost-Efficient OCI Baseline (Personal Project)
+> Target: best Always Free usage / lowest ongoing cost for backend.
 
-### 0.2 Cloudflare R2
-- [ ] Enable R2 in Cloudflare Dashboard (add payment method — free tier, no charge)
-- [ ] Create bucket `stageway-assets` (public read enabled)
-- [ ] Create R2 API token with read+write permissions
-- [ ] Note: Account ID, Access Key ID, Secret Access Key, bucket endpoint URL
+- [ ] Keep runtime inside Always Free envelope (up to `4 OCPU / 24 GB` across A1 instances).
+- [ ] Start with one A1 instance (`2 OCPU / 12 GB`) and scale vertically first.
+- [ ] Stay in one home region and avoid cross-region transfer.
+- [ ] Keep object storage under Always Free limits with lifecycle cleanup.
+- [ ] Set cost guardrails with compartments, quotas, and budgets.
 
-### 0.3 Cloudflare DNS
-- [ ] Add domain to Cloudflare (change registrar nameservers)
-- [ ] Add A record: `api.yourdomain.com` → OCI public IP (proxy enabled, orange cloud)
-- [ ] Verify Cloudflare SSL mode: Full (not Full Strict) for HTTP backend
+### 0.1 OCI Account and Region Readiness
+- [ ] Confirm account is active and home region has `VM.Standard.A1.Flex` capacity.
+- [ ] Create cost budget alerts before first production deploy.
+- [ ] Record service limits for compute, block volume, LB, and object storage.
 
-### 0.4 UptimeRobot (bridge — keep Render alive while migrating)
-- [ ] Sign up at uptimerobot.com (free)
-- [ ] Add HTTP monitor: `https://your-render-url/actuator/health`, every 5 minutes
-- [ ] Verify monitor is green — Render cold starts eliminated
+### 0.2 Network and Security Foundation
+- [ ] Create VCN, public subnet for reverse proxy, and secure NSG/security list rules.
+- [ ] Open only required ingress (`80`, `443`, `8081` if direct test).
+- [ ] Configure Bastion/SSH access and lock down admin access paths.
 
-**Phase 0 done when:** OCI VM running Docker, R2 wired, domain Cloudflare-proxied, Vercel env vars updated, smoke test passes.
+### 0.2.1 Terraform Foundation (Infrastructure as Code First)
+- [ ] Add `infra/` root with standard module structure:
+  - `infra/bootstrap`
+  - `infra/modules/*`
+  - `infra/envs/dev` and `infra/envs/prod`
+- [ ] Pin Terraform and `oracle/oci` provider versions; commit `.terraform.lock.hcl`.
+- [ ] Keep infra plan deterministic: `terraform fmt -check`, `terraform validate`, `terraform test` in CI.
+- [ ] Use OCI Resource Manager for Terraform job execution and drift detection.
+- [ ] Mark secret inputs as sensitive; never commit plaintext secrets/tfstate.
+
+### 0.3 Compute Runtime
+- [ ] Provision `VM.Standard.A1.Flex` instance with Ubuntu and Docker.
+- [ ] Configure persistent volume mounts for app data/log rotation.
+- [ ] Deploy backend + reverse proxy via Docker Compose.
+
+### 0.4 Object Storage and Backups
+- [ ] Create bucket(s) for app assets/backups in OCI Object Storage.
+- [ ] Define lifecycle policy for stale objects and backup retention.
+- [ ] Configure app-level CORS/public URL rules as required.
+
+### 0.5 DNS and TLS
+- [ ] Point `api.yourdomain.com` to OCI public endpoint/LB.
+- [ ] Configure TLS termination (reverse proxy and certificate renewal).
+
+### 0.6 Monitoring and Alerts
+- [ ] Enable OCI Logging and Monitoring for backend host and app.
+- [ ] Add alarms for CPU, memory, 5xx spikes, and host health.
+- [ ] Add uptime checks and incident notification channel.
+
+**Phase 0 done when:** OCI backend is reachable via custom domain/TLS, infra is Terraform-managed, alerts are active, and smoke test passes.
 
 ---
 
 ## Phase 1 — Backend Completions
 > Wire features that exist in config but were never completed. No new models or migrations needed.
 
-### 1.1 Cloudflare R2 — File Storage Integration
+### 1.1 OCI Object Storage — File Storage Integration
 **File:** `backend/src/main/java/com/eventmanagement/service/FileStorageService.java`
 **Current state:** Wired to Supabase Storage via RestTemplate. Supabase credentials often missing in prod → uploads silently fall back to local disk → files lost on container restart.
-**Goal:** Replace Supabase Storage path with AWS SDK v2 S3 client pointed at R2 endpoint. Keep Supabase Storage as fallback if R2 env vars absent.
+**Goal:** Replace Supabase Storage path with OCI Object Storage client flow. Keep Supabase path as temporary fallback until OCI rollout is complete.
 
-- [ ] Add AWS SDK v2 S3 dependency to `pom.xml`: `software.amazon.awssdk:s3`
-- [ ] Add R2 environment variables to `application.yml`:
-  - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL`
-- [ ] Refactor `FileStorageService`: build `S3Client` with R2 endpoint (`https://<account-id>.r2.cloudflarestorage.com`), region `auto`
-- [ ] Replace `uploadToSupabase()` with `uploadToR2()` using `PutObjectRequest`
-- [ ] Replace `buildSupabasePublicUrl()` with R2 public URL construction
-- [ ] Update `downloadFile()` to redirect to R2 public URL for public files
-- [ ] Test: upload event banner, verify URL serves from Cloudflare CDN
-- [ ] Set R2 env vars in Render (current) and later OCI
+- [ ] Add OCI Object Storage SDK dependency in `pom.xml` (Oracle Java SDK module for Object Storage)
+- [ ] Add OCI storage env variables to `application.yml`:
+  - `OCI_REGION`, `OCI_NAMESPACE`, `OCI_BUCKET`, `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY_PATH`
+- [ ] Refactor `FileStorageService` to upload/download via OCI Object Storage APIs.
+- [ ] Replace Supabase public URL builder with OCI object URL/signed URL strategy.
+- [ ] Update `downloadFile()` to use signed URL or controlled proxy route.
+- [ ] Test: upload event banner, verify URL serves correctly from OCI Object Storage flow.
+- [ ] Store OCI credentials securely (Vault or restricted host secret file with rotation plan).
 
-### 1.2 WebSocket — Real-time Check-in Updates ✅
+### 1.2 WebSocket — Real-time Check-in Updates ✅ (Feature Complete, Hardening Pending)
 **Files:** `RegistrationUpdatePublisher.java`, `CheckInBroadcast.java` (new DTO), `RegistrationService.java`, `useCheckInSocket.ts`, `check-in/page.tsx`
 - [x] Created `CheckInBroadcast` record DTO (`registrationId, eventId, attendeeName, attendeeEmail, seatNumber, checkedInAt, method`)
 - [x] Added `publishCheckIn(Registration)` method to `RegistrationUpdatePublisher` — broadcasts to `/topic/checkins/{eventId}`
@@ -86,6 +209,10 @@
 - [x] Installed `@stomp/stompjs@7.3.0`, `sockjs-client@1.6.1`, `@types/sockjs-client@1.5.4`
 - [x] Created `hooks/useCheckInSocket.ts` — STOMP client hook with auth header + stale-closure-safe callback ref
 - [x] Wired hook in `check-in/page.tsx` — live attendee list updates on check-in broadcast
+- [ ] Remove `attendeeEmail` from broadcast payload unless strictly required by role/UX.
+- [ ] Add explicit message-level authorization policy for STOMP destinations (`/app/**`, `/topic/**`) and deny-by-default for inbound message types.
+- [ ] Tighten WebSocket allowed origins to strict environment allowlist (no broad wildcard patterns).
+- [ ] Add security regression tests for unauthorized subscribe/publish attempts.
 
 ### 1.3 OpenAPI / Swagger Docs ✅
 **Files:** `pom.xml`, `SecurityConfig.java`, `OpenApiConfig.java` (new), all controllers
@@ -99,17 +226,18 @@
 ### 1.4 OCI Deployment
 **File:** `backend/Dockerfile` (already updated — `eclipse-temurin:21-jre-jammy`, container-aware JVM flags)
 
-- [ ] On OCI VM: `git clone` repo
-- [ ] `docker build -t stageway-backend .` (builds native ARM64)
-- [ ] Create `/opt/stageway/.env` with all production env vars
-- [ ] Run container with `--restart unless-stopped`, `--env-file`
-- [ ] Configure nginx: proxy `api.yourdomain.com` → `localhost:8081`
-- [ ] Test all endpoints via Cloudflare proxy URL
-- [ ] Update Vercel env var `NEXT_PUBLIC_API_BASE_URL` to new OCI URL
-- [ ] Verify frontend → OCI backend connection
-- [ ] Remove Render service (or leave as fallback)
+- [ ] Provision A1 VM and base OS hardening via Terraform.
+- [ ] Deploy backend container and reverse proxy via Docker Compose.
+- [ ] Configure secrets/env vars via OCI-friendly secure path (Vault or protected env-file).
+- [ ] Configure health endpoint checks and restart policies.
+- [ ] Test all endpoints via OCI public URL.
+- [ ] Bind custom domain `api.yourdomain.com` + TLS cert.
+- [ ] Update Vercel env var `NEXT_PUBLIC_API_BASE_URL` to OCI API URL.
+- [ ] Verify frontend → OCI backend connection.
+- [ ] Remove Render service after cutover and rollback window
+- [ ] Keep rollback strategy documented (previous image tag + compose rollback steps).
 
-**Phase 1 done when:** Files upload to R2 and serve from CDN. Check-in page updates live ✅. API docs available ✅. Backend running on OCI with no cold starts.
+**Phase 1 done when:** Files upload to OCI Object Storage (or approved interim fallback), check-in page updates live ✅, API docs available ✅, backend runs stably on OCI with no free-dyno cold starts.
 
 ---
 
@@ -286,7 +414,8 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - [x] Seat availability, registration flow inline
 
 ### 4.3 Create/Edit Event
-- [ ] Dark form with glass card sections — not yet rebuilt for dark theme
+- [~] Partially modernized, but still not fully on Design System v2 tokens/motion/accessibility parity.
+- [ ] Finalize create/edit flow to full v2 system (token usage, spacing scale, motion, input states, validation UX consistency).
 
 **Phase 4 done when:** ✅ Discovery and detail pages done. Create/Edit uses legacy styles (functional, not dark-themed).
 
@@ -364,14 +493,46 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - [x] EventCarousel prev/next buttons already had `aria-label`
 
 ### 9.5 Final Deployment Checks
-- [ ] Update `next.config.mjs`: add R2 public URL to `images.domains` (when R2 credentials available)
-- [ ] Update CORS on Spring Boot: add OCI/Cloudflare proxy URL to allowed origins
+- [ ] Update `next.config.mjs`: add storage/public asset domain used in OCI file flow
+- [ ] Update CORS on Spring Boot: add OCI API custom domain + Vercel frontend domain
 - [ ] Environment variables verified in Vercel dashboard
-- [ ] Environment variables verified in OCI `.env` file
-- [ ] Run `bun run verify` (lint + typecheck + audit) — zero errors ✅ (0 errors, 3 pre-existing warnings)
-- [ ] Run `./mvnw checkstyle:check` — passes ✅
-- [ ] Run `./mvnw test` — all tests pass
+- [ ] Environment variables verified on OCI host/runtime
+- [x] Run `bun run verify` (lint + typecheck) — passes after frontend quality cleanup.
+- [~] Run `bun run security:audit` — fails with known dependency vulnerabilities; upgrade plan required.
+- [x] Run `./mvnw checkstyle:check` — passes (verified 2026-05-24).
+- [~] Run `./mvnw test` — passes with required env vars injected; needs stable test defaults for zero-config local run.
 - [ ] Smoke test full user journey: sign up → browse events → register → QR → check-in
+
+### 9.6 Enterprise Hardening, Simplification, and SSOT
+> Priority is reliability and clarity without over-engineering.
+
+- [ ] Remove stale infra references from docs/scripts and align all docs to one current stack (Vercel + OCI + Supabase + Object Storage + Caffeine).
+- [ ] Enforce one backend topology for local/prod parity:
+  - local: Spring Boot + Supabase services + same env contract
+  - prod: Spring Boot container on OCI host with same env contract
+- [ ] Add test-safe backend defaults/profile for required auth/storage placeholders so `mvn test` runs clean locally without manual env hacks.
+- [ ] Stabilize frontend test baseline:
+  - isolate integration tests that require backend
+  - harden browser API mocks
+  - make CI deterministic
+- [ ] Resolve duplicate/fragmented client infrastructure (single QueryClient source, remove dead client state bootstrapping).
+- [ ] Add minimal E2E happy-path coverage (auth → browse → register → check-in) and run in CI.
+
+### 9.7 Terraform and Infra Operations Hardening
+- [ ] Add CI checks for IaC quality:
+  - `terraform fmt -check -recursive`
+  - `terraform validate`
+  - `terraform test` (module-level tests where useful)
+- [ ] Enforce PR workflow:
+  - plan on PR
+  - apply only on protected branch/manual approval
+- [ ] Add drift detection cadence (scheduled `terraform plan` in read-only mode).
+- [ ] Prevent state/secrets leaks:
+  - block `terraform.tfstate` and `.tfvars` secret files from git
+  - review outputs to avoid exposing secret values
+- [ ] Define rollback runbook:
+  - rollback by redeploying previous image tag
+  - validate health endpoint and websocket reconnect behavior after rollback
 
 ---
 
@@ -380,15 +541,17 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 
 | Decision | Choice | Reason |
 |---|---|---|
-| Backend runtime | OCI ARM Ampere A1 (free VM) | 24GB RAM, always-on, Docker-native, zero cost forever |
+| Active backend cloud (current) | OCI Always Free (A1 VM path) | Maximize zero-cost runway for StageWay backend |
+| Backend runtime | OCI Compute A1 + Docker Compose | Simple, predictable, and stays inside Always Free targets |
 | Frontend hosting | Vercel | Best Next.js platform, zero config, free tier sufficient |
 | Database | Supabase PostgreSQL | Already wired for auth + DB, Flyway migrations in place |
 | Auth | Supabase JWT | Already working, Google OAuth done |
-| File storage | Cloudflare R2 | Zero egress fees, S3-compatible (AWS SDK), free 10GB |
-| CDN/DNS | Cloudflare free | Free WAF, DDoS, SSL, CDN |
+| File storage | OCI Object Storage | Stays in OCI ecosystem and aligns with Always Free limits |
+| DNS/TLS | OCI DNS + reverse proxy TLS | Minimal moving parts and direct control |
+| Secrets | OCI Vault or restricted host secret file | Practical security with gradual hardening path |
+| Infra provisioning | Terraform + OCI provider + Resource Manager | Repeatable infra with drift detection |
 | Backend language | Keep Spring Boot | Well-built backend, complex business logic, not worth rewriting |
-| Cloudflare Workers | Skipped | Cannot run JVM — incompatible with Spring Boot |
-| Cloudflare D1 | Skipped | SQLite, not JDBC-compatible with Spring Boot/JPA |
+| OCI scale model | Vertical-first within 4 OCPU/24GB, then optional 2-node + free LB | Best cost efficiency for personal-project traffic |
 | Three.js integration | React Three Fiber | Declarative, React-native, avoids manual lifecycle management |
 | Theme | Dark-first | Concert/stage aesthetic, neon effects only work on dark backgrounds |
 | Cache | Caffeine in-memory | Already running in prod, sufficient for current scale |
@@ -401,6 +564,7 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 | UI accent system | Indigo-violet `#7c5af5` primary + amber `#f5a623` spotlight + category colors | v1 violet-only felt flat; amber adds warmth; category dots (rose/sky/orange/violet/emerald) let cards breathe visually |
 | Background depth | Noise texture on body + ambient gradient orbs per section | Researched 2025 dark glassmorphism trend — flat `#0d0d12` felt cheap vs layered depth with noise + orbs |
 | Skills installed | `anthropics/skills/frontend-design`, `vercel-labs/agent-skills/web-design-guidelines`, `anthropics/skills/theme-factory` | Globally via `npx skills add`, for design-aware sessions |
+| Single backend strategy | Same Spring Boot backend contract for local + prod (OCI target) | Reduces environment drift, lowers debugging complexity, keeps one source of truth |
 
 ---
 
@@ -408,10 +572,11 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 
 | Item | Blocked On | Who |
 |---|---|---|
-| Phase 0.1 | OCI account signup | User |
-| Phase 0.2 | Enable R2 in Cloudflare dashboard | User |
-| Phase 1.1 | R2 bucket + API credentials | Depends on 0.2 |
-| Phase 1.4 | OCI VM provisioned + SSH access | Depends on 0.1 |
+| OCI pivot baseline | Home region capacity for A1 shape / provisioning success | User |
+| OCI Terraform bootstrap | Initial OCI tenancy/user/policy wiring for Terraform workflows | Depends on OCI IAM setup |
+| Phase 0.2 | VCN + security baseline completion | Depends on tenancy limits/policies |
+| Phase 0.4 / 1.1 | Object Storage bucket policy + signed URL strategy finalized | User + Depends on 0.4 |
+| Phase 1.4 | OCI deploy path hardened (TLS, alarms, rollback) | Depends on 0.3, 0.5, 0.6 |
 
 ---
 
@@ -419,11 +584,14 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 
 **Next session priorities (in order):**
 
-1. **Phase 1.1 — R2 File Storage** — blocked on user creating R2 bucket/credentials (Phase 0.2)
-2. **Phase 4.3 — Create/Edit Event form** — functional but uses legacy styling, needs v2 design treatment (glass cards, category-colored inputs, new token system)
-3. **Extend v2 design to inner pages** — dashboard, host hub, check-in, registrations, analytics — still use v1 surface colors (`#13131a`) that don't match new `#0e1018` surface token
-4. **Phase 9.1 — Page transitions** — AnimatePresence between routes in layout (currently pages snap on nav)
-5. **Phase 1.4 / Phase 0** — OCI deployment (do last, when ready to go live)
+1. **Fix quality gates first** — make `bun run verify`, `bun test`, and `mvn test` deterministic and green.
+2. **OCI Always Free bootstrap** — provision A1 VM in home region and validate free-tier resource fit.
+3. **OCI Terraform foundation** — define OCI modules/stacks and reproducible infra recovery workflow.
+4. **Phase 9.6 SSOT cleanup** — remove stale infra guidance and enforce one documented stack/runtime path.
+5. **Phase 1.2 hardening** — tighten WebSocket auth/origin policy and reduce broadcast PII.
+6. **Phase 1.1 storage path decision** — keep current path or migrate to OCI Object Storage within free limits.
+7. **Phase 4.3 + transitions** — complete create/edit v2 parity and route transitions.
+8. **OCI backend production hardening** — monitoring alarms, backups, and optional free LB when needed.
 
 **Already complete:**
 - Phase 2 v2 ✅ — Full UI redesign "Luminary" (April 2026): Lenis, new tokens, NavBar pill, Footer CTA band, EventCard poster, EventsPage, HeroSection parallax
@@ -434,5 +602,4 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - Phase 9.2, 9.3 (partial), 9.4 — mobile/reduced-motion, React.memo, aria-labels
 - Landing page, About page — complete dark rebuild
 - Checkstyle clean (BUILD SUCCESS)
-- ESLint clean (0 errors, 3 pre-existing warnings)
-- TypeScript clean (0 new errors; 7 pre-existing in StageScene.tsx `useRef` type narrowing — not blocking)
+- Backend tests pass with injected env placeholders

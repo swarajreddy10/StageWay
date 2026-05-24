@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 declare module "bun:test" {
+  export interface TestFn {
+    (name: string, fn: () => void | Promise<void>): void;
+    skip(name: string, fn: () => void | Promise<void>): void;
+  }
+
   export function describe(name: string, fn: () => void): void;
-  export function test(name: string, fn: () => void | Promise<void>): void;
+  export const test: TestFn;
   export function beforeAll(fn: () => void | Promise<void>): void;
   export function beforeEach(fn: () => void | Promise<void>): void;
   export function afterEach(fn: () => void | Promise<void>): void;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Calendar, MapPin, Users, Ticket, Clock,
@@ -110,7 +111,14 @@ export default function EventDetailPage() {
       {/* Hero banner */}
       <div className="relative h-64 overflow-hidden md:h-80 lg:h-96">
         {currentEvent.bannerImageUrl ? (
-          <img src={currentEvent.bannerImageUrl} alt={currentEvent.name} className="h-full w-full object-cover grayscale opacity-60" />
+          <Image
+            src={currentEvent.bannerImageUrl}
+            alt={currentEvent.name}
+            fill
+            className="object-cover grayscale opacity-60"
+            sizes="100vw"
+            priority
+          />
         ) : (
           <div className="h-full w-full bg-[#0e1018]" />
         )}

@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useAuthStore } from "@/stores/authStore";
 import { useRegistrations } from "@/hooks/useRegistrations";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegistrationCard } from "@/components/registration/RegistrationCard";

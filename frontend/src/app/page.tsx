@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -20,8 +19,6 @@ import HeroSection from "@/components/HeroSection";
 import { fetchEvents } from "@/lib/event-api";
 import { useBackendStatusStore } from "@/hooks/useBackendStatus";
 import type { Event } from "@/types/event";
-
-const FloatingCard = dynamic(() => import("@/components/three/FloatingCard"), { ssr: false });
 
 /* ─── helpers ─────────────────────────────────────────────────── */
 function formatDate(value: string) {
