@@ -117,12 +117,12 @@ export default function EventDetailPage() {
   return (
     <main className="min-h-screen bg-[#060810]">
       {/* Content grid */}
-      <div className="container space-y-6 px-4 py-6 md:px-8 md:py-8">
+      <div className="container max-w-[1240px] space-y-5 px-4 py-5 md:px-8 md:py-7">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#0e1018] p-3 transition-colors duration-200 hover:border-white/[0.12] sm:p-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/[0.07] bg-[#0e1018]/65 p-2.5 backdrop-blur-sm transition-colors duration-200 hover:border-white/[0.12] sm:p-3"
         >
           <Button
             variant="ghost"
@@ -154,7 +154,7 @@ export default function EventDetailPage() {
           </div>
         </motion.div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
 
           {/* Left — event details */}
           <div className="space-y-6">
