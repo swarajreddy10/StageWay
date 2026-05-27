@@ -4,7 +4,7 @@ import { memo } from "react";
 import { cn } from "@/lib/utils";
 import type { Event } from "@/types/event";
 import { format, toZonedTime } from "date-fns-tz";
-import { Calendar, MapPin, Users, ArrowUpRight } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowUpRight, Ticket } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { EventImage } from "./EventImage";
@@ -47,29 +47,17 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Link href={`/events/${event.id}`} className="block h-full group">
+      <Link href={`/events/${event.id}`} className="group block h-full">
         <div
           className={cn(
-            "relative h-full overflow-hidden rounded-2xl border transition-all duration-300",
-            "border-white/[0.07] bg-[#0e1018]",
-            "hover:-translate-y-1.5",
+            "relative h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e1018] transition-all duration-300",
+            "hover:-translate-y-1 hover:border-white/[0.16]",
             className
           )}
-          style={{
-            boxShadow: "0 2px 16px rgba(0,0,0,0.35)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow =
-              `0 0 0 1px ${cat.glow}, 0 8px 32px rgba(0,0,0,0.5), 0 0 40px ${cat.glow}`;
-            (e.currentTarget as HTMLElement).style.borderColor = cat.dot + "44";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 16px rgba(0,0,0,0.35)";
-            (e.currentTarget as HTMLElement).style.borderColor = "";
-          }}
+          style={{ boxShadow: "0 4px 22px rgba(0,0,0,0.35)" }}
         >
-          {/* Poster-format banner — 3:4 aspect */}
-          <div className="relative aspect-[3/4] w-full overflow-hidden">
+          {/* Landscape banner for denser marketplace scanning */}
+          <div className="relative aspect-[16/10] w-full overflow-hidden">
             <EventImage
               src={rawBannerSrc}
               alt={event.name}
@@ -81,7 +69,7 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
 
             {/* Top badges row */}
             <div className="absolute top-3 inset-x-3 flex items-center justify-between">
-              {/* Category dot + label */}
+              {/* Category chip */}
               <div
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-md text-[10px] font-semibold uppercase tracking-wider"
                 style={{ background: cat.badge, border: `1px solid ${cat.dot}30`, color: cat.dot }}
@@ -90,7 +78,7 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
                 {event.category || "Event"}
               </div>
 
-              {/* Price */}
+              {/* Price chip */}
               <div
                 className="px-2.5 py-1 rounded-full backdrop-blur-md text-[10px] font-bold"
                 style={{
@@ -113,7 +101,7 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
             )}
 
             {/* Bottom overlay content */}
-            <div className="absolute bottom-0 inset-x-0 p-4 space-y-2">
+            <div className="absolute inset-x-0 bottom-0 space-y-2 p-4">
               {/* Date pill */}
               <div className="flex items-center gap-1.5">
                 <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/50">
@@ -125,13 +113,13 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
               </div>
 
               {/* Title */}
-              <h3 className="font-display text-base font-bold text-white leading-tight line-clamp-2 group-hover:text-white transition-colors">
+              <h3 className="line-clamp-2 font-display text-lg font-bold leading-tight text-white transition-colors group-hover:text-white">
                 {event.name}
               </h3>
 
               {/* Venue */}
               {(event.venueName ?? event.location) && (
-                <div className="flex items-center gap-1.5 text-[11px] text-white/40">
+                <div className="flex items-center gap-1.5 text-xs text-white/45">
                   <MapPin className="h-3 w-3 shrink-0" />
                   <span className="line-clamp-1">{event.venueName ?? event.location}</span>
                 </div>
@@ -140,9 +128,9 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
           </div>
 
           {/* Card bottom strip */}
-          <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.05]">
-            <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-              <Users className="h-3 w-3" />
+          <div className="flex items-center justify-between border-t border-white/[0.06] px-4 py-3">
+            <div className="flex items-center gap-1.5 text-xs text-white/35">
+              <Users className="h-3.5 w-3.5" />
               <span>
                 {isSoldOut
                   ? "Fully booked"
@@ -150,7 +138,7 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
               </span>
               {/* Capacity fill bar */}
               {!isSoldOut && (
-                <div className="ml-1 w-16 h-px rounded-full bg-white/[0.07] overflow-hidden">
+                <div className="ml-1 h-1 w-16 overflow-hidden rounded-full bg-white/[0.07]">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${fillPct}%`, background: cat.dot + "88" }}
@@ -159,11 +147,10 @@ export const EventCard = memo(function EventCard({ event, className, index = 0 }
               )}
             </div>
 
-            <div
-              className="h-6 w-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0"
-              style={{ background: cat.badge, border: `1px solid ${cat.dot}30` }}
-            >
-              <ArrowUpRight className="h-3 w-3" style={{ color: cat.dot }} />
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-white/65">
+              <Ticket className="h-3.5 w-3.5 text-white/45" />
+              View
+              <ArrowUpRight className="h-3.5 w-3.5 translate-x-0 transition-transform duration-200 group-hover:translate-x-0.5" />
             </div>
           </div>
         </div>

@@ -7,7 +7,6 @@ import {
   Calendar,
   CalendarPlus,
   DollarSign,
-  Edit,
   MapPin,
   Share2,
   Tags,
@@ -25,6 +24,7 @@ interface EventDetailsProps {
 }
 
 export function EventDetails({ event, canEdit }: EventDetailsProps) {
+  void canEdit;
   const isSoldOut = event.availableSeats === 0;
   const isFree = event.price === 0;
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -91,17 +91,6 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
               </Badge>
             </div>
             <div className="flex gap-1.5">
-              {canEdit && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Edit event"
-                  onClick={() => (window.location.href = `/events/${event.id}/edit`)}
-                  className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:bg-black/50 active:scale-[0.97]"
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-              )}
               <Button
                 variant="outline"
                 size="icon"
