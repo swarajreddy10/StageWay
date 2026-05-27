@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -65,6 +66,20 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST.value(),
             "Bad Request",
             message,
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(
+        HttpMessageNotReadableException ex,
+        HttpServletRequest request
+    ) {
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Bad Request",
+            "Invalid request payload.",
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

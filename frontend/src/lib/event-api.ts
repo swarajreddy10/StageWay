@@ -26,6 +26,25 @@ const normalizeEvent = (event: Event): Event => {
 
 const normalizeEventList = (events: Event[]) => events.map(normalizeEvent);
 
+const toBackendEventPayload = (request: CreateEventRequest | UpdateEventRequest) => {
+  const payload: Record<string, unknown> = { ...request } as Record<string, unknown>;
+
+  if (payload.startDate && !payload.startsAt) {
+    payload.startsAt = payload.startDate;
+  }
+  if (payload.endDate && !payload.endsAt) {
+    payload.endsAt = payload.endDate;
+  }
+  if (payload.bannerUrl && !payload.bannerImageUrl) {
+    payload.bannerImageUrl = payload.bannerUrl;
+  }
+
+  delete payload.startDate;
+  delete payload.endDate;
+  delete payload.bannerUrl;
+  return payload;
+};
+
 const buildEventQuery = (filters?: EventQuery) => {
   const queryParams = new URLSearchParams();
 
@@ -68,12 +87,12 @@ export async function fetchEvent(id: number): Promise<Event> {
 }
 
 export async function createEvent(request: CreateEventRequest): Promise<Event> {
-  const event = await apiClient.post<Event>(API_ROUTES.events, request);
+  const event = await apiClient.post<Event>(API_ROUTES.events, toBackendEventPayload(request));
   return normalizeEvent(event);
 }
 
 export async function updateEvent(eventId: number, request: UpdateEventRequest): Promise<Event> {
-  const event = await apiClient.put<Event>(API_ROUTES.event(eventId), request);
+  const event = await apiClient.put<Event>(API_ROUTES.event(eventId), toBackendEventPayload(request));
   return normalizeEvent(event);
 }
 
