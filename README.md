@@ -111,6 +111,32 @@ docker-compose down -v && docker-compose up -d
 
 ---
 
+## 🚢 Deploy Backend on Render (Docker)
+
+This repository now includes a production-ready Render Blueprint at `render.yaml` for the backend service.
+
+### Important Free Tier Reality
+- Render Free web services spin down after 15 minutes of inactivity and take about ~1 minute to spin up again.
+- Free web services also use an ephemeral filesystem (local files are lost on restart/redeploy/spin-down).
+- If you need truly always-on behavior, move the service to a paid Render plan.
+
+### One-Time Setup
+1. Push this repository to GitHub/GitLab.
+2. In Render, create a new **Blueprint** and point it to this repo.
+3. Render will read `render.yaml` and prompt for `sync: false` secrets.
+4. Set all required backend env vars (database, Supabase, CORS, QR secret, admin emails).
+5. Deploy.
+
+### What `render.yaml` configures
+- Docker runtime using `backend/Dockerfile`
+- `healthCheckPath: /actuator/health`
+- `SPRING_PROFILES_ACTIVE=prod`
+- Free plan (`plan: free`)
+- Graceful shutdown window (`maxShutdownDelaySeconds: 120`)
+- Build filter so backend deploys are triggered only by `backend/**` changes
+
+---
+
 ## 📚 API Overview
 
 ### **Authentication**
@@ -237,7 +263,7 @@ docker-compose exec stageway-db psql -U postgres -d eventmanagement
 
 ### **Environment Profiles**
 - `dev` — active in Docker via `SPRING_PROFILES_ACTIVE=dev`, connects to Supabase PostgreSQL, pool size 2-10, DEBUG logging
-- `prod` — activate via `SPRING_PROFILES_ACTIVE=prod`, no defaults, all env vars required, pool size 10-200
+- `prod` — activate via `SPRING_PROFILES_ACTIVE=prod`, no defaults, all env vars required, Render-safe defaults for pool size and graceful shutdown
 
 **Required env vars in `backend/.env`:**
 ```
@@ -248,6 +274,13 @@ SUPABASE_ANON_KEY=
 DATABASE_URL=
 DATABASE_USERNAME=
 DATABASE_PASSWORD=
+```
+
+**Additional production tuning vars (optional):**
+```
+DB_POOL_MIN_IDLE=1
+DB_POOL_MAX_SIZE=8
+APP_STORAGE_ALLOW_LOCAL_FALLBACK=false
 ```
 
 ### **Database Configuration**
