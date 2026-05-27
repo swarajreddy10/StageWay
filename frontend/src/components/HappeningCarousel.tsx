@@ -81,7 +81,7 @@ export default function HappeningCarousel() {
       <div className="container px-4 md:px-8">
         <div className="mb-4 sm:mb-6 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
           <div className="space-y-1 sm:space-y-2">
-            <Badge className="bg-white/80 text-foreground border border-white/70 text-xs">
+            <Badge className="bg-[#0e1018] text-white/60 border border-white/[0.08] text-xs">
               Platform Features
             </Badge>
             <h2 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">
@@ -96,7 +96,7 @@ export default function HappeningCarousel() {
               type="button"
               variant="outline"
               onClick={goPrev}
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/90 p-0 text-foreground shadow-sm hover:bg-white"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/[0.08] bg-[#0e1018] p-0 text-foreground shadow-sm hover:bg-[#141720]"
               aria-label="Previous"
             >
               <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -105,7 +105,7 @@ export default function HappeningCarousel() {
               type="button"
               variant="outline"
               onClick={goNext}
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/70 bg-white/90 p-0 text-foreground shadow-sm hover:bg-white"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-white/[0.08] bg-[#0e1018] p-0 text-foreground shadow-sm hover:bg-[#141720]"
               aria-label="Next"
             >
               <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -113,7 +113,7 @@ export default function HappeningCarousel() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/70 bg-white/80 shadow-[0_28px_70px_rgba(15,23,42,0.14)]">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#0e1018] ">
           <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[16/7] w-full">
             {slides.map((slide, index) => (
               <motion.div
@@ -134,12 +134,12 @@ export default function HappeningCarousel() {
                   priority={index === 0}
                 />
                 <div className="absolute inset-0">
-                  <div className="absolute inset-0 bg-black/50" />
+                  <div className="absolute inset-0 bg-[#060810]/50" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
                 </div>
                 <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10">
                   <div className="max-w-3xl space-y-2 sm:space-y-3">
-                    <span className="inline-block text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white font-bold bg-black/80 px-3 py-1 rounded-full">
+                    <span className="inline-block text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white font-bold bg-[#060810]/80 px-3 py-1 rounded-full">
                       {slide.date}
                     </span>
                     <h3 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white [text-shadow:_0_2px_20px_rgb(0_0_0_/_80%)]">
@@ -149,11 +149,11 @@ export default function HappeningCarousel() {
                       {slide.subtitle}
                     </p>
                     <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/90 border-2 border-white/50 px-3 py-1.5 text-xs sm:text-sm text-white font-bold shadow-xl">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#060810]/90 border-2 border-white/50 px-3 py-1.5 text-xs sm:text-sm text-white font-bold shadow-xl">
                         <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         <span className="hidden xs:inline">{slide.location}</span>
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-black/90 border-2 border-white/50 px-3 py-1.5 text-xs sm:text-sm text-white font-bold shadow-xl">
+                      <span className="inline-flex items-center rounded-full bg-[#060810]/90 border-2 border-white/50 px-3 py-1.5 text-xs sm:text-sm text-white font-bold shadow-xl">
                         {slide.theme}
                       </span>
                     </div>
@@ -161,7 +161,7 @@ export default function HappeningCarousel() {
                       <Button
                         asChild
                         size="lg"
-                        className="bg-white text-[#1E5A55] hover:bg-gray-100 font-bold shadow-2xl h-10 sm:h-12 px-6 sm:px-8"
+                        className="bg-[#7c5af5] text-white hover:bg-[#6040e0] font-bold shadow-btn-violet h-10 sm:h-12 px-6 sm:px-8"
                       >
                         <Link href="/events">
                           Explore Events

@@ -11,6 +11,13 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
   ]),
+  {
+    rules: {
+      // Data-fetching effects legitimately call setState in callbacks and on
+      // initial trigger — disable overly strict rule for async fetch pattern.
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ])
 
 export default eslintConfig

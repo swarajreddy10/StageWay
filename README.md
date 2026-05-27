@@ -47,8 +47,8 @@ A modern full-stack platform for creating, managing, and attending events with s
 
 ### **Backend Stack**
 - **Java 21** with **Spring Boot 3.2.4** - Modern, performant backend framework
-- **PostgreSQL** - Primary database with Flyway migrations
-- **Redis** - Caching and session management
+- **PostgreSQL 18.3** - Primary database with Flyway migrations
+- **Redis 8.4.2** - Caching and session management
 - **Spring Security** - Authentication and authorization with JWT
 - **Supabase Integration** - OAuth authentication provider
 - **ZXing Library** - QR code generation and processing
@@ -75,8 +75,6 @@ A modern full-stack platform for creating, managing, and attending events with s
 
 ### **Prerequisites**
 ```bash
-Java 21+
-Maven 3.6+
 Docker & Docker Compose
 Bun 1.3.4+ (or Node.js 18+)
 ```
@@ -91,35 +89,51 @@ cd stageway
 
 2. **Configure environment**
 ```bash
-# Backend
+# Backend — copy and fill in your Supabase credentials
 cp backend/.env.example backend/.env
-# Edit with your database URL, Supabase credentials
 
 # Frontend
 cp frontend/.env.example frontend/.env.local
-# Edit with your API endpoints
 ```
 
-3. **Start with Docker (Recommended)**
+3. **Start**
 ```bash
 docker-compose up -d
+
+# First run or after version upgrades — wipe volumes first:
+docker-compose down -v && docker-compose up -d
 ```
 
-4. **Or run manually**
-```bash
-# Backend
-cd backend
-./mvnw spring-boot:run
-
-# Frontend
-cd frontend
-bun install && bun dev
-```
-
-5. **Access the application**
+4. **Access the application**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8081
 - Health Check: http://localhost:8081/actuator/health
+
+---
+
+## 🚢 Deploy Backend on Render (Docker)
+
+This repository now includes a production-ready Render Blueprint at `render.yaml` for the backend service.
+
+### Important Free Tier Reality
+- Render Free web services spin down after 15 minutes of inactivity and take about ~1 minute to spin up again.
+- Free web services also use an ephemeral filesystem (local files are lost on restart/redeploy/spin-down).
+- If you need truly always-on behavior, move the service to a paid Render plan.
+
+### One-Time Setup
+1. Push this repository to GitHub/GitLab.
+2. In Render, create a new **Blueprint** and point it to this repo.
+3. Render will read `render.yaml` and prompt for `sync: false` secrets.
+4. Set all required backend env vars (database, Supabase, CORS, QR secret, admin emails).
+5. Deploy.
+
+### What `render.yaml` configures
+- Docker runtime using `backend/Dockerfile`
+- `healthCheckPath: /actuator/health`
+- `SPRING_PROFILES_ACTIVE=prod`
+- Free plan (`plan: free`)
+- Graceful shutdown window (`maxShutdownDelaySeconds: 120`)
+- Build filter so backend deploys are triggered only by `backend/**` changes
 
 ---
 
@@ -161,10 +175,17 @@ bun install && bun dev
 
 ### **Backend Development**
 ```bash
-cd backend
-./mvnw clean test          # Run tests
-./mvnw spring-boot:run     # Start dev server
-./mvnw checkstyle:check    # Code quality
+# Start all services
+docker-compose up -d
+
+# Rebuild backend after code changes
+docker-compose up -d --build stageway-api
+
+# View logs
+docker-compose logs -f stageway-api
+
+# Run tests (inside container)
+docker-compose exec stageway-api java -jar app.jar --spring.profiles.active=dev
 ```
 
 **Test Coverage:**
@@ -202,14 +223,10 @@ bun audit                  # Security audit
 
 ### **Database Management**
 ```bash
-# Apply migrations
-./mvnw flyway:migrate
-
-# Check migration status
-./mvnw flyway:info
-
 # Access database
-docker-compose exec postgres psql -U postgres
+docker-compose exec stageway-db psql -U postgres -d eventmanagement
+
+# Flyway migrations run automatically on startup via application-dev.yml
 ```
 
 ---
@@ -226,8 +243,10 @@ docker-compose exec postgres psql -U postgres
 │   │   ├── repository/     # Data access layer
 │   │   └── config/         # Configuration
 │   └── src/main/resources/
-│       ├── application.yml  # Application configuration
-│       └── db/migration/   # Flyway migrations
+│       ├── application.yml         # Shared base config
+│       ├── application-dev.yml     # Docker dev profile (active by default)
+│       ├── application-prod.yml    # Production profile
+│       └── db/migration/           # Flyway migrations
 ├── frontend/
 │   ├── src/app/            # Next.js App Router pages
 │   ├── src/components/     # React components
@@ -242,10 +261,32 @@ docker-compose exec postgres psql -U postgres
 
 ## 🔧 Configuration
 
+### **Environment Profiles**
+- `dev` — active in Docker via `SPRING_PROFILES_ACTIVE=dev`, connects to Supabase PostgreSQL, pool size 2-10, DEBUG logging
+- `prod` — activate via `SPRING_PROFILES_ACTIVE=prod`, no defaults, all env vars required, Render-safe defaults for pool size and graceful shutdown
+
+**Required env vars in `backend/.env`:**
+```
+CORS_ALLOWED_ORIGINS=
+QR_SECRET=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+DATABASE_URL=
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
+```
+
+**Additional production tuning vars (optional):**
+```
+DB_POOL_MIN_IDLE=1
+DB_POOL_MAX_SIZE=8
+APP_STORAGE_ALLOW_LOCAL_FALLBACK=false
+```
+
 ### **Database Configuration**
-- PostgreSQL with connection pooling via HikariCP
-- Flyway for database schema migrations
-- JPA/Hibernate with validation
+- PostgreSQL (Supabase) with HikariCP connection pooling
+- Flyway migrations run automatically on startup
+- JPA/Hibernate with schema validation
 
 ### **Security Configuration**
 - JWT-based authentication via Supabase

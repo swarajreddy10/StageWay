@@ -12,9 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Files", description = "File upload and download for event banners")
 public class FileController {
     private final FileStorageService fileStorageService;
 
@@ -22,6 +26,7 @@ public class FileController {
         this.fileStorageService = fileStorageService;
     }
 
+    @Operation(summary = "Upload a file", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(value = "/files", consumes = "multipart/form-data")
     @PreAuthorize("isAuthenticated()")
     public FileAsset uploadFile(
@@ -31,6 +36,7 @@ public class FileController {
         return fileStorageService.uploadFile(file, authHeader);
     }
 
+    @Operation(summary = "Download a file by ID")
     @GetMapping("/files/{id}")
     public ResponseEntity<byte[]> downloadFile(
         @PathVariable String id,

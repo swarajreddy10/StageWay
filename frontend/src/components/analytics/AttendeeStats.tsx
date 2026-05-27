@@ -30,7 +30,7 @@ export function AttendeeStats({ demographics, timeSlots }: AttendeeStatsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+      <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
         <CardHeader>
           <CardTitle>Attendee Demographics</CardTitle>
         </CardHeader>
@@ -61,7 +61,7 @@ export function AttendeeStats({ demographics, timeSlots }: AttendeeStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+      <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
         <CardHeader>
           <CardTitle>Popular Time Slots</CardTitle>
         </CardHeader>

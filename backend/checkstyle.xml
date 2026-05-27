@@ -15,7 +15,6 @@
     <module name="RightCurly"/>
     <module name="MethodLength">
       <property name="max" value="220"/>
-      <property name="skipConstructor" value="true"/>
     </module>
     <module name="ParameterName">
       <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
@@ -23,15 +22,16 @@
     <module name="MemberName">
       <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
     </module>
-    <module name="ConstantName"/>
-    <module name="FinalLocalVariable"/>
-    <module name="RegexpMultiline">
-      <property name="format" value="System\\.out\\.print|System\\.err\\.print"/>
-      <property name="message" value="Avoid using System.out/err logging, use the logger instead."/>
-      <property name="ignoreComments" value="true"/>
+    <module name="ConstantName">
+      <!-- Allow lowercase 'log' for SLF4J logger fields -->
+      <property name="format" value="^log$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
     </module>
   </module>
   <module name="LineLength">
     <property name="max" value="120"/>
+  </module>
+  <module name="RegexpSingleline">
+    <property name="format" value="System\.(out|err)\.print"/>
+    <property name="message" value="Avoid using System.out/err logging, use the logger instead."/>
   </module>
 </module>

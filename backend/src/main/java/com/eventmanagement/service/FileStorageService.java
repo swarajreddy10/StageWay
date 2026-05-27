@@ -36,6 +36,7 @@ public class FileStorageService {
     private final String supabaseUrl;
     private final String supabaseServiceRoleKey;
     private final String supabaseStorageBucket;
+    private final boolean allowLocalFallback;
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         ".jpg",
         ".jpeg",
@@ -60,7 +61,8 @@ public class FileStorageService {
         RestTemplate restTemplate,
         @Value("${supabase.url:}") String supabaseUrl,
         @Value("${supabase.service-role-key:}") String supabaseServiceRoleKey,
-        @Value("${supabase.storage.bucket:}") String supabaseStorageBucket
+        @Value("${supabase.storage.bucket:}") String supabaseStorageBucket,
+        @Value("${app.storage.allow-local-fallback:true}") boolean allowLocalFallback
     ) {
         this.authService = authService;
         this.fileUploadRepository = fileUploadRepository;
@@ -68,6 +70,13 @@ public class FileStorageService {
         this.supabaseUrl = supabaseUrl;
         this.supabaseServiceRoleKey = supabaseServiceRoleKey;
         this.supabaseStorageBucket = supabaseStorageBucket;
+        this.allowLocalFallback = allowLocalFallback;
+        if (!isSupabaseStorageEnabled() && !allowLocalFallback) {
+            throw new IllegalStateException(
+                "Supabase Storage is required in this environment. Set SUPABASE_SERVICE_ROLE_KEY and "
+                    + "SUPABASE_STORAGE_BUCKET, or enable app.storage.allow-local-fallback."
+            );
+        }
         this.uploadRoot = Paths.get("uploads");
         try {
             Files.createDirectories(uploadRoot);
@@ -248,9 +257,11 @@ public class FileStorageService {
                 + supabaseStorageBucket
                 + "/"
                 + storagePath;
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed: " + response.getStatusCode());
+                throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed: " + response.getStatusCode());
             }
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File upload failed.");

@@ -1,44 +1,35 @@
 "use client";
 
 import { Suspense } from "react";
+import { motion } from "framer-motion";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
-import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, CheckCircle2 } from "lucide-react";
 
 export default function ResetPasswordPage() {
   return (
-    <main className="min-h-screen px-4 py-12">
-      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-2 lg:items-center">
-        <div className="hidden lg:flex flex-col gap-6 rounded-3xl border border-white/70 bg-white/80 p-10 shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
-          <Badge className="w-fit bg-[#1E5A55] text-white">
-            <ShieldCheck className="mr-2 h-3 w-3" />
-            Secure Update
-          </Badge>
-          <h1 className="font-display text-4xl font-bold">Set a new password.</h1>
-          <p className="text-muted-foreground">
-            Finish the reset flow and jump back into your events.
-          </p>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Strong password guidance built in
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Access restored right away
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#1E5A55]" />
-              Keep your account safe going forward
-            </div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#060810] px-4 py-10 sm:py-16">
+      {/* Dot grid */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+      {/* Radial vignette */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#000_100%)]" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-6 sm:p-8">
+          <div className="mb-6 text-center space-y-1">
+            <span className="font-display text-2xl font-bold tracking-tight">
+              <span className="text-white">Stage</span><span className="text-white/50">Way</span>
+            </span>
+            <p className="text-white/40 text-sm">Set new password</p>
           </div>
-        </div>
-        <div className="flex justify-center">
-          <Suspense fallback={<div className="text-center">Loading...</div>}>
+          <Suspense fallback={<div className="h-32 rounded-lg bg-white/[0.04] animate-pulse" />}>
             <ResetPasswordForm />
           </Suspense>
         </div>
-      </div>
+      </motion.div>
     </main>
   );
 }

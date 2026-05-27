@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +12,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { isBackendAssetUrl, resolveAssetUrl, resolveFileBaseUrl } from "@/lib/api-base";
 import { API_ROUTES } from "@/lib/api-routes";
@@ -25,7 +22,17 @@ import { useAuthStore } from "@/stores/authStore";
 import type { CreateEventRequest, EventCategory } from "@/types/event";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  ImagePlus,
+  Loader2,
+  MapPin,
+  Tag,
+  Ticket,
+  Upload,
+} from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, type MouseEvent } from "react";
 import { useForm } from "react-hook-form";
@@ -95,6 +102,16 @@ const categories: EventCategory[] = [
   "OTHER",
 ];
 
+const TABS = [
+  { id: "basics",   label: "Basics",   icon: Tag },
+  { id: "schedule", label: "Schedule", icon: Calendar },
+  { id: "location", label: "Location", icon: MapPin },
+  { id: "tickets",  label: "Tickets",  icon: Ticket },
+  { id: "media",    label: "Media",    icon: ImagePlus },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
 interface EventFormProps {
   initialData?: Partial<CreateEventRequest>;
   onSubmit: (data: CreateEventRequest) => Promise<void>;
@@ -113,11 +130,13 @@ export function EventForm({
   submitError,
 }: EventFormProps) {
   const { isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<TabId>("basics");
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -175,15 +194,14 @@ export function EventForm({
         .filter(Boolean)
     : [];
 
-  const tabErrors = {
-    basics: Boolean(errors.name || errors.description || errors.category || errors.tags),
+  const tabErrors: Record<TabId, boolean> = {
+    basics:   Boolean(errors.name || errors.description || errors.category || errors.tags),
     schedule: Boolean(errors.startDate || errors.endDate),
     location: Boolean(errors.location || errors.venueName),
-    tickets: Boolean(errors.capacity || errors.price || errors.currency),
-    media: Boolean(errors.bannerUrl),
+    tickets:  Boolean(errors.capacity || errors.price || errors.currency),
+    media:    Boolean(errors.bannerUrl),
   };
 
-  // Track form changes
   useEffect(() => {
     const subscription = watch(() => {
       setHasUnsavedChanges(true);
@@ -208,8 +226,7 @@ export function EventForm({
       setUploadStatus("Sign in to upload, or paste an image URL instead.");
       return;
     }
-    // Check file size (20MB limit)
-    const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+    const maxSize = 20 * 1024 * 1024;
     if (bannerFile.size > maxSize) {
       setUploadStatus(
         `File too large. Maximum size is 20MB. Your file is ${(bannerFile.size / 1024 / 1024).toFixed(2)}MB.`
@@ -229,7 +246,7 @@ export function EventForm({
       const asset = await uploadFile(bannerFile, token);
       const fileUrl = `${resolveFileBaseUrl()}${API_ROUTES.files}/${asset.id}`;
       setValue("bannerUrl", fileUrl, { shouldValidate: true });
-      setUploadStatus("Banner uploaded. Preview updated.");
+      setUploadStatus("Banner uploaded successfully.");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Upload failed";
       setUploadStatus(message);
@@ -241,15 +258,15 @@ export function EventForm({
   const onFormSubmit = async (data: EventFormData) => {
     const startDateTime = new Date(data.startDate);
     const endDateTime = new Date(data.endDate);
-    
+
     if (startDateTime >= endDateTime) {
-      setError('endDate', {
-        type: 'manual',
-        message: 'End time must be after start time'
+      setError("endDate", {
+        type: "manual",
+        message: "End time must be after start time",
       });
       return;
     }
-    
+
     const submitData: CreateEventRequest = {
       name: data.name,
       description: data.description,
@@ -270,77 +287,104 @@ export function EventForm({
               .filter(Boolean)
           : undefined,
     };
-    
+
     await onSubmit(submitData);
     setHasUnsavedChanges(false);
   };
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* ── Main form panel ── */}
         <div className="space-y-6">
-          <div className="rounded-3xl border border-white/70 bg-white/80 p-6 shadow-sm">
-            <Tabs defaultValue="basics" className="space-y-4">
-              <TabsList className="flex w-full flex-wrap justify-start gap-2 border border-white/70 bg-white/70">
-                <TabsTrigger value="basics" className="gap-2">
-                  Basics
-                  {tabErrors.basics && <span className="h-2 w-2 rounded-full bg-destructive" />}
-                </TabsTrigger>
-                <TabsTrigger value="schedule" className="gap-2">
-                  Schedule
-                  {tabErrors.schedule && <span className="h-2 w-2 rounded-full bg-destructive" />}
-                </TabsTrigger>
-                <TabsTrigger value="location" className="gap-2">
-                  Location
-                  {tabErrors.location && <span className="h-2 w-2 rounded-full bg-destructive" />}
-                </TabsTrigger>
-                <TabsTrigger value="tickets" className="gap-2">
-                  Tickets
-                  {tabErrors.tickets && <span className="h-2 w-2 rounded-full bg-destructive" />}
-                </TabsTrigger>
-                <TabsTrigger value="media" className="gap-2">
-                  Media
-                  {tabErrors.media && <span className="h-2 w-2 rounded-full bg-destructive" />}
-                </TabsTrigger>
-              </TabsList>
+          <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] overflow-hidden">
+            {/* Tab strip */}
+            <div className="flex gap-1 overflow-x-auto border-b border-white/[0.06] bg-white/[0.02] p-2">
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={[
+                    "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
+                    activeTab === id
+                      ? "bg-white/[0.09] text-white"
+                      : "text-white/40 hover:text-white/70 hover:bg-white/[0.04]",
+                  ].join(" ")}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                  {tabErrors[id] && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />
+                  )}
+                </button>
+              ))}
+            </div>
 
-              <TabsContent value="basics">
-                <div className="space-y-4 rounded-2xl border border-white/70 bg-white/60 p-4">
+            {/* Tab content */}
+            <div className="p-6">
+              {/* Basics */}
+              {activeTab === "basics" && (
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Event Name *</Label>
-                    <Input id="name" {...register("name")} disabled={isLoading} />
+                    <Label htmlFor="name" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Event Name <span className="text-white/40">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      placeholder="Give your event a great name"
+                      {...register("name")}
+                      disabled={isLoading}
+                      className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25"
+                    />
                     {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name.message}</p>
+                      <p className="flex items-center gap-1 text-xs text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.name.message}
+                      </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
+                    <Label htmlFor="description" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Description <span className="text-white/40">*</span>
+                    </Label>
                     <Textarea
                       id="description"
                       rows={5}
+                      placeholder="Tell attendees what makes this event special..."
                       {...register("description")}
                       disabled={isLoading}
+                      className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25 resize-none"
                     />
                     {errors.description && (
-                      <p className="text-sm text-destructive">{errors.description.message}</p>
+                      <p className="flex items-center gap-1 text-xs text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.description.message}
+                      </p>
                     )}
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
+                      <Label className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                        Category
+                      </Label>
                       <Select
                         value={(watch("category") as string) || ""}
                         onValueChange={(value) => setValue("category", value as EventCategory)}
                         disabled={isLoading}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/[0.04] border-white/10 text-white focus:border-white/25">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-[#141720] border-white/10">
                           {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
+                            <SelectItem
+                              key={category}
+                              value={category}
+                              className="text-white/80 focus:bg-white/[0.08] focus:text-white"
+                            >
                               {category}
                             </SelectItem>
                           ))}
@@ -348,20 +392,24 @@ export function EventForm({
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tags">Tags (comma-separated)</Label>
+                      <Label htmlFor="tags" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                        Tags
+                      </Label>
                       <Input
                         id="tags"
-                        placeholder="tech, conference, networking"
+                        placeholder="tech, networking, startup"
                         {...register("tags")}
                         disabled={isLoading}
+                        className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25"
                       />
                     </div>
                   </div>
                 </div>
-              </TabsContent>
+              )}
 
-              <TabsContent value="schedule">
-                <div className="space-y-4 rounded-2xl border border-white/70 bg-white/60 p-4">
+              {/* Schedule */}
+              {activeTab === "schedule" && (
+                <div className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <DateTimeField
                       value={watch("startDate")}
@@ -379,23 +427,30 @@ export function EventForm({
                     />
                   </div>
                 </div>
-              </TabsContent>
+              )}
 
-              <TabsContent value="location">
-                <div className="space-y-4 rounded-2xl border border-white/70 bg-white/60 p-4">
+              {/* Location */}
+              {activeTab === "location" && (
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Country
+                    </Label>
                     <Select
                       value={selectedCountry}
                       onValueChange={handleCountryChange}
                       disabled={isLoading}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white/[0.04] border-white/10 text-white focus:border-white/25">
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-60">
+                      <SelectContent className="max-h-60 bg-[#141720] border-white/10">
                         {COUNTRIES.map((country) => (
-                          <SelectItem key={country.code} value={country.code}>
+                          <SelectItem
+                            key={country.code}
+                            value={country.code}
+                            className="text-white/80 focus:bg-white/[0.08] focus:text-white"
+                          >
                             {country.name}
                           </SelectItem>
                         ))}
@@ -404,43 +459,66 @@ export function EventForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location / Address *</Label>
+                    <Label htmlFor="location" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Location / Address <span className="text-white/40">*</span>
+                    </Label>
                     <Input
                       id="location"
-                      placeholder="City, State or Full Address"
+                      placeholder="City, State or full address"
                       {...register("location")}
                       disabled={isLoading}
+                      className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25"
                     />
                     {errors.location && (
-                      <p className="text-sm text-destructive">{errors.location.message}</p>
+                      <p className="flex items-center gap-1 text-xs text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.location.message}
+                      </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="venueName">Venue Name</Label>
-                    <Input id="venueName" {...register("venueName")} disabled={isLoading} />
+                    <Label htmlFor="venueName" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Venue Name
+                    </Label>
+                    <Input
+                      id="venueName"
+                      placeholder="e.g. Madison Square Garden"
+                      {...register("venueName")}
+                      disabled={isLoading}
+                      className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25"
+                    />
                   </div>
                 </div>
-              </TabsContent>
+              )}
 
-              <TabsContent value="tickets">
-                <div className="space-y-4 rounded-2xl border border-white/70 bg-white/60 p-4">
+              {/* Tickets */}
+              {activeTab === "tickets" && (
+                <div className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="capacity">Capacity *</Label>
+                      <Label htmlFor="capacity" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                        Capacity <span className="text-white/40">*</span>
+                      </Label>
                       <Input
                         id="capacity"
                         type="number"
                         min="1"
                         {...register("capacity", { valueAsNumber: true })}
                         disabled={isLoading}
+                        className="bg-white/[0.04] border-white/10 text-white focus:border-white/25"
                       />
                       {errors.capacity && (
-                        <p className="text-sm text-destructive">{errors.capacity.message}</p>
+                        <p className="flex items-center gap-1 text-xs text-red-400">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.capacity.message}
+                        </p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="price">Price</Label>
+                      <Label htmlFor="price" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                        Price
+                      </Label>
                       <Input
                         id="price"
                         type="number"
@@ -448,71 +526,111 @@ export function EventForm({
                         min="0"
                         {...register("price", { valueAsNumber: true })}
                         disabled={isLoading}
+                        className="bg-white/[0.04] border-white/10 text-white focus:border-white/25"
                       />
                     </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="currency">Currency *</Label>
+                    <Label className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Currency <span className="text-white/40">*</span>
+                    </Label>
                     <Select
                       value={watch("currency") || "USD"}
                       onValueChange={(value) => setValue("currency", value)}
                       disabled={isLoading}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white/[0.04] border-white/10 text-white focus:border-white/25">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="max-h-60">
+                      <SelectContent className="max-h-60 bg-[#141720] border-white/10">
                         {CURRENCIES.map((currency) => (
-                          <SelectItem key={currency.code} value={currency.code}>
+                          <SelectItem
+                            key={currency.code}
+                            value={currency.code}
+                            className="text-white/80 focus:bg-white/[0.08] focus:text-white"
+                          >
                             {currency.symbol} {currency.code} - {currency.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {errors.currency && (
-                      <p className="text-sm text-destructive">{errors.currency.message}</p>
+                      <p className="flex items-center gap-1 text-xs text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.currency.message}
+                      </p>
                     )}
                   </div>
-                </div>
-              </TabsContent>
 
-              <TabsContent value="media">
-                <div className="space-y-4 rounded-2xl border border-white/70 bg-white/60 p-4">
+                  {/* Free badge indicator */}
+                  {priceValue === 0 && (
+                    <div className="flex items-center gap-2 rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-white/50" />
+                      <span className="text-xs text-white/55 font-medium">Free event — no ticket price</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Media */}
+              {activeTab === "media" && (
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="bannerUrl">Banner URL</Label>
+                    <Label htmlFor="bannerUrl" className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                      Banner URL
+                    </Label>
                     <Input
                       id="bannerUrl"
                       placeholder="https://your-image-url.com/banner.jpg"
                       {...register("bannerUrl")}
                       disabled={isLoading}
+                      className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/25 focus:border-white/25"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Paste an image URL or upload a banner below.
-                    </p>
+                    <p className="text-xs text-white/30">Paste a URL or upload a file below.</p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => setBannerFile(event.target.files?.[0] ?? null)}
-                      className="w-full rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm text-muted-foreground file:mr-4 file:rounded-full file:border-0 file:bg-white/80 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-foreground hover:file:bg-white"
-                      disabled={isLoading || isUploading}
-                    />
-                    <Button
-                      type="button"
-                      onClick={(event) => void handleUpload(event)}
-                      disabled={isLoading || isUploading}
-                      className="bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]"
-                    >
-                      {isUploading ? "Uploading..." : "Upload Banner"}
-                    </Button>
+                  {/* Upload area */}
+                  <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex flex-col items-center gap-3 sm:flex-row">
+                      <label className="flex-1 cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setBannerFile(e.target.files?.[0] ?? null)}
+                          className="sr-only"
+                          disabled={isLoading || isUploading}
+                        />
+                        <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white/40 transition hover:border-white/20 hover:text-white/60">
+                          <Upload className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{bannerFile ? bannerFile.name : "Choose image file…"}</span>
+                        </div>
+                      </label>
+                      <Button
+                        type="button"
+                        onClick={(e) => void handleUpload(e)}
+                        disabled={isLoading || isUploading || !bannerFile}
+                        className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet shrink-0 disabled:opacity-40"
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Uploading…
+                          </>
+                        ) : (
+                          "Upload Banner"
+                        )}
+                      </Button>
+                    </div>
+                    {uploadStatus && (
+                      <p className={`mt-2 text-xs ${uploadStatus.startsWith("Banner uploaded") ? "text-white/60" : "text-white/40"}`}>
+                        {uploadStatus}
+                      </p>
+                    )}
                   </div>
-
-                  {uploadStatus && <p className="text-sm text-muted-foreground">{uploadStatus}</p>}
 
                   {previewBannerUrl && (
-                    <div className="overflow-hidden rounded-2xl border border-white/70 bg-white/80">
+                    <div className="overflow-hidden rounded-xl border border-white/10">
                       <Image
                         src={previewBannerUrl}
                         alt="Event banner preview"
@@ -524,130 +642,161 @@ export function EventForm({
                     </div>
                   )}
                 </div>
-              </TabsContent>
-            </Tabs>
+              )}
+            </div>
           </div>
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-24">
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Live Preview</CardTitle>
-              <Badge variant="outline" className="border-white/70 bg-white/70 text-xs">
-                {isEditMode ? "Updating" : "Draft"}
+        {/* ── Sidebar ── */}
+        <aside className="space-y-4 lg:sticky lg:top-24">
+          {/* Live preview */}
+          <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <span className="text-sm font-semibold text-white/80">Live Preview</span>
+              <Badge className={`text-[10px] font-bold uppercase tracking-wider ${
+                isEditMode
+                  ? "border-white/[0.10] bg-white/[0.05] text-white/55"
+                  : "border-white/[0.08] bg-white/[0.03] text-white/40"
+              }`}>
+                {isEditMode ? "Editing" : "Draft"}
               </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-white/70 bg-white/80">
-                {bannerUrl ? (
-                  <Image
-                    src={previewBannerUrl}
-                    alt="Event banner preview"
-                    fill
-                    className="object-cover"
-                    unoptimized={isBackendAsset}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    Upload a banner to preview
-                  </div>
-                )}
+            </div>
+
+            {/* Banner */}
+            <div className="relative h-36 w-full bg-white/[0.03]">
+              {bannerUrl ? (
+                <Image
+                  src={previewBannerUrl}
+                  alt="Event banner"
+                  fill
+                  className="object-cover"
+                  unoptimized={isBackendAsset}
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-1.5">
+                  <ImagePlus className="h-6 w-6 text-white/15" />
+                  <span className="text-xs text-white/20">No banner yet</span>
+                </div>
+              )}
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+
+            <div className="space-y-3 p-4">
+              <div>
+                <h3 className="font-display font-semibold text-white line-clamp-2">{previewName}</h3>
+                <p className="mt-1 text-xs text-white/40 line-clamp-2">{previewDescription}</p>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">{previewName}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">{previewDescription}</p>
-              </div>
-              <Separator className="bg-white/60" />
-              <div className="grid gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center justify-between">
-                  <span>Schedule</span>
-                  <span>{endLabel ? `${startLabel} - ${endLabel}` : startLabel}</span>
+
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center justify-between text-white/40">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="h-3 w-3 text-white/30" />
+                    Schedule
+                  </span>
+                  <span className="text-white/60">
+                    {endLabel ? `${startLabel} – ${endLabel}` : startLabel}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Location</span>
-                  <span className="text-right">{previewLocation}</span>
+                <div className="flex items-center justify-between text-white/40">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3 w-3 text-white/30" />
+                    Location
+                  </span>
+                  <span className="text-right text-white/60 max-w-[120px] truncate">{previewLocation}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Capacity</span>
-                  <span>{capacityValue ? `${capacityValue} seats` : "Set capacity"}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Price</span>
-                  <span>
+                <div className="flex items-center justify-between text-white/40">
+                  <span className="flex items-center gap-1.5">
+                    <Ticket className="h-3 w-3 text-white/30" />
+                    Tickets
+                  </span>
+                  <span className="text-white/60">
+                    {capacityValue ? `${capacityValue} seats` : "—"} ·{" "}
                     {priceValue === 0 ? "Free" : `${previewCurrency} ${priceValue.toFixed(2)}`}
                   </span>
                 </div>
               </div>
+
               {tagList.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   {tagList.slice(0, 4).map((tag) => (
-                    <Badge
+                    <span
                       key={tag}
-                      variant="outline"
-                      className="border-white/70 bg-white/70 text-xs"
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/40"
                     >
                       #{tag}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-            <CardHeader>
-              <CardTitle>Publishing checklist</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+          {/* Checklist */}
+          <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-white/50">
+                Checklist
+              </span>
               {hasUnsavedChanges && (
-                <div className="flex items-center gap-2 text-amber-600">
-                  <span className="h-2 w-2 rounded-full bg-amber-600" />
-                  <span>Unsaved changes</span>
-                </div>
+                <span className="flex items-center gap-1 text-[10px] text-white/40">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/40 animate-pulse" />
+                  Unsaved
+                </span>
               )}
-              <Separator className="bg-white/60" />
-              <div className="space-y-2">
-                <p>Make sure your dates are in the future.</p>
-                <p>Add a banner to boost conversions.</p>
-                <p>Set pricing and capacity before publishing.</p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="space-y-2">
+              {[
+                "Dates must be in the future",
+                "Add a banner to boost conversions",
+                "Set capacity before publishing",
+              ].map((tip) => (
+                <div key={tip} className="flex items-start gap-2 text-xs text-white/30">
+                  <span className="mt-0.5 h-1 w-1 shrink-0 rounded-full bg-white/20" />
+                  {tip}
+                </div>
+              ))}
+            </div>
+          </div>
         </aside>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      {/* Bottom bar */}
+      <div className="flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-auto">
           {(submitNotice || submitError) && (
             <div
-              className={`rounded-md px-3 py-2 text-sm ${
+              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm ${
                 submitError
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "border border-red-500/20 bg-red-500/[0.08] text-red-400"
+                  : "border border-white/[0.10] bg-white/[0.05] text-white/60"
               }`}
             >
+              {submitError ? (
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              )}
               {submitError || submitNotice}
             </div>
           )}
         </div>
-        <div className="flex gap-4">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : isEditMode ? (
-              "Save Changes"
-            ) : (
-              "Create Event"
-            )}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-violet-600 px-6 font-semibold text-white shadow-btn-violet hover:bg-violet-500 sm:w-auto"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving…
+            </>
+          ) : isEditMode ? (
+            "Save Changes"
+          ) : (
+            "Create Event"
+          )}
+        </Button>
       </div>
     </form>
   );

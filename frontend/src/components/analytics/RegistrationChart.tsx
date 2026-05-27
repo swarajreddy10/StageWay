@@ -24,7 +24,7 @@ export function RegistrationChart({ data }: RegistrationChartProps) {
   }));
 
   return (
-    <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
+    <Card className="rounded-3xl border border-white/[0.08] bg-[#0e1018] shadow-sm">
       <CardHeader>
         <CardTitle>Registration Trend</CardTitle>
       </CardHeader>

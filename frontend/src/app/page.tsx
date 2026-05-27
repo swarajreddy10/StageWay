@@ -1,380 +1,425 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Calendar, ChartLine, CheckCircle2, Loader2, Sparkles, Users2 } from "lucide-react";
 import Link from "next/link";
-import EventCarousel from "../components/EventCarousel";
-import HappeningCarousel from "../components/HappeningCarousel";
-import HeroSection from "../components/HeroSection";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { fetchEvents } from "../lib/event-api";
-import { useBackendStatusStore } from "../hooks/useBackendStatus";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Calendar,
+  ChartLine,
+  QrCode,
+  Users,
+  Loader2,
+  CheckCircle2,
+  Zap,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
+import { EventCard } from "@/components/events/EventCard";
+import { fetchEvents } from "@/lib/event-api";
+import { useBackendStatusStore } from "@/hooks/useBackendStatus";
 import type { Event } from "@/types/event";
 
+/* ─── helpers ─────────────────────────────────────────────────── */
 function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "Schedule open";
-  }
-  return date.toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "Date TBA";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function getStart(e: Event) {
+  return e.startsAt ?? e.startDate ?? e.createdAt;
 }
 
-const experiencePillars = [
+/* ─── static data ─────────────────────────────────────────────── */
+const PILLARS = [
   {
-    title: "Event Creation",
-    description: "Build professional event pages with custom branding and ticketing in minutes.",
     icon: Calendar,
+    title: "Event Creation",
+    desc: "Build polished event pages with clear schedules, venue details, and ticket options in minutes.",
+    num: "01",
   },
   {
-    title: "Analytics Dashboard",
-    description: "Track registrations, revenue, and engagement with real-time insights.",
+    icon: ChartLine,
+    title: "Live Analytics",
+    desc: "Track registrations, revenue, and engagement with real-time charts and per-event breakdowns.",
+    num: "02",
+  },
+  {
+    icon: QrCode,
+    title: "QR Check-In",
+    desc: "Speed up entry with QR scanning and a clean check-in flow for hosts and attendees.",
+    num: "03",
+  },
+];
+
+const FLOW_STEPS = [
+  {
+    n: "01",
+    title: "Create Your Event",
+    desc: "Set dates, pricing, capacity, and upload event banners. Publish in minutes.",
+    icon: Sparkles,
+  },
+  {
+    n: "02",
+    title: "Manage Registrations",
+    desc: "Accept registrations in one flow and keep attendee updates visible to your team.",
+    icon: Users,
+  },
+  {
+    n: "03",
+    title: "Track Performance",
+    desc: "Monitor check-ins, revenue, and attendee engagement — live, from any device.",
     icon: ChartLine,
   },
-  {
-    title: "QR Check-In",
-    description: "Seamless entry with QR code scanning and instant attendee verification.",
-    icon: CheckCircle2,
-  },
 ];
 
-const flowSteps = [
-  {
-    title: "Create Your Event",
-    description: "Set dates, pricing, capacity, and upload event banners.",
-  },
-  {
-    title: "Manage Registrations",
-    description: "Accept registrations, handle waitlists, and send confirmations.",
-  },
-  {
-    title: "Track Performance",
-    description: "Monitor check-ins, revenue, and attendee engagement in real-time.",
-  },
+const TRUST_ITEMS = [
+  { value: "Reliable", label: "Platform Stability" },
+  { value: "Fast",     label: "Check-in Experience" },
+  { value: "Secure",   label: "Guest Access Flow" },
+  { value: "Live",     label: "Operational Visibility" },
 ];
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: (delay = 0) => ({
+    opacity: 1, y: 0, transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  }),
+};
+
+/* ─── Page ─────────────────────────────────────────────────────── */
 export default function HomePage() {
   const backendStatus = useBackendStatusStore((s) => s.status);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [events, setEvents]       = useState<Event[]>([]);
+  const [isLoadingEvents, setLoading] = useState(true);
+  const [hasFetched, setHasFetched]   = useState(false);
 
   useEffect(() => {
     if (backendStatus !== "awake" || hasFetched) return;
     setHasFetched(true);
-
     fetchEvents()
-      .then((data) => setEvents(data))
+      .then((d) => setEvents(d))
       .catch(() => setEvents([]))
-      .finally(() => setIsLoadingEvents(false));
+      .finally(() => setLoading(false));
   }, [backendStatus, hasFetched]);
 
-  const getEventStart = (event: Event) =>
-    event.startsAt ?? event.startDate ?? event.createdAt;
-
-  const sorted = [...events].sort(
-    (a, b) => new Date(getEventStart(a)).getTime() - new Date(getEventStart(b)).getTime()
-  );
-  const featured = sorted.slice(0, 8);
-  const nextEventLabel = featured[0]
-    ? `${featured[0].name} - ${formatDate(getEventStart(featured[0]))}`
-    : "Schedule open";
+  const sorted   = [...events].sort((a, b) => new Date(getStart(a)).getTime() - new Date(getStart(b)).getTime());
+  const featured = sorted.slice(0, 6);
+  const nextLabel = featured[0] ? `${featured[0].name} — ${formatDate(getStart(featured[0]))}` : "Schedule open";
 
   return (
-    <main className="flex-1">
-      <HappeningCarousel />
+    <main className="flex-1 bg-[#060810]">
 
-      <HeroSection
-        eventCount={events.length}
-        upcomingCount={featured.length}
-        nextEventLabel={nextEventLabel}
-      />
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <HeroSection eventCount={events.length} upcomingCount={featured.length} nextEventLabel={nextLabel} />
 
-      <section className="relative py-12 md:py-16 lg:py-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/40" />
-        <div className="container relative px-4 md:px-8">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div className="space-y-2">
-              <Badge className="border-[#1E5A55]/20 bg-[#1E5A55]/10 text-[#1E5A55] font-semibold">
-                Featured Events
-              </Badge>
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
-                Discover Upcoming Events
-              </h2>
-              <p className="text-base text-muted-foreground">Browse and register for events happening near you.</p>
-            </div>
-            <Button
-              variant="outline"
-              asChild
-              className="border-2 border-[#1E5A55]/20 bg-white hover:bg-[#1E5A55]/5 font-semibold"
-            >
-              <Link href="/events">
-                View All Events
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+      {/* ── Trust bar ────────────────────────────────────────── */}
+      <div className="bg-[#060810] pb-8">
+        <div className="container px-4 md:px-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {TRUST_ITEMS.map(({ value, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.07] bg-[#0e1018] px-4 py-4 text-center"
+              >
+                <span className="font-display text-sm font-bold text-white/85 tabular-nums tracking-tight">{value}</span>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-white/30">{label}</span>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
+
+      {/* ── Featured Events ──────────────────────────────────── */}
+      <section className="py-24 md:py-32">
+        <div className="container px-4 md:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="mb-12 flex flex-wrap items-end justify-between gap-4"
+          >
+            <motion.div variants={fadeUp} custom={0} className="max-w-2xl space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                Featured Events
+              </p>
+              <h2 className="font-display text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+                Discover what&apos;s happening
+              </h2>
+              <p className="text-sm leading-relaxed text-white/42 md:text-base">
+                Curated experiences from hosts using StageWay to run registrations, check-ins, and live operations.
+              </p>
+            </motion.div>
+            <motion.div variants={fadeUp} custom={0.08}>
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="border border-white/[0.08] text-white/40 hover:text-white hover:border-white/[0.16] text-sm h-9"
+                >
+                  <Link href="/events">
+                    Browse all events <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </motion.div>
+          </motion.div>
+
           {isLoadingEvents ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-28">
+              <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+            </div>
+          ) : featured.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-28 text-center">
+              <div className="h-14 w-14 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
+                <Calendar className="h-7 w-7 text-white/20" />
+              </div>
+              <p className="text-sm text-white/25">Events coming soon</p>
             </div>
           ) : (
-            <EventCarousel events={featured.slice(0, 5)} />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((event, index) => (
+                <EventCard key={event.id} event={event} index={index} />
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      <section className="py-12 md:py-16 lg:py-20">
+      {/* ── Section divider ───────────────────────────────────── */}
+      <div className="section-divider container" />
+
+      {/* ── Platform Pillars ─────────────────────────────────── */}
+      <section className="py-24 md:py-32">
         <div className="container px-4 md:px-8">
-          <div className="mb-10 max-w-3xl space-y-3">
-            <Badge className="border-[#D8573B]/20 bg-[#D8573B]/10 text-[#D8573B] font-semibold">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
+            className="mb-14 max-w-xl space-y-3"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
               Platform Features
-            </Badge>
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
-              Everything You Need to Run Events
+            </p>
+            <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+              Everything you need to run events
             </h2>
-            <p className="text-base text-muted-foreground">Professional tools for event management, registration, and analytics.</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {experiencePillars.map((pillar) => (
-              <Card
-                key={pillar.title}
-                className="border-2 border-[#1E5A55]/10 bg-gradient-to-br from-white to-[#1E5A55]/5 shadow-lg hover:shadow-xl transition-shadow"
+            <p className="text-sm text-white/40 leading-relaxed">
+              Professional-grade tooling for event management, registration workflows, and analytics.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-px border border-white/[0.07] rounded-xl overflow-hidden md:grid-cols-3 bg-white/[0.07] stagger-grid">
+            {PILLARS.map(({ icon: Icon, title, desc, num }) => (
+              <div
+                key={title}
+                className="group bg-[#0e1018] hover:bg-[#141720] transition-colors duration-200 p-8 flex flex-col gap-5"
               >
-                <CardHeader className="space-y-3 p-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1E5A55]/10">
-                    <pillar.icon className="h-6 w-6 text-[#1E5A55]" />
+                <div className="flex items-start justify-between">
+                  <div className="h-10 w-10 rounded-lg border border-white/[0.09] bg-white/[0.04] flex items-center justify-center group-hover:border-white/[0.15] transition-colors">
+                    <Icon className="h-4.5 w-4.5 text-white/60" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{pillar.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-base text-muted-foreground p-6 pt-0">
-                  {pillar.description}
-                </CardContent>
-              </Card>
+                  <span className="font-mono text-[10px] text-white/15 font-bold tracking-wider">{num}</span>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-display font-semibold text-white/90 text-base">{title}</h3>
+                  <p className="text-sm text-white/40 leading-relaxed">{desc}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 lg:py-20">
+      {/* ── Section divider ───────────────────────────────────── */}
+      <div className="section-divider container" />
+
+      {/* ── How it works ─────────────────────────────────────── */}
+      <section className="py-24 md:py-32">
         <div className="container px-4 md:px-8">
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="space-y-6">
-              <Badge className="border-[#1E5A55]/20 bg-[#1E5A55]/10 text-[#1E5A55] font-semibold">
-                How It Works
-              </Badge>
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl">
-                Simple Event Management Workflow
-              </h2>
-              <p className="text-base text-muted-foreground">From creation to analytics in three easy steps.</p>
-              <div className="grid gap-4">
-                {flowSteps.map((step, index) => (
-                  <div
-                    key={step.title}
-                    className="flex gap-4 rounded-xl border-2 border-[#1E5A55]/10 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-start">
+
+            {/* Steps */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55 }}
+              className="space-y-10"
+            >
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">How it works</p>
+                <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+                  Simple, powerful workflow
+                </h2>
+              </div>
+
+              <div className="space-y-2">
+                {FLOW_STEPS.map(({ n, title, desc, icon: Icon }, i) => (
+                  <motion.div
+                    key={n}
+                    initial={{ opacity: 0, x: -14 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.45, delay: i * 0.08 }}
+                    className="group flex gap-4 rounded-lg border border-white/[0.07] bg-[#0e1018] hover:border-white/[0.12] hover:bg-[#141720] p-4 transition-all duration-200"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1E5A55] text-sm font-bold text-white">
-                      {index + 1}
+                    <div className="h-9 w-9 shrink-0 rounded-md border border-white/[0.08] bg-white/[0.04] flex items-center justify-center group-hover:border-white/[0.14] transition-colors">
+                      <Icon className="h-4 w-4 text-white/50" />
                     </div>
-                    <div>
-                      <p className="font-bold text-base">{step.title}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[9px] font-bold text-white/20">{n}</span>
+                        <p className="font-semibold text-white/90 text-sm">{title}</p>
+                      </div>
+                      <p className="text-xs text-white/38 leading-relaxed">{desc}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
-            <Card className="border-2 border-[#D8573B]/10 bg-gradient-to-br from-white to-[#D8573B]/5 shadow-xl">
-              <CardHeader className="p-6">
-                <CardTitle className="text-2xl font-bold">Platform Insights</CardTitle>
-                <p className="text-base text-muted-foreground">Real-time event performance metrics.</p>
-              </CardHeader>
-              <CardContent className="space-y-4 p-6 pt-0">
-                <div className="grid gap-3 rounded-xl border-2 border-[#1E5A55]/10 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Check-In Rate</span>
-                    <span className="text-sm font-bold text-[#1E5A55]">
-                      92%
-                    </span>
+            </motion.div>
+
+            {/* Stats panel */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+            >
+              <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] p-7 space-y-7">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-display font-semibold text-white/90 text-sm">Platform Insights</p>
+                    <p className="text-xs text-white/30 mt-0.5">Live performance metrics</p>
                   </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
-                    <div className="h-full w-[92%] bg-[#1E5A55] rounded-full" />
-                  </div>
-                </div>
-                <div className="grid gap-3 rounded-xl border-2 border-[#D8573B]/10 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm">Registration Growth</span>
-                    <span className="text-sm font-bold text-[#D8573B]">
-                      +24%
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-[#D8573B]" />
-                    Strong momentum this week
+                  <div className="h-8 w-8 rounded-md border border-white/[0.08] bg-white/[0.04] flex items-center justify-center">
+                    <Zap className="h-3.5 w-3.5 text-white/50" />
                   </div>
                 </div>
+
+                <div className="space-y-5">
+                  {[
+                    { label: "Check-In Rate",       value: 92 },
+                    { label: "Registration Growth", value: 78 },
+                    { label: "Host Satisfaction",   value: 96 },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-white/45 font-medium">{label}</span>
+                        <span className="font-bold tabular-nums text-white/70 font-mono">{value}%</span>
+                      </div>
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${value}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.1, delay: 0.3, ease: "easeOut" }}
+                          className="h-full rounded-full bg-[#7c5af5]"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-white/[0.06] pt-5 grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Events Created", val: "Live" },
+                    { label: "Guest Check-In", val: "Ready" },
+                  ].map(({ label, val }) => (
+                    <div key={label} className="rounded-md border border-white/[0.07] bg-white/[0.02] p-3 text-center">
+                      <div className="text-sm font-bold text-white/70">{val}</div>
+                      <div className="text-[9px] text-white/25 mt-0.5 tracking-wide uppercase">{label}</div>
+                    </div>
+                  ))}
+                </div>
+
                 <Button
                   asChild
-                  className="w-full bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
+                  className="w-full bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm h-10 shadow-btn-white"
                 >
-                  <Link href="/analytics">View analytics</Link>
+                  <Link href="/analytics">
+                    View analytics <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                  </Link>
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-b from-white to-gray-50">
+      {/* ── Feature checklist strip ───────────────────────────── */}
+      <section className="border-t border-white/[0.05] py-14 md:py-16">
         <div className="container px-4 md:px-8">
-          <Tabs defaultValue="attendee" className="space-y-6">
-            <TabsList className="flex w-full flex-wrap justify-start gap-2 border-2 border-gray-200 bg-white p-1">
-              <TabsTrigger value="attendee" className="gap-2">
-                <Users2 className="h-4 w-4" />
-                Attendee mode
-              </TabsTrigger>
-              <TabsTrigger value="host" className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                Host mode
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="attendee">
-              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">Your personal event radar</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Find your crowd and keep tickets ready.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="grid gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-foreground" />
-                      Filter by location, date, and vibe.
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-foreground" />
-                      QR passes synced to your registrations.
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-foreground" />
-                      Reminders before every event.
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-xl">Popular this week</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-muted-foreground">
-                    {isLoadingEvents ? (
-                      <div className="flex items-center justify-center py-6">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : featured.length === 0 ? (
-                      <p className="py-4 text-center text-sm text-muted-foreground">Events coming soon</p>
-                    ) : (
-                      featured.slice(0, 3).map((event) => (
-                        <div
-                          key={event.id}
-                          className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3"
-                        >
-                          <span className="font-semibold text-foreground">{event.name}</span>
-                          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                            {formatDate(getEventStart(event))}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="host">
-              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-xl">Host stack essentials</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-muted-foreground">
-                    <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
-                      <p className="font-semibold text-foreground">Event Builder</p>
-                      <p>Draft, schedule, and publish in a single flow.</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
-                      <p className="font-semibold text-foreground">Attendee Ops</p>
-                      <p>Track check-ins and handle waitlists on the fly.</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
-                      <p className="font-semibold text-foreground">Live Analytics</p>
-                      <p>Spot what&apos;s resonating and scale the best ideas.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">Command your venue</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Keep every event moving from doors open to encore.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-sm text-muted-foreground">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-foreground" />
-                      Auto-save drafts with live preview.
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-foreground" />
-                      Dashboards per event and team.
-                    </div>
-                    <Button
-                      asChild
-                      className="w-full bg-[#d69b6d] text-white shadow-lg hover:bg-[#261d10]"
-                    >
-                      <Link href="/auth/signin">Sign in to host</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-
-      <section className="py-12 md:py-16">
-        <div className="container px-4 md:px-8">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-[#1E5A55]/20 bg-gradient-to-br from-[#1E5A55]/5 to-[#D8573B]/5 p-10 md:p-16 shadow-2xl">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[#1E5A55]/30 blur-3xl" />
-            <div className="pointer-events-none absolute -left-24 bottom-0 h-56 w-56 rounded-full bg-[#D8573B]/30 blur-3xl" />
-            <div className="flex flex-col items-center gap-6 text-center relative">
-              <Badge className="border-[#1E5A55]/20 bg-white text-[#1E5A55] font-bold text-sm px-4 py-1.5">
-                Get Started Today
-              </Badge>
-              <h2 className="text-3xl font-semibold md:text-4xl lg:text-5xl max-w-3xl">
-                Start Managing Professional Events
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-                Join event organizers using StageWay for seamless event management.
-              </p>
-              <Button
-                size="lg"
-                asChild
-                className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              "Secure sign-in for attendees and hosts",
+              "QR-based event check-in flow",
+              "Live attendance updates",
+              "Registration overflow handling",
+            ].map((text, i) => (
+              <motion.div
+                key={text}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+                className="flex items-center gap-3 rounded-lg border border-white/[0.07] bg-white/[0.02] px-4 py-3"
               >
-                <Link href="/auth/signin">
-                  Sign in / Register
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-white/35" />
+                <span className="text-sm text-white/45 font-medium">{text}</span>
+              </motion.div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ─────────────────────────────────────────── */}
+      <section className="py-16 md:py-24 lg:py-32">
+        <div className="container px-4 md:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0e1018] p-6 sm:p-8 md:p-12 lg:p-20 text-center"
+          >
+            {/* Subtle noise texture */}
+            <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
+              style={{ backgroundImage: "radial-gradient(circle at 50% 50%, #ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+            />
+
+            <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center space-y-5 sm:space-y-6 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/25">
+                Get started today
+              </p>
+              <h2 className="font-display text-[2rem] font-bold text-white sm:text-4xl md:text-5xl max-w-2xl leading-tight">
+                Ready to take the Stage?
+              </h2>
+              <p className="text-white/35 text-sm sm:text-base max-w-xl leading-relaxed">
+                Join event organizers using StageWay for seamless, professional event management.
+              </p>
+              <div className="grid w-full max-w-2xl gap-3 pt-1 sm:pt-2 sm:grid-cols-2">
+                <Button
+                  size="lg"
+                  asChild
+                  className="w-full justify-center bg-violet-600 hover:bg-violet-500 text-white h-11 sm:h-12 px-6 sm:px-9 font-bold text-sm shadow-btn-white tracking-wide"
+                >
+                  <Link href="/auth/signup">
+                    Create your account
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  asChild
+                  className="w-full justify-center border border-white/[0.10] hover:border-white/[0.20] text-white/50 hover:text-white h-11 sm:h-12 px-6 sm:px-9 text-sm"
+                >
+                  <Link href="/events">Browse events</Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </main>

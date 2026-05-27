@@ -92,6 +92,12 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- OpenAPI / Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -117,7 +123,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <argLine>-XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+                    <argLine>-XX:+EnableDynamicAgentLoading -Xshare:off --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

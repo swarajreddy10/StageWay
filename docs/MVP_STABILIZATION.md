@@ -13,7 +13,7 @@ This checklist matches the current code changes and what you still need to do.
 
 ---
 
-## 2) Backend env vars (Render)
+## 2) Backend env vars (OCI backend runtime)
 Required:
 - `DATABASE_URL`
 - `DATABASE_USERNAME`
@@ -42,7 +42,7 @@ Auth:
 Storage:
 - Create bucket (ex: `stageway-assets`).
 - Set it to **public** for now (simplest).
-- Add `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_STORAGE_BUCKET` to Render.
+- Add `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_STORAGE_BUCKET` to the OCI backend runtime environment.
 If you keep the bucket private:
 - `/api/files/{id}` returns signed URLs for private assets.
 
@@ -50,18 +50,18 @@ If you keep the bucket private:
 
 ## 4) Frontend env vars (Vercel)
 Required:
-- `NEXT_PUBLIC_API_BASE_URL` = `https://YOUR_RENDER_DOMAIN`
+- `NEXT_PUBLIC_API_BASE_URL` = `https://api.YOUR_DOMAIN`
 - `NEXT_PUBLIC_SUPABASE_URL` = `https://YOUR_PROJECT.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `YOUR_SUPABASE_ANON_KEY`
 
 Optional:
-- `NEXT_PUBLIC_FILE_API_BASE_URL` = `https://YOUR_RENDER_DOMAIN`
+- `NEXT_PUBLIC_FILE_API_BASE_URL` = `https://api.YOUR_DOMAIN`
 
 ---
 
 ## 5) Post-deploy smoke tests
 Backend:
-1) `GET https://YOUR_RENDER_DOMAIN/actuator/health`
+1) `GET https://api.YOUR_DOMAIN/actuator/health`
 2) `POST /api/auth/supabase` with a valid Supabase access token.
 
 Frontend:
@@ -77,13 +77,13 @@ Frontend:
 
 ### 403 on protected endpoints
 - Confirm the frontend is sending `Authorization: Bearer <supabase_access_token>`.
-- Check `NEXT_PUBLIC_API_BASE_URL` points to Render (no `localhost`).
+- Check `NEXT_PUBLIC_API_BASE_URL` points to the OCI API domain (no `localhost`).
 - Make sure Supabase session exists (refresh token stored by Supabase client).
 
 ### Event not showing for attendee
 1) Verify event status is `PUBLISHED`.
-2) Hit `GET https://YOUR_RENDER_DOMAIN/api/events` directly; confirm the event is present.
-3) Confirm the frontend is using the same Render base URL.
+2) Hit `GET https://api.YOUR_DOMAIN/api/events` directly; confirm the event is present.
+3) Confirm the frontend is using the same OCI API base URL.
 4) Clear browser cache and sign in again (token refresh).
 
 ### Need a host/admin account

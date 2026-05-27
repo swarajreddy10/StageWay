@@ -24,10 +24,17 @@ const createStorage = () => {
 global.window = {
   localStorage: createStorage(),
   sessionStorage: createStorage(),
+  location: {
+    protocol: "http:",
+    hostname: "localhost",
+    origin: "http://localhost:3000",
+  },
   dispatchEvent: () => true,
   addEventListener: () => {},
   removeEventListener: () => {},
 } as unknown as Window & typeof globalThis;
+
+global.location = global.window.location;
 
 // Mock localStorage and sessionStorage
 global.localStorage = global.window.localStorage;

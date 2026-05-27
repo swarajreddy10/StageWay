@@ -11,9 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/host-requests")
+@Tag(name = "Host Requests", description = "Submit and track host access requests")
 public class HostAccessRequestController {
     private final HostAccessRequestService hostAccessRequestService;
     private final AuthService authService;
@@ -26,6 +30,7 @@ public class HostAccessRequestController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Submit a host access request", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     public HostAccessRequestResponse createRequest(
         @RequestBody(required = false) HostAccessRequestCreateRequest request,
@@ -38,6 +43,7 @@ public class HostAccessRequestController {
         return hostAccessRequestService.createRequest(userId, note, companyName, eventPlan);
     }
 
+    @Operation(summary = "Get my latest host access request", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/me")
     public ResponseEntity<HostAccessRequestResponse> getMyRequest(
         @RequestHeader(value = "Authorization", required = false) String authHeader

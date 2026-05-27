@@ -1,37 +1,82 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: stageway-postgres
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  stageway-db:
+    image: postgres:18.3-alpine3.22
+    container_name: stageway-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: eventmanagement
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
+      - stageway-db-data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventmanagement"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
-  redis:
-    image: redis:7-alpine
-    container_name: stageway-redis
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  stageway-cache:
+    image: redis:8.4.2-alpine3.22
+    container_name: stageway-cache
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - stageway-cache-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  # ── Backend ──────────────────────────────────────────────────────────────────
+  stageway-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: stageway-api
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8081:8081"
+    depends_on:
+      stageway-db:
+        condition: service_healthy
+      stageway-cache:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 768m
 
 volumes:
-  postgres_data:
-  redis_data:
+  stageway-db-data:
+    name: stageway-db-data
+  stageway-cache-data:
+    name: stageway-cache-data

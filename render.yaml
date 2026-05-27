@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: stageway-backend
+    runtime: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    autoDeployTrigger: commit
+    healthCheckPath: /actuator/health
+    maxShutdownDelaySeconds: 120
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: APP_STORAGE_ALLOW_LOCAL_FALLBACK
+        value: "false"
+      - key: DB_POOL_MAX_SIZE
+        value: "8"
+      - key: DB_POOL_MIN_IDLE
+        value: "1"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        sync: false
+      - key: QR_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: APP_SECURITY_ADMIN_EMAILS
+        sync: false

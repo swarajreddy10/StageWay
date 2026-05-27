@@ -38,7 +38,7 @@ export function WaitlistButton({ eventId, onJoin }: WaitlistButtonProps) {
         onClick={handleJoin}
         disabled={isLoading}
         variant="outline"
-        className="w-full border-white/70 bg-white/70 hover:bg-white"
+        className="w-full border-white/[0.08] bg-[#141720] hover:bg-[#1c2030]"
       >
         {isLoading ? (
           <>

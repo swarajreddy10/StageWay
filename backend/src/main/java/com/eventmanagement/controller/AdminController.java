@@ -18,9 +18,13 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/admin")
+@Tag(name = "Admin", description = "User role management and host access request review")
 public class AdminController {
     private final AuthService authService;
     private final HostAccessRequestService hostAccessRequestService;
@@ -33,6 +37,7 @@ public class AdminController {
         this.hostAccessRequestService = hostAccessRequestService;
     }
 
+    @Operation(summary = "Update a user's role", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/users/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public AuthUser updateUserRole(
@@ -43,6 +48,7 @@ public class AdminController {
         return authService.buildAuthUser(user);
     }
 
+    @Operation(summary = "List host access requests", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/host-requests")
     @PreAuthorize("hasRole('ADMIN')")
     public List<HostAccessRequestAdminResponse> listHostRequests(
@@ -51,6 +57,8 @@ public class AdminController {
         return hostAccessRequestService.listRequests(status);
     }
 
+    @Operation(summary = "Approve or reject a host access request",
+        security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/host-requests/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public HostAccessRequestAdminResponse reviewHostRequest(

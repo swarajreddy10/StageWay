@@ -23,9 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Events", description = "Event CRUD and seat availability")
 public class EventController {
     private final EventService eventService;
     private final RegistrationService registrationService;
@@ -35,6 +39,7 @@ public class EventController {
         this.registrationService = registrationService;
     }
 
+    @Operation(summary = "List events", description = "Paginated event list with optional filters")
     @GetMapping("/events")
     public PagedResponse<EventResponse> getAllEvents(
         @RequestParam(value = "search", required = false) String search,
@@ -62,6 +67,8 @@ public class EventController {
         );
     }
 
+    @Operation(summary = "My events", description = "Events owned by the authenticated host",
+        security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping({"/events/mine", "/events/my"})
     @PreAuthorize("hasRole('HOST')")
     public List<EventResponse> getMyEvents(
@@ -70,6 +77,7 @@ public class EventController {
         return eventService.getMyEvents(authHeader);
     }
 
+    @Operation(summary = "Create event", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/events")
     @PreAuthorize("hasRole('HOST')")
     public EventResponse createEvent(
@@ -79,6 +87,7 @@ public class EventController {
         return eventService.createEvent(request, authHeader);
     }
 
+    @Operation(summary = "Update event", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/events/{id}")
     @PreAuthorize("hasRole('HOST')")
     public EventResponse updateEvent(
@@ -89,6 +98,7 @@ public class EventController {
         return eventService.updateEvent(id, request, authHeader);
     }
 
+    @Operation(summary = "Delete event", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/events/{id}")
     @PreAuthorize("hasRole('HOST')")
     public ResponseEntity<Void> deleteEvent(
@@ -99,16 +109,19 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get event by ID")
     @GetMapping("/events/{id}")
     public EventResponse getEvent(@PathVariable Long id) {
         return eventService.getEvent(id);
     }
 
+    @Operation(summary = "Seat availability for an event")
     @GetMapping("/events/{id}/seats")
     public SeatAvailability getSeatAvailability(@PathVariable Long id) {
         return eventService.getSeatAvailability(id);
     }
 
+    @Operation(summary = "Attendee list for an event", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/events/{id}/attendees")
     @PreAuthorize("hasRole('HOST')")
     public List<AttendeeSummary> getEventAttendees(

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { resolveApiBaseUrl } from '@/lib/api-base';
+import { LOCAL_HOSTS } from '@/lib/env';
 
 interface BackendStatusState {
   status: 'probing' | 'awake' | 'sleeping';
@@ -31,6 +32,16 @@ async function pingBackend(timeoutMs: number): Promise<boolean> {
   }
 }
 
+function isLocalBackendTarget() {
+  const baseUrl = resolveApiBaseUrl();
+  try {
+    const parsed = new URL(baseUrl);
+    return LOCAL_HOSTS.has(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function useBackendStatus() {
   const { status, setStatus } = useBackendStatusStore();
   const toastIdRef = useRef<string | number | undefined>(undefined);
@@ -53,10 +64,13 @@ export function useBackendStatus() {
       }
 
       setStatus('sleeping');
-      toastIdRef.current = toast.loading(
-        'Server is waking up, this may take a moment...',
-        { duration: Infinity }
-      );
+      const shouldShowWakeToast = !isLocalBackendTarget();
+      if (shouldShowWakeToast) {
+        toastIdRef.current = toast.loading(
+          'Server is waking up, this may take a moment...',
+          { duration: Infinity }
+        );
+      }
 
       const retry = async () => {
         if (cancelled) return;
@@ -65,7 +79,7 @@ export function useBackendStatus() {
 
         if (ok) {
           setStatus('awake');
-          if (toastIdRef.current !== undefined) {
+          if (shouldShowWakeToast && toastIdRef.current !== undefined) {
             toast.dismiss(toastIdRef.current);
             toast.success('Connected!', { duration: 2000 });
           }

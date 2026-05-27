@@ -1,7 +1,37 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx next build)"
+      "Bash(npx next build)",
+      "Bash(find c:UsersswaraOneDriveDocumentsMy-gitSpringbootfrontendsrc -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__accounts_list",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__r2_buckets_list",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__d1_databases_list",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__set_active_account",
+      "mcp__claude_ai_Cloudflare_Developer_Platform__workers_list",
+      "Bash(bun add:*)",
+      "Bash(bun run:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(m[''''ruleId''''], m[''''message''''][:60]\\) for f in data for m in f[''''messages''''] if m[''''severity'''']==2]\")",
+      "Bash(grep -oP '\\\\s+\\\\S+\\\\s*$')",
+      "Bash(grep -v \"^$\")",
+      "Bash(./mvnw checkstyle:check)",
+      "WebSearch",
+      "Bash(xargs grep:*)",
+      "Bash(xargs sed:*)",
+      "Read(//c/Users/swara/.claude/projects/c--Users-swara-OneDrive-Documents-My-git-Springboot/**)",
+      "Bash(./mvnw test:*)",
+      "Bash(npx skills *)",
+      "WebFetch(domain:skills.sh)",
+      "WebFetch(domain:lu.ma)",
+      "WebFetch(domain:motion.dev)",
+      "WebFetch(domain:blog.olivierlarose.com)",
+      "WebFetch(domain:luma.com)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc *)",
+      "Bash(timeout 20 bun dev)",
+      "Bash(bun dev *)",
+      "Bash(curl -s http://localhost:3000 -o /dev/null -w \"%{http_code}\")"
     ]
   }
 }

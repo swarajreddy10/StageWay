@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft, Calendar, MapPin, Ticket,
+  Edit, QrCode, Loader2, CheckCircle2, AlertCircle
+} from "lucide-react";
+import Link from "next/link";
 import { EventDetails } from "@/components/events/EventDetails";
 import { RegistrationForm } from "@/components/registration/RegistrationForm";
 import { QRCodeDisplay } from "@/components/registration/QRCodeDisplay";
@@ -12,251 +18,316 @@ import { useRegistrations } from "@/hooks/useRegistrations";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import type { Registration } from "@/types/registration";
 import { fetchEventAttendees } from "@/lib/event-api";
 import { checkInRegistration } from "@/lib/registration-api";
 
+function formatDate(v: string) {
+  return new Date(v).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+function formatTime(v: string) {
+  return new Date(v).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
 export default function EventDetailPage() {
-  const params = useParams();
+  const params  = useParams();
   const eventId = Number(params?.id);
   const { isAuthenticated, user } = useAuthStore();
   const { currentEvent, isLoading: eventLoading, fetchEvent } = useEvents();
   const { registerForEvent, isLoading: registrationLoading } = useRegistrations();
-  const [registration, setRegistration] = useState<Registration | null>(null);
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const [attendeesLoading, setAttendeesLoading] = useState(false);
-  const qrSectionRef = useRef<HTMLDivElement | null>(null);
-  const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
-  const [registrationTone, setRegistrationTone] = useState<"error" | "success">("success");
 
-  const isHost = user?.role === "HOST";
+  const [registration, setRegistration]     = useState<Registration | null>(null);
+  const [showForm, setShowForm]             = useState(false);
+  const [attendees, setAttendees]           = useState<Attendee[]>([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(false);
+  const [message, setMessage]               = useState<{ text: string; ok: boolean } | null>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const isHost  = user?.role === "HOST";
   const isAdmin = user?.role === "ADMIN";
-  const ownsEvent = isHost && currentEvent?.organizationId === user?.id;
-  const canEdit = ownsEvent;
+  const ownsEvent  = isHost && currentEvent?.organizationId === user?.id;
+  const canEdit    = ownsEvent;
   const canRegister = !ownsEvent && !isAdmin;
 
   useEffect(() => {
-    if (eventId && !isNaN(eventId)) {
-      fetchEvent(eventId);
-    }
+    if (eventId && !isNaN(eventId)) fetchEvent(eventId);
   }, [eventId, fetchEvent]);
 
-  const fetchAttendees = useCallback(async () => {
-    if (!canEdit || !eventId) {
-      return;
-    }
+  const loadAttendees = useCallback(async () => {
+    if (!canEdit || !eventId) return;
     setAttendeesLoading(true);
     try {
       const data = await fetchEventAttendees(eventId);
-      setAttendees(
-        data.map((attendee) => ({
-          id: attendee.registrationId,
-          registrationId: attendee.registrationId,
-          fullName: attendee.fullName,
-          email: attendee.email,
-          status: attendee.status,
-          seatNumber: attendee.seatNumber ? String(attendee.seatNumber) : null,
-          registeredAt: attendee.registeredAt,
-          checkedInAt: attendee.checkedInAt ?? null,
-        }))
-      );
-    } catch (error) {
-      console.error("Failed to fetch attendees:", error);
-    } finally {
-      setAttendeesLoading(false);
-    }
+      setAttendees(data.map((a) => ({
+        id: a.registrationId, registrationId: a.registrationId,
+        fullName: a.fullName, email: a.email, status: a.status,
+        seatNumber: a.seatNumber ? String(a.seatNumber) : null,
+        registeredAt: a.registeredAt, checkedInAt: a.checkedInAt ?? null,
+      })));
+    } catch { /* silent */ }
+    finally { setAttendeesLoading(false); }
   }, [canEdit, eventId]);
 
-  useEffect(() => {
-    fetchAttendees();
-  }, [fetchAttendees]);
+  useEffect(() => { loadAttendees(); }, [loadAttendees]);
 
-  const handleRegister = async (data: { eventId: number; seatNumber?: string }) => {
-    setRegistrationMessage(null);
+  async function handleRegister(data: { eventId: number; seatNumber?: string }) {
+    setMessage(null);
     try {
-      const newRegistration = await registerForEvent(data);
-      setRegistration(newRegistration);
-      setShowRegistrationForm(false);
-      setRegistrationTone("success");
-      setRegistrationMessage("Registration complete. Scroll down to your QR pass.");
-    } catch (error) {
-      console.error("Registration error:", error);
-      setRegistrationTone("error");
-      setRegistrationMessage(
-        error instanceof Error ? error.message : "Registration failed. Please try again."
-      );
+      const reg = await registerForEvent(data);
+      setRegistration(reg);
+      setShowForm(false);
+      setMessage({ text: "Registration complete! Scroll down to your QR pass.", ok: true });
+    } catch (e) {
+      setMessage({ text: e instanceof Error ? e.message : "Registration failed.", ok: false });
     }
-  };
-
-  const hasRegistration = canRegister && registration !== null;
-
-  if (eventLoading) {
-    return (
-      <main className="container mx-auto flex items-center justify-center px-4 py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </main>
-    );
   }
 
-  if (!currentEvent) {
-    return (
-      <main className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Event not found</h1>
-          <Link href="/events">
-            <Button variant="outline">Back to Events</Button>
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  /* ── Loading ─────────────────────────────────────── */
+  if (eventLoading) return (
+    <main className="flex min-h-screen items-center justify-center bg-[#060810]">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+        <p className="text-xs text-white/30">Loading event details…</p>
+      </div>
+    </main>
+  );
+
+  if (!currentEvent) return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#060810] px-4">
+      <div className="h-14 w-14 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
+        <Calendar className="h-7 w-7 text-white/20" />
+      </div>
+      <p className="text-white/40 font-medium text-sm">Event not found</p>
+      <Button variant="ghost" asChild className="text-white/50 hover:text-white border border-white/[0.08] text-sm">
+        <Link href="/events"><ArrowLeft className="mr-2 h-3.5 w-3.5" />Back to Events</Link>
+      </Button>
+    </main>
+  );
+
+  const start = currentEvent.startsAt ?? currentEvent.startDate;
+  const isFree = !currentEvent.price || currentEvent.price === 0;
+  const isSoldOut = currentEvent.availableSeats === 0;
+  const filledPercentage = currentEvent.capacity
+    ? Math.max(
+        0,
+        Math.min(100, Math.round(((currentEvent.capacity - currentEvent.availableSeats) / currentEvent.capacity) * 100))
+      )
+    : 0;
 
   return (
-    <main className="container mx-auto min-h-screen px-4 pb-16 pt-8">
-      <Link href="/events">
-        <Button variant="outline" className="mb-6 border-white/70 bg-white/70 hover:bg-white">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Events
-        </Button>
-      </Link>
+    <main className="min-h-screen bg-[#060810]">
+      {/* Content grid */}
+      <div className="container space-y-6 px-4 py-6 md:px-8 md:py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#0e1018] p-3 transition-colors duration-200 hover:border-white/[0.12] sm:p-4"
+        >
+          <Button
+            variant="ghost"
+            asChild
+            size="sm"
+            className="border border-white/[0.08] text-white/60 hover:bg-white/[0.05] hover:text-white"
+          >
+            <Link href="/events" className="active:scale-[0.99] transition-transform"><ArrowLeft className="mr-1.5 h-4 w-4" />Back to Events</Link>
+          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="border-white/[0.12] bg-white/[0.08] text-[10px] font-bold uppercase tracking-wider text-white/55">
+              {currentEvent.status}
+            </Badge>
+            {isSoldOut && (
+              <Badge className="border-white/[0.14] bg-white/[0.09] text-[10px] font-bold uppercase tracking-wider text-white/75">
+                Sold Out
+              </Badge>
+            )}
+            {canEdit && (
+              <Button
+                size="sm"
+                variant="ghost"
+                asChild
+                className="h-8 border border-white/[0.08] px-3 text-xs text-white/60 hover:bg-white/[0.05] hover:text-white"
+              >
+                <Link href={`/events/${eventId}/edit`} className="active:scale-[0.99] transition-transform"><Edit className="mr-1 h-3 w-3" />Edit Event</Link>
+              </Button>
+            )}
+          </div>
+        </motion.div>
 
-      <div className="space-y-6">
-        <EventDetails event={currentEvent} canEdit={canEdit} />
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
 
-        {canRegister && (
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-            <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
-                <Badge className="border border-white/70 bg-white/80 text-foreground">
-                  Tickets
-                </Badge>
-                <h2 className="text-lg font-semibold text-foreground">
-                  {hasRegistration ? "You're registered" : "Reserve your spot"}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {currentEvent.price === 0
-                    ? "Free entry"
-                    : `${currentEvent.currency} ${currentEvent.price.toFixed(2)}`}{" "}
-                  ·{" "}
-                  {currentEvent.availableSeats === 0
-                    ? "Sold out"
-                    : `${currentEvent.availableSeats} seats left`}
-                </p>
+          {/* Left — event details */}
+          <div className="space-y-6">
+            {/* Event details */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <EventDetails event={currentEvent} canEdit={canEdit} />
+            </motion.div>
+
+            {/* Host tools */}
+            {canEdit && (
+              <div className="space-y-3 rounded-xl border border-white/[0.08] bg-[#0e1018] p-5">
+                <h3 className="text-sm font-semibold text-white">Host Tools</h3>
+                <p className="text-xs text-white/40">Manage attendee flow and monitor live registrations for this event.</p>
+                <Button asChild className="h-10 w-full bg-violet-600 text-sm font-semibold text-white shadow-btn-white hover:bg-violet-500 sm:w-auto">
+                  <Link href="/check-in"><QrCode className="mr-2 h-4 w-4" />Open Check-In</Link>
+                </Button>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {hasRegistration ? (
+            )}
+
+            {/* Attendee list (host) */}
+            {canEdit && (
+              <AttendeeList
+                attendees={attendees}
+                isLoading={attendeesLoading}
+                onCheckIn={async (id) => { await checkInRegistration(id); await loadAttendees(); }}
+              />
+            )}
+          </div>
+
+          {/* Right — registration card (sticky) */}
+          <div className="lg:sticky lg:top-24 space-y-4">
+            {canRegister && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="space-y-5 rounded-xl border border-white/[0.09] bg-[#0e1018] p-5 transition-colors duration-200 hover:border-white/[0.13] sm:p-6"
+            >
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">
+                    Registration
+                  </p>
+                  <h2 className="font-display text-xl font-bold text-white">Reserve your pass</h2>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <div className="font-display text-3xl font-bold text-white">
+                    {isFree ? "Free" : `${currentEvent.currency ?? "$"}${currentEvent.price?.toFixed(2)}`}
+                  </div>
+                  <p className="text-xs text-white/35 mt-0.5">
+                    {isSoldOut ? "Sold out" : `${currentEvent.availableSeats} seats remaining`}
+                  </p>
+                </div>
+
+                {/* Capacity bar */}
+                {currentEvent.capacity && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] text-white/30">
+                      <span>Availability</span>
+                      <span>{filledPercentage}% filled</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${filledPercentage}%` }}
+                        transition={{ duration: 1, delay: 0.4 }}
+                        className="h-full rounded-full bg-[#7c5af5]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1.5 rounded-lg border border-white/[0.07] bg-white/[0.03] p-3.5 text-xs text-white/45">
+                  {start && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-1.5 text-white/35">
+                        <Calendar className="h-3.5 w-3.5" />Date
+                      </span>
+                      <span className="text-right text-white/65">{formatDate(start)}</span>
+                    </div>
+                  )}
+                  {start && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-white/35">Time</span>
+                      <span className="text-white/65">{formatTime(start)}</span>
+                    </div>
+                  )}
+                  {(currentEvent.venueName || currentEvent.location) && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-1.5 text-white/35">
+                        <MapPin className="h-3.5 w-3.5" />Venue
+                      </span>
+                      <span className="max-w-[60%] truncate text-right text-white/65">
+                        {currentEvent.venueName ?? currentEvent.location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Message */}
+                {message && (
+                  <div className={`flex items-start gap-2 rounded-lg p-3 text-xs ${
+                    message.ok
+                      ? "bg-white/[0.06] border border-white/[0.12] text-white/70"
+                      : "bg-white/[0.03] border border-white/[0.08] text-white/45"
+                  }`}>
+                    {message.ok
+                      ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      : <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
+                    {message.text}
+                  </div>
+                )}
+
+                {/* CTA */}
+                {registration ? (
                   <Button
-                    variant="outline"
-                    className="border-white/70 bg-white/70 hover:bg-white"
-                    onClick={() =>
-                      qrSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                    }
+                    onClick={() => qrRef.current?.scrollIntoView({ behavior: "smooth" })}
+                    className="h-10 w-full bg-violet-600 text-white font-semibold shadow-btn-violet transition-all duration-200 hover:-translate-y-px hover:bg-violet-500 active:scale-[0.99]"
                   >
-                    View QR Pass
+                    <Ticket className="mr-2 h-4 w-4" />View QR Pass
                   </Button>
                 ) : !isAuthenticated ? (
-                  <Link href="/auth/signin">
-                    <Button className="bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]">
-                      Sign In to Register
-                    </Button>
-                  </Link>
-                ) : currentEvent.availableSeats === 0 ? (
-                  <div className="min-w-[220px]">
-                    <WaitlistButton eventId={eventId} />
-                  </div>
+                  <Button asChild className="h-10 w-full bg-violet-600 text-white font-semibold shadow-btn-violet transition-all duration-200 hover:-translate-y-px hover:bg-violet-500 active:scale-[0.99]">
+                    <Link href="/auth/signin">Sign In to Register</Link>
+                  </Button>
+                ) : isSoldOut ? (
+                  <WaitlistButton eventId={eventId} />
+                ) : showForm ? (
+                  <Button variant="ghost" onClick={() => setShowForm(false)} className="h-10 w-full border border-white/[0.08] text-white/40 transition-all duration-200 hover:bg-white/[0.05] hover:text-white active:scale-[0.99]">
+                    Cancel
+                  </Button>
                 ) : (
-                  <Button
-                    onClick={() => setShowRegistrationForm(true)}
-                    className="bg-[#D8573B] text-white shadow-lg hover:bg-[#C44F36]"
-                  >
+                  <Button onClick={() => setShowForm(true)} className="h-10 w-full bg-violet-600 text-white font-semibold shadow-btn-violet transition-all duration-200 hover:-translate-y-px hover:bg-violet-500 active:scale-[0.99]">
                     Register Now
                   </Button>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </motion.div>
+            )}
 
-        {canRegister && registrationMessage && (
-          <div
-            className={`rounded-2xl border border-white/70 px-4 py-3 text-sm shadow-sm ${
-              registrationTone === "error"
-                ? "bg-destructive/10 text-destructive"
-                : "bg-emerald-50 text-emerald-700"
-            }`}
-          >
-            {registrationMessage}
-          </div>
-        )}
-
-        {canRegister && showRegistrationForm && isAuthenticated && !hasRegistration && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Complete registration</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add attendee details to finalize your tickets.
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setShowRegistrationForm(false)}
+            {/* Registration form */}
+            {canRegister && showForm && isAuthenticated && !registration && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg border border-white/[0.08] bg-[#0e1018] p-5"
               >
-                Close
-              </Button>
-            </div>
-            <RegistrationForm
-              eventId={eventId}
-              availableSeats={currentEvent.availableSeats}
-              onSubmit={handleRegister}
-              isLoading={registrationLoading}
-            />
-          </div>
-        )}
+                <h3 className="font-semibold text-white text-sm mb-4">Complete Registration</h3>
+                <RegistrationForm
+                  eventId={eventId}
+                  availableSeats={currentEvent.availableSeats}
+                  onSubmit={handleRegister}
+                  isLoading={registrationLoading}
+                />
+              </motion.div>
+            )}
 
-        {canRegister && registration?.qrCode && (
-          <div ref={qrSectionRef}>
-            <QRCodeDisplay
-              qrCode={registration.qrCode}
-              registrationId={registration.id}
-              eventName={currentEvent.name}
-            />
-          </div>
-        )}
-
-        {canEdit && (
-          <Card className="rounded-3xl border border-white/70 bg-white/80 shadow-sm">
-            <CardContent className="flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Host tools</h3>
-                <p className="text-sm text-muted-foreground">
-                  Manage check-ins and registrations for this event.
-                </p>
+            {/* QR pass */}
+            {canRegister && registration?.qrCode && (
+              <div ref={qrRef}>
+                <QRCodeDisplay
+                  qrCode={registration.qrCode}
+                  registrationId={registration.id}
+                  eventName={currentEvent.name}
+                />
               </div>
-              <Link href="/check-in">
-                <Button className="bg-[#1E5A55] text-white shadow-lg hover:bg-[#174844]">
-                  Open Check-In
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {canEdit && (
-          <AttendeeList
-            attendees={attendees}
-            isLoading={attendeesLoading}
-            onCheckIn={async (registrationId) => {
-              await checkInRegistration(registrationId);
-              await fetchAttendees();
-            }}
-          />
-        )}
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );
