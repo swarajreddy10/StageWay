@@ -371,34 +371,34 @@ export default function AboutPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-24">
+      <section className="py-14 md:py-20 lg:py-24">
         <div className="container px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e1018] p-12 md:p-16 text-center"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0e1018] p-6 sm:p-8 md:p-12 lg:p-16 text-center"
           >
             {/* Dot grid pattern */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
 
-            <div className="relative space-y-6">
+            <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center space-y-5 sm:space-y-6 text-center">
               <Badge className="border border-white/[0.10] bg-white/[0.04] text-white/50 text-[10px] font-bold uppercase tracking-widest">
                 Get started today
               </Badge>
-              <h2 className="font-display text-3xl font-bold text-white md:text-5xl max-w-2xl mx-auto">
+              <h2 className="font-display text-[2rem] sm:text-4xl md:text-5xl font-bold text-white max-w-2xl">
                 Ready to take the stage?
               </h2>
-              <p className="text-white/40 max-w-md mx-auto">
+              <p className="text-white/40 text-sm sm:text-base max-w-xl">
                 Join event organizers and attendees already using StageWay for seamless, professional events.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
                 <Button
                   size="lg"
                   asChild
-                  className="bg-violet-600 hover:bg-violet-500 text-white h-12 px-8 font-semibold shadow-btn-white"
+                  className="w-full justify-center bg-violet-600 hover:bg-violet-500 text-white h-11 sm:h-12 px-6 sm:px-8 font-semibold shadow-btn-white"
                 >
                   <Link href="/auth/signup">
                     Create your account
@@ -409,7 +409,7 @@ export default function AboutPage() {
                   size="lg"
                   variant="ghost"
                   asChild
-                  className="border border-white/[0.10] hover:border-white/20 text-white/55 hover:text-white h-12 px-8"
+                  className="w-full justify-center border border-white/[0.10] hover:border-white/20 text-white/55 hover:text-white h-11 sm:h-12 px-6 sm:px-8"
                 >
                   <Link href="/events">Browse events</Link>
                 </Button>

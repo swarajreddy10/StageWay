@@ -83,7 +83,7 @@ export default function RegistrationsPage() {
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
             <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setPage(0); }}>
-              <TabsList className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-0.5 mb-6">
+              <TabsList className="mb-6 w-full overflow-x-auto whitespace-nowrap rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
                 {[
                   { value: "all",       label: "All" },
                   { value: "upcoming",  label: "Upcoming" },
@@ -93,7 +93,7 @@ export default function RegistrationsPage() {
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/40 rounded-md px-3 py-1.5 text-sm"
+                    className="whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-white/40 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white"
                   >
                     {label}
                     {STATUS_COUNTS[value] > 0 && (

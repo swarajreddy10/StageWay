@@ -81,11 +81,11 @@ export default function DashboardPage() {
                 <p className="text-xs text-white/40">{user.email}</p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" asChild className="border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.05] text-sm">
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col sm:auto-cols-max">
+              <Button variant="ghost" asChild className="w-full justify-center border border-white/[0.08] text-sm text-white/50 hover:bg-white/[0.05] hover:text-white sm:w-auto">
                 <Link href="/registrations"><Ticket className="mr-2 h-4 w-4" />My Tickets</Link>
               </Button>
-              <Button asChild className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold shadow-btn-violet">
+              <Button asChild className="w-full justify-center bg-violet-600 text-sm font-semibold text-white shadow-btn-violet hover:bg-violet-500 sm:w-auto">
                 <Link href="/events"><ArrowRight className="mr-2 h-3.5 w-3.5" />Browse Events</Link>
               </Button>
             </div>
@@ -133,13 +133,13 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display font-bold text-white text-lg">Your Schedule</h2>
             <Link href="/registrations" className="text-xs text-white/35 hover:text-white/70 transition-colors">View all →</Link>
           </div>
 
           <Tabs defaultValue="upcoming">
-            <TabsList className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-0.5 mb-5">
+            <TabsList className="mb-5 w-full overflow-x-auto rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
               {[
                 { value: "upcoming", label: "Upcoming", count: upcoming.length },
                 { value: "past",     label: "Past",     count: past.length },
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/40 rounded-md px-4 py-1.5 text-sm transition-all"
+                  className="whitespace-nowrap rounded-md px-4 py-1.5 text-sm text-white/40 transition-all data-[state=active]:bg-white/[0.08] data-[state=active]:text-white"
                 >
                   {label}
                   {count > 0 && (

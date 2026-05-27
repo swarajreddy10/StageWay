@@ -6,7 +6,7 @@ import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
 export default function ResetPasswordPage() {
   return (
-    <main className="relative min-h-screen bg-[#060810] flex items-center justify-center px-4 py-16 overflow-hidden">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#060810] px-4 py-10 sm:py-16">
       {/* Dot grid */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
       {/* Radial vignette */}
@@ -18,7 +18,7 @@ export default function ResetPasswordPage() {
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-8">
+        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-6 sm:p-8">
           <div className="mb-6 text-center space-y-1">
             <span className="font-display text-2xl font-bold tracking-tight">
               <span className="text-white">Stage</span><span className="text-white/50">Way</span>

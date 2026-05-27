@@ -59,10 +59,10 @@ function AuthCallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-10 py-8 text-center ">
-        <h2 className="font-display text-2xl font-semibold">Completing sign in...</h2>
-        <p className="mt-2 text-muted-foreground">Syncing your account details.</p>
+    <div className="flex min-h-screen items-center justify-center bg-[#060810] px-4 py-10 sm:py-16">
+      <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-6 py-6 text-center sm:px-10 sm:py-8">
+        <h2 className="font-display text-xl font-semibold sm:text-2xl">Completing sign in...</h2>
+        <p className="mt-2 text-sm text-muted-foreground sm:text-base">Syncing your account details.</p>
       </div>
     </div>
   );
@@ -72,9 +72,9 @@ export default function AuthCallback() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center px-4">
-          <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-10 py-8 text-center ">
-            <h2 className="font-display text-2xl font-semibold">Loading...</h2>
+        <div className="flex min-h-screen items-center justify-center bg-[#060810] px-4 py-10 sm:py-16">
+          <div className="rounded-3xl border border-white/[0.08] bg-[#0e1018] px-6 py-6 text-center sm:px-10 sm:py-8">
+            <h2 className="font-display text-xl font-semibold sm:text-2xl">Loading...</h2>
           </div>
         </div>
       }

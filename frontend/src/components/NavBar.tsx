@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut, Calendar, Plus, QrCode, BarChart2, Zap } from "lucide-react";
+import { Menu, X, User, LogOut, Calendar, Plus, QrCode, BarChart2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "./BrandLogo";
 
 const NAV_LINKS = [
   { href: "/events", label: "Events" },
@@ -113,12 +114,12 @@ export default function NavBar() {
         >
           {/* Wordmark */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center justify-center h-6 w-6 rounded-md bg-violet-600/90">
-              <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
-            </div>
-            <span className="font-display text-[0.95rem] font-bold tracking-[0.08em] text-white uppercase select-none hidden sm:block">
-              Stageway
-            </span>
+            <BrandLogo size="sm" showText={false} className="sm:hidden" />
+            <BrandLogo
+              size="sm"
+              className="hidden sm:flex"
+              textClassName="text-[0.95rem]"
+            />
           </Link>
 
           {/* Desktop nav links - center */}
@@ -225,7 +226,7 @@ export default function NavBar() {
       </header>
 
       {/* Spacer so content doesn't go under the floating nav */}
-      <div className="h-[72px]" aria-hidden />
+      <div className="h-20 sm:h-[88px]" aria-hidden />
 
       {/* Mobile menu */}
       <AnimatePresence>
@@ -235,7 +236,7 @@ export default function NavBar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-x-4 top-[80px] z-40 rounded-2xl border border-white/[0.09] bg-[#0e1018]/95 backdrop-blur-2xl shadow-[0_16px_48px_rgba(0,0,0,0.6)] md:hidden overflow-hidden"
+            className="fixed inset-x-4 top-20 z-40 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0e1018]/95 shadow-[0_16px_48px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:top-[88px] md:hidden"
           >
             <div className="p-4 flex flex-col gap-1">
               {showUser && (

@@ -53,6 +53,15 @@ export default function EventsPage() {
   }, [events, sortOrder]);
 
   const total = pagination?.totalElements ?? 0;
+  const activeFilterCount = useMemo(() => {
+    const filterEntries = Object.entries(filters).filter(([key, value]) => {
+      if (key === "search") return false;
+      return value !== undefined && value !== null && value !== "";
+    }).length;
+    const hasSearch = searchQuery.trim().length > 0;
+    const hasCustomSort = sortOrder !== "soonest";
+    return filterEntries + (hasSearch ? 1 : 0) + (hasCustomSort ? 1 : 0);
+  }, [filters, searchQuery, sortOrder]);
 
   return (
     <main className="min-h-screen bg-[#060810]">
@@ -68,7 +77,7 @@ export default function EventsPage() {
           }}
         />
 
-        <div className="relative container px-4 pt-10 pb-8 md:px-8">
+        <div className="relative container px-4 pt-8 pb-6 md:px-8 md:pt-10 md:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -83,9 +92,9 @@ export default function EventsPage() {
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">
+                <h1 className="mb-2 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl">
                   All Events
                 </h1>
                 <p className="text-sm text-white/35">
@@ -96,12 +105,12 @@ export default function EventsPage() {
               </div>
 
               {/* Sort pills */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setSortOrder(opt.value)}
-                    className="px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-150"
+                    className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150"
                     style={{
                       background: sortOrder === opt.value ? "rgba(124,90,245,0.15)" : "transparent",
                       border: `1px solid ${sortOrder === opt.value ? "rgba(124,90,245,0.35)" : "rgba(255,255,255,0.07)"}`,
@@ -115,15 +124,15 @@ export default function EventsPage() {
             </div>
 
             {/* Search + filter row */}
-            <div className="flex items-center gap-2.5">
-              <div className="relative flex-1 max-w-xl">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+              <div className="relative w-full flex-1">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search events, hosts, venues…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 rounded-xl pl-10 pr-10 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all"
+                  className="h-11 w-full rounded-xl pl-10 pr-10 text-sm text-white placeholder:text-white/25 transition-all focus:outline-none"
                   style={{
                     background: "rgba(14,16,24,0.8)",
                     border: "1px solid rgba(255,255,255,0.08)",
@@ -155,7 +164,7 @@ export default function EventsPage() {
 
               <button
                 onClick={() => setFiltersOpen((v) => !v)}
-                className="flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-medium transition-all duration-200"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-medium transition-all duration-200 sm:w-auto"
                 style={{
                   background: filtersOpen ? "rgba(124,90,245,0.12)" : "rgba(14,16,24,0.8)",
                   border: `1px solid ${filtersOpen ? "rgba(124,90,245,0.30)" : "rgba(255,255,255,0.08)"}`,
@@ -165,6 +174,11 @@ export default function EventsPage() {
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-violet-400/35 bg-violet-500/15 px-1.5 text-[10px] font-bold text-violet-200">
+                    {activeFilterCount}
+                  </span>
+                )}
               </button>
             </div>
           </motion.div>
@@ -183,8 +197,6 @@ export default function EventsPage() {
               <div className="container px-4 py-5 md:px-8">
                 <EventFiltersComponent
                   filters={filters}
-                  sortOrder={sortOrder}
-                  onSortChange={setSortOrder}
                   onFiltersChange={(f) => { setFilters(f); setPage(0); }}
                 />
               </div>

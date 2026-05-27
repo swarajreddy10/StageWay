@@ -3,10 +3,11 @@
 import { Suspense } from "react";
 import { motion } from "framer-motion";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function SignInPage() {
   return (
-    <main className="relative min-h-screen bg-[#060810] flex items-center justify-center px-4 py-16 overflow-hidden">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#060810] px-4 py-10 sm:py-16">
       {/* Subtle dot grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.025]"
@@ -26,11 +27,9 @@ export default function SignInPage() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-8">
+        <div className="rounded-xl border border-white/[0.09] bg-[#0e1018] p-6 sm:p-8">
           <div className="mb-7 text-center space-y-1.5">
-            <span className="font-display text-xl font-bold tracking-[0.06em] text-white uppercase">
-              Stageway
-            </span>
+            <BrandLogo className="justify-center" />
             <p className="text-white/35 text-sm">Welcome back</p>
           </div>
           <Suspense fallback={<div className="h-48 skeleton" />}>

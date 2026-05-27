@@ -299,14 +299,14 @@ export function EventForm({
         <div className="space-y-6">
           <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] overflow-hidden">
             {/* Tab strip */}
-            <div className="flex gap-1 border-b border-white/[0.06] bg-white/[0.02] p-2">
+            <div className="flex gap-1 overflow-x-auto border-b border-white/[0.06] bg-white/[0.02] p-2">
               {TABS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setActiveTab(id)}
                   className={[
-                    "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
+                    "relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
                     activeTab === id
                       ? "bg-white/[0.09] text-white"
                       : "text-white/40 hover:text-white/70 hover:bg-white/[0.04]",
@@ -762,8 +762,8 @@ export function EventForm({
       </div>
 
       {/* Bottom bar */}
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-        <div>
+      <div className="flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-auto">
           {(submitNotice || submitError) && (
             <div
               className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm ${
@@ -784,7 +784,7 @@ export function EventForm({
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet px-6"
+          className="w-full bg-violet-600 px-6 font-semibold text-white shadow-btn-violet hover:bg-violet-500 sm:w-auto"
         >
           {isLoading ? (
             <>

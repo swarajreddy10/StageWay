@@ -131,7 +131,7 @@ export default function HostAccessRequestPage() {
               </div>
               <h1 className="font-display text-xl font-bold text-white">You already have host access</h1>
               <p className="text-sm text-white/40">Jump into your host dashboard to manage events.</p>
-              <Button asChild className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet">
+              <Button asChild className="w-full bg-violet-600 font-semibold text-white shadow-btn-violet hover:bg-violet-500 sm:w-auto">
                 <Link href="/host">
                   Go to host dashboard
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -150,18 +150,20 @@ export default function HostAccessRequestPage() {
       <div className="border-b border-white/[0.07]">
         <div className="container px-4 py-8 md:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04]">
+            <div className="mb-1 flex items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04]">
                 <ShieldCheck className="h-4 w-4 text-white/50" />
               </div>
-              <h1 className="font-display text-2xl font-bold text-white">Request Host Access</h1>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-white">Request Host Access</h1>
+                <p className="text-sm text-white/40">Tell us about your event plans and we&apos;ll review your request.</p>
+              </div>
             </div>
-            <p className="text-white/40 text-sm ml-12">Tell us about your event plans and we&apos;ll review your request.</p>
           </motion.div>
         </div>
       </div>
 
-      <div className="container px-4 py-8 md:px-8 max-w-2xl">
+      <div className="container max-w-2xl px-4 py-8 md:px-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-6">
 
           {/* Status card */}
@@ -210,7 +212,7 @@ export default function HostAccessRequestPage() {
 
           {/* Form or approved action */}
           {request?.status === "APPROVED" ? (
-            <Button asChild className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet">
+            <Button asChild className="w-full bg-violet-600 font-semibold text-white shadow-btn-violet hover:bg-violet-500 sm:w-auto">
               <Link href="/host">
                 Go to host dashboard
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -247,11 +249,11 @@ export default function HostAccessRequestPage() {
                   className="w-full rounded-lg bg-white/[0.04] border border-white/[0.09] px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/25 transition-colors resize-none"
                 />
               </div>
-              <div className="flex gap-3 pt-1">
+              <div className="grid gap-3 pt-1 sm:grid-cols-2">
                 <Button
                   onClick={handleSubmit}
                   disabled={!canSubmit || isSubmitting}
-                  className="bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-btn-violet"
+                  className="w-full justify-center bg-violet-600 font-semibold text-white shadow-btn-violet hover:bg-violet-500"
                 >
                   {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Submit request"}
                 </Button>
@@ -259,7 +261,7 @@ export default function HostAccessRequestPage() {
                   variant="ghost"
                   onClick={() => loadRequest(true)}
                   disabled={isLoading}
-                  className="border border-white/[0.09] text-white/45 hover:text-white hover:bg-white/[0.05] text-sm"
+                  className="w-full justify-center border border-white/[0.09] text-sm text-white/45 hover:bg-white/[0.05] hover:text-white"
                 >
                   {isLoading ? "Refreshing..." : "Refresh status"}
                 </Button>
@@ -270,7 +272,7 @@ export default function HostAccessRequestPage() {
               variant="ghost"
               onClick={() => loadRequest(true)}
               disabled={isLoading}
-              className="border border-white/[0.09] text-white/45 hover:text-white hover:bg-white/[0.05] text-sm"
+              className="w-full justify-center border border-white/[0.09] text-sm text-white/45 hover:bg-white/[0.05] hover:text-white sm:w-auto"
             >
               {isLoading ? "Refreshing..." : "Refresh status"}
             </Button>

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import { EventCard } from "@/components/events/EventCard";
 import { fetchEvents } from "@/lib/event-api";
 import { useBackendStatusStore } from "@/hooks/useBackendStatus";
 import type { Event } from "@/types/event";
@@ -35,7 +36,7 @@ const PILLARS = [
   {
     icon: Calendar,
     title: "Event Creation",
-    desc: "Build professional event pages with custom branding, ticketing, and seat management in minutes.",
+    desc: "Build polished event pages with clear schedules, venue details, and ticket options in minutes.",
     num: "01",
   },
   {
@@ -47,7 +48,7 @@ const PILLARS = [
   {
     icon: QrCode,
     title: "QR Check-In",
-    desc: "HMAC-SHA256 signed QR codes for fraud-proof entry scanning with instant attendee verification.",
+    desc: "Speed up entry with QR scanning and a clean check-in flow for hosts and attendees.",
     num: "03",
   },
 ];
@@ -62,7 +63,7 @@ const FLOW_STEPS = [
   {
     n: "02",
     title: "Manage Registrations",
-    desc: "Accept registrations automatically. Handle waitlists and seat assignments hands-free.",
+    desc: "Accept registrations in one flow and keep attendee updates visible to your team.",
     icon: Users,
   },
   {
@@ -74,10 +75,10 @@ const FLOW_STEPS = [
 ];
 
 const TRUST_ITEMS = [
-  { value: "99.9%",     label: "Uptime SLA" },
-  { value: "< 200ms",   label: "Check-in speed" },
-  { value: "HMAC-256",  label: "QR security" },
-  { value: "WebSocket", label: "Real-time sync" },
+  { value: "Reliable", label: "Platform Stability" },
+  { value: "Fast",     label: "Check-in Experience" },
+  { value: "Secure",   label: "Guest Access Flow" },
+  { value: "Live",     label: "Operational Visibility" },
 ];
 
 const fadeUp = {
@@ -86,46 +87,6 @@ const fadeUp = {
     opacity: 1, y: 0, transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   }),
 };
-
-/* ─── EventCard ───────────────────────────────────────────────── */
-function EventCard({ event }: { event: Event }) {
-  const start = getStart(event);
-  const isFree = !event.price || event.price === 0;
-
-  return (
-    <div className="group relative flex flex-col h-full border border-white/[0.08] bg-[#0e1018] rounded-lg overflow-hidden hover:border-white/[0.15] hover:bg-[#141720] transition-all duration-200">
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30 border border-white/[0.08] px-2 py-0.5 rounded-full">
-            {event.category ?? event.status ?? "Event"}
-          </span>
-          <span className="text-[10px] text-white/25 tabular-nums font-mono">{formatDate(start)}</span>
-        </div>
-
-        <h3 className="font-display font-semibold text-white/90 text-base leading-snug line-clamp-2 group-hover:text-white transition-colors duration-150">
-          {event.name}
-        </h3>
-
-        {(event.venueName || event.location) && (
-          <p className="text-xs text-white/30 truncate">{event.venueName ?? event.location}</p>
-        )}
-
-        <div className="mt-auto flex items-center justify-between pt-2 border-t border-white/[0.06]">
-          <span className="text-sm font-bold text-white/80">
-            {isFree ? "Free" : `$${event.price}`}
-          </span>
-          {event.capacity != null && (
-            <span className="text-[10px] text-white/25 font-mono">{event.capacity} seats</span>
-          )}
-        </div>
-      </div>
-
-      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <ArrowRight className="h-3.5 w-3.5 text-white/50" />
-      </div>
-    </div>
-  );
-}
 
 /* ─── Page ─────────────────────────────────────────────────────── */
 export default function HomePage() {
@@ -154,13 +115,16 @@ export default function HomePage() {
       <HeroSection eventCount={events.length} upcomingCount={featured.length} nextEventLabel={nextLabel} />
 
       {/* ── Trust bar ────────────────────────────────────────── */}
-      <div className="border-y border-white/[0.05] bg-[#060810]">
+      <div className="bg-[#060810] pb-8">
         <div className="container px-4 md:px-8">
-          <div className="grid grid-cols-2 divide-x divide-white/[0.05] sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {TRUST_ITEMS.map(({ value, label }) => (
-              <div key={label} className="flex flex-col items-center justify-center gap-1 py-5 px-4 text-center">
-                <span className="font-display text-sm font-bold text-white/80 tabular-nums tracking-tight">{value}</span>
-                <span className="text-[10px] text-white/25 tracking-[0.08em] uppercase">{label}</span>
+              <div
+                key={label}
+                className="flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.07] bg-[#0e1018] px-4 py-4 text-center"
+              >
+                <span className="font-display text-sm font-bold text-white/85 tabular-nums tracking-tight">{value}</span>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-white/30">{label}</span>
               </div>
             ))}
           </div>
@@ -176,25 +140,28 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="mb-12 flex flex-wrap items-end justify-between gap-4"
           >
-            <motion.div variants={fadeUp} custom={0} className="space-y-2">
+            <motion.div variants={fadeUp} custom={0} className="max-w-2xl space-y-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
                 Featured Events
               </p>
               <h2 className="font-display text-3xl font-bold text-white md:text-4xl lg:text-5xl">
                 Discover what&apos;s happening
               </h2>
+              <p className="text-sm leading-relaxed text-white/42 md:text-base">
+                Curated experiences from hosts using StageWay to run registrations, check-ins, and live operations.
+              </p>
             </motion.div>
             <motion.div variants={fadeUp} custom={0.08}>
-              <Button
-                variant="ghost"
-                asChild
-                className="border border-white/[0.08] text-white/40 hover:text-white hover:border-white/[0.16] text-sm h-9"
-              >
-                <Link href="/events">
-                  View all <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </motion.div>
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="border border-white/[0.08] text-white/40 hover:text-white hover:border-white/[0.16] text-sm h-9"
+                >
+                  <Link href="/events">
+                    Browse all events <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </motion.div>
           </motion.div>
 
           {isLoadingEvents ? (
@@ -209,11 +176,9 @@ export default function HomePage() {
               <p className="text-sm text-white/25">Events coming soon</p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-grid">
-              {featured.map((event) => (
-                <Link key={event.id} href={`/events/${event.id}`} className="block h-full">
-                  <EventCard event={event} />
-                </Link>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((event, index) => (
+                <EventCard key={event.id} event={event} index={index} />
               ))}
             </div>
           )}
@@ -359,7 +324,7 @@ export default function HomePage() {
                 <div className="border-t border-white/[0.06] pt-5 grid grid-cols-2 gap-3">
                   {[
                     { label: "Events Created", val: "Live" },
-                    { label: "WebSocket Sync", val: "Active" },
+                    { label: "Guest Check-In", val: "Ready" },
                   ].map(({ label, val }) => (
                     <div key={label} className="rounded-md border border-white/[0.07] bg-white/[0.02] p-3 text-center">
                       <div className="text-sm font-bold text-white/70">{val}</div>
@@ -387,10 +352,10 @@ export default function HomePage() {
         <div className="container px-4 md:px-8">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              "Supabase JWT auth",
-              "HMAC-signed QR codes",
-              "WebSocket real-time sync",
-              "Automatic waitlist queue",
+              "Secure sign-in for attendees and hosts",
+              "QR-based event check-in flow",
+              "Live attendance updates",
+              "Registration overflow handling",
             ].map((text, i) => (
               <motion.div
                 key={text}
@@ -409,35 +374,35 @@ export default function HomePage() {
       </section>
 
       {/* ── Final CTA ─────────────────────────────────────────── */}
-      <section className="py-24 md:py-32">
+      <section className="py-16 md:py-24 lg:py-32">
         <div className="container px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0e1018] p-12 md:p-20 text-center"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0e1018] p-6 sm:p-8 md:p-12 lg:p-20 text-center"
           >
             {/* Subtle noise texture */}
             <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
               style={{ backgroundImage: "radial-gradient(circle at 50% 50%, #ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }}
             />
 
-            <div className="relative space-y-6">
+            <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center space-y-5 sm:space-y-6 text-center">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/25">
                 Get started today
               </p>
-              <h2 className="font-display text-3xl font-bold text-white md:text-5xl max-w-xl mx-auto leading-tight">
+              <h2 className="font-display text-[2rem] font-bold text-white sm:text-4xl md:text-5xl max-w-2xl leading-tight">
                 Ready to take the Stage?
               </h2>
-              <p className="text-white/35 text-sm max-w-md mx-auto leading-relaxed">
+              <p className="text-white/35 text-sm sm:text-base max-w-xl leading-relaxed">
                 Join event organizers using StageWay for seamless, professional event management.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <div className="grid w-full max-w-2xl gap-3 pt-1 sm:pt-2 sm:grid-cols-2">
                 <Button
                   size="lg"
                   asChild
-                  className="bg-violet-600 hover:bg-violet-500 text-white h-12 px-9 font-bold text-sm shadow-btn-white tracking-wide"
+                  className="w-full justify-center bg-violet-600 hover:bg-violet-500 text-white h-11 sm:h-12 px-6 sm:px-9 font-bold text-sm shadow-btn-white tracking-wide"
                 >
                   <Link href="/auth/signup">
                     Create your account
@@ -448,7 +413,7 @@ export default function HomePage() {
                   size="lg"
                   variant="ghost"
                   asChild
-                  className="border border-white/[0.10] hover:border-white/[0.20] text-white/50 hover:text-white h-12 px-9 text-sm"
+                  className="w-full justify-center border border-white/[0.10] hover:border-white/[0.20] text-white/50 hover:text-white h-11 sm:h-12 px-6 sm:px-9 text-sm"
                 >
                   <Link href="/events">Browse events</Link>
                 </Button>

@@ -97,7 +97,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
                   size="icon"
                   aria-label="Edit event"
                   onClick={() => (window.location.href = `/events/${event.id}/edit`)}
-                  className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+                  className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:bg-black/50 active:scale-[0.97]"
                 >
                   <Edit className="h-3.5 w-3.5" />
                 </Button>
@@ -107,7 +107,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
                 size="icon"
                 aria-label="Share event"
                 onClick={handleShare}
-                className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+                className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:bg-black/50 active:scale-[0.97]"
               >
                 <Share2 className="h-3.5 w-3.5" />
               </Button>
@@ -116,7 +116,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
                 size="icon"
                 aria-label="Add to calendar"
                 onClick={handleAddToCalendar}
-                className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+                className="h-8 w-8 rounded-full border-white/20 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-px hover:bg-black/50 active:scale-[0.97]"
               >
                 <CalendarPlus className="h-3.5 w-3.5" />
               </Button>
@@ -157,7 +157,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
             content: event.venueName ? `${event.venueName}, ${event.location}` : event.location,
           },
         ].map(({ icon: Icon, title, sub, content }) => (
-          <div key={title} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-[#0e1018] p-4">
+          <div key={title} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-[#0e1018] p-4 transition-colors duration-200 hover:border-white/[0.12]">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
               <Icon className="h-4 w-4 text-white/40" />
             </div>
@@ -170,7 +170,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
         ))}
 
         {/* Seats card */}
-        <div className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-[#0e1018] p-4">
+        <div className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-[#0e1018] p-4 transition-colors duration-200 hover:border-white/[0.12]">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
             <Users className="h-4 w-4 text-white/40" />
           </div>
@@ -190,7 +190,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="flex w-full items-center gap-1 rounded-xl border border-white/[0.07] bg-[#0e1018] p-1 h-auto">
+        <TabsList className="flex h-auto w-full items-center gap-1 overflow-x-auto whitespace-nowrap rounded-xl border border-white/[0.07] bg-[#0e1018] p-1">
           {[
             { value: "overview",  icon: Tags,       label: "Overview" },
             { value: "logistics", icon: MapPin,      label: "Logistics" },
@@ -199,7 +199,7 @@ export function EventDetails({ event, canEdit }: EventDetailsProps) {
             <TabsTrigger
               key={value}
               value={value}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-white/40 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white transition-all"
+              className="flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-white/40 transition-all data-[state=active]:bg-white/[0.08] data-[state=active]:text-white"
             >
               <Icon className="h-3.5 w-3.5" />
               {label}

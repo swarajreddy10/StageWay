@@ -46,13 +46,17 @@ export default function AnalyticsPage() {
       <div className="border-b border-white/[0.07]">
         <div className="container px-4 py-8 md:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-start gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
                 <BarChart3 className="h-4 w-4 text-white/50" />
               </div>
-              <h1 className="font-display text-2xl font-bold text-white">Host Analytics</h1>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-white">Host Analytics</h1>
+                <p className="mt-1 text-sm text-white/40">
+                  Comprehensive insights into your events&apos; performance and audience engagement.
+                </p>
+              </div>
             </div>
-            <p className="text-white/40 text-sm ml-12">Comprehensive insights into your events&apos; performance and audience engagement.</p>
           </motion.div>
         </div>
       </div>

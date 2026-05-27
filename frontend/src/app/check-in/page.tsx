@@ -145,13 +145,15 @@ export default function CheckInPage() {
       <div className="border-b border-white/[0.07]">
         <div className="container px-4 py-8 md:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-start gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
                 <QrCode className="h-4 w-4 text-white/50" />
               </div>
-              <h1 className="font-display text-2xl font-bold text-white">Check-In Management</h1>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-white">Check-In Management</h1>
+                <p className="mt-1 text-sm text-white/40">Scan QR codes or manually check in attendees.</p>
+              </div>
             </div>
-            <p className="text-white/40 text-sm ml-12">Scan QR codes or manually check in attendees.</p>
           </motion.div>
         </div>
       </div>
@@ -159,7 +161,7 @@ export default function CheckInPage() {
       <div className="container px-4 py-8 md:px-8">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
           <Tabs defaultValue="scanner">
-            <TabsList className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-0.5 mb-6">
+            <TabsList className="mb-6 w-full overflow-x-auto whitespace-nowrap rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
               {[
                 { value: "scanner", label: "QR Scanner", icon: <ScanLine className="h-3.5 w-3.5" /> },
                 { value: "manual",  label: "Manual Check-In", icon: <Users className="h-3.5 w-3.5" /> },
@@ -167,7 +169,7 @@ export default function CheckInPage() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="flex items-center gap-1.5 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/40 rounded-md px-3 py-1.5 text-sm"
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-white/40 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white"
                 >
                   {icon}{label}
                 </TabsTrigger>
@@ -326,7 +328,7 @@ export default function CheckInPage() {
                 {/* Attendee list */}
                 {selectedEventId && (
                   <div className="rounded-xl border border-white/[0.08] bg-[#0e1018] overflow-hidden">
-                    <div className="p-5 border-b border-white/[0.06] flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-3 border-b border-white/[0.06] p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-white">Attendees</h3>
                         <Badge className="bg-white/[0.06] text-white/50 border-none text-[10px]">{attendees.length}</Badge>
@@ -336,7 +338,7 @@ export default function CheckInPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="relative flex-1 max-w-xs">
+                      <div className="relative w-full sm:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
                         <input
                           value={searchQuery}

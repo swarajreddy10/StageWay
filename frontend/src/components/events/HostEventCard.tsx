@@ -19,9 +19,14 @@ export function HostEventCard({ event }: HostEventCardProps) {
   const fillPct = event.capacity
     ? Math.max(0, Math.min(100, Math.round(((event.capacity - event.availableSeats) / event.capacity) * 100)))
     : 0;
+  const isFree = !event.price || event.price === 0;
 
   return (
-    <div className="rounded-lg border border-white/[0.08] bg-[#0e1018] overflow-hidden group hover:border-white/[0.14] hover:bg-[#141720] transition-all duration-200">
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="group overflow-hidden rounded-xl border border-white/[0.08] bg-[#0e1018] transition-all duration-200 hover:border-white/[0.14] hover:bg-[#141720]"
+    >
       <div className="p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-semibold text-white/90 text-sm leading-snug line-clamp-2">{event.name}</h3>
@@ -35,10 +40,12 @@ export function HostEventCard({ event }: HostEventCardProps) {
             <Calendar className="h-3 w-3" />
             {format(new Date(event.startDate), "MMM d, yyyy")}
           </span>
+          <span className="text-white/25">•</span>
+          <span>{isFree ? "Free" : `${event.currency ?? "USD"} ${event.price.toFixed(2)}`}</span>
           {(event.venueName ?? event.location) && (
-            <span className="flex items-center gap-1">
+            <span className="inline-flex min-w-0 max-w-full items-center gap-1">
               <MapPin className="h-3 w-3" />
-              {event.venueName ?? event.location}
+              <span className="truncate">{event.venueName ?? event.location}</span>
             </span>
           )}
         </div>
@@ -51,7 +58,7 @@ export function HostEventCard({ event }: HostEventCardProps) {
             </span>
             <span>{fillPct}%</span>
           </div>
-          <div className="h-px rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
             <motion.div
               className="h-full rounded-full bg-[#7c5af5]"
               initial={{ width: 0 }}
@@ -63,17 +70,17 @@ export function HostEventCard({ event }: HostEventCardProps) {
 
         <div className="flex gap-2">
           <Link href={`/events/${event.id}`} className="flex-1">
-            <Button variant="ghost" size="sm" className="w-full border border-white/[0.08] text-white/45 hover:text-white hover:bg-white/[0.05] text-xs">
+            <Button variant="ghost" size="sm" className="h-8 w-full border border-white/[0.08] text-xs text-white/45 transition-all duration-200 hover:-translate-y-px hover:bg-white/[0.05] hover:text-white active:scale-[0.99]">
               View
             </Button>
           </Link>
           <Link href={`/events/${event.id}/edit`}>
-            <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs shadow-btn-white">
+            <Button size="sm" className="h-8 bg-violet-600 text-xs font-semibold text-white shadow-btn-white transition-all duration-200 hover:-translate-y-px hover:bg-violet-500 active:scale-[0.99]">
               <Pencil className="mr-1.5 h-3 w-3" />Edit
             </Button>
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

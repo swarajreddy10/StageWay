@@ -10,7 +10,7 @@
 
 **What StageWay is:** Full-stack event management platform.
 **Backend:** Spring Boot 3.2.4, Java 21, Supabase JWT auth, PostgreSQL via Supabase, Flyway migrations (V1–V13), Caffeine cache, HMAC-SHA256 QR check-in, WebSocket (STOMP/SockJS at `/ws`, real-time check-in on `/topic/checkins/{eventId}`), optimistic locking on Event + Registration.
-**Frontend:** Next.js 16.1.1, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Zustand, TanStack Query, Framer Motion, Recharts, Three.js (R3F 9.5 + drei 10.7).
+**Frontend:** Next.js 16.2.6, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Zustand, TanStack Query, Framer Motion, Recharts, Three.js (R3F 9.5 + drei 10.7).
 **Current deployment:** Frontend → Vercel. Backend → Render free (cold starts). DB/Auth → Supabase. Files → Supabase Storage (half-wired).
 **Audit baseline:** 2026-05-24 (repo-wide verification rerun and status correction).
 
@@ -74,6 +74,9 @@
 - [x] `bun run typecheck` passes (tsconfig ambient-type leakage fixed).
 - [x] `bun test` passes for default suite (integration tests are now explicitly opt-in via `RUN_INTEGRATION_TESTS=true`).
 - [x] `bun run security:audit` passes after dependency hardening (Next.js upgraded to `16.2.6`, vulnerable transitives resolved).
+- [x] Framer Motion scroll-container warning fixed by setting `html { position: relative; }` for `useScroll` target offset measurement.
+- [x] Local-dev backend wake probe toast noise reduced (no persistent "waking up" toast for localhost backend targets).
+- [x] Resolved Three.js deprecation warning in dev logs by aligning to `three@0.182.0` + `@types/three@0.182.0` with current `@react-three/fiber` runtime.
 
 ### Backend quality gates
 - [x] `./mvnw -q checkstyle:check` passes.
@@ -472,6 +475,8 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - [ ] Page transitions: Framer Motion `AnimatePresence` between routes (still snap — not done)
 - [x] Smooth scroll: Lenis provider wraps entire app (`SmoothScroll.tsx`) — April 2026
 - [x] Scroll parallax on HeroSection: `useScroll` + `useTransform` on content + Three.js canvas
+- [x] Resolved Framer Motion dev warning for target-based `useScroll` by making the scrolling container non-static (`html { position: relative; }`).
+- [x] Landing hero upgraded to a client-style two-column composition (clear value proposition, primary/secondary CTA hierarchy, and live command-deck preview) while keeping dark-stage visual identity.
 - [x] Stagger animation on EventCard grid: `index * 0.06s` delay via Framer Motion
 - [x] Loading states: skeleton shimmer updated to match v2 design (`.skeleton` in globals.css)
 - [x] Toast notifications (sonner): styled `#141720` bg, violet border, `rounded-xl` — April 2026
@@ -481,11 +486,13 @@ const y = useTransform(scrollYProgress, [0, 1], [0, 80]);  // content rises 80px
 - [x] Three.js: `mobile` prop on `StageScene` reduces particle counts at `max-width: 767px`
 - [x] Canvas disabled when `prefers-reduced-motion` set (HeroSection uses `useReducedMotion`)
 - [x] NavBar hamburger menu with animated mobile drawer
+- [x] Full inner-page responsive sweep completed for `events`, `auth`, `dashboard`, `host`, and `admin` pages (mobile spacing, action-row stacking, tab overflow handling, consistent container rhythm).
 
 ### 9.3 Performance ✅
 - [x] `React.memo` on `EventCard` and `RegistrationCard`
 - [x] Dynamic imports for all Three.js components (`ssr: false`)
 - [ ] `frameloop="demand"` on non-animated canvases (hero uses `"always"` — correct for animated spotlights)
+- [x] `THREE.Clock` deprecation warning mitigated for current stack via compatible version pin (`three@0.182.0`) until R3F Timer-native runtime path is adopted.
 
 ### 9.4 Accessibility ✅
 - [x] `aria-label` on icon-only buttons: NavBar hamburger, EventDetails (Edit/Share/Calendar), RegistrationCard cancel

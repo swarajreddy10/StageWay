@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Mail, Zap } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
+import { BrandLogo } from "./BrandLogo";
 
 const EXPLORE = [
   { href: "/events",        label: "Browse Events" },
@@ -17,10 +18,10 @@ const ACCOUNT = [
 ];
 
 const CAPABILITIES = [
-  "Real-time analytics",
+  "Event publishing",
+  "Registration flows",
   "QR check-ins",
-  "Smart waitlists",
-  "WebSocket sync",
+  "Attendance insights",
 ];
 
 export default function Footer() {
@@ -79,16 +80,16 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="relative flex items-center gap-3 shrink-0">
+          <div className="relative flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center shrink-0">
             <Link
               href="/events"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.10] bg-white/[0.04] text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.07] hover:border-white/[0.16] transition-all duration-200"
+              className="flex items-center justify-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.04] px-5 py-2.5 text-[13px] font-medium text-white/70 transition-all duration-200 hover:border-white/[0.16] hover:bg-white/[0.07] hover:text-white"
             >
               Browse events
             </Link>
             <Link
               href="/auth/signup"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 hover:scale-[1.02]"
+              className="flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-semibold text-white transition-all duration-200 hover:opacity-90 hover:scale-[1.02]"
               style={{
                 background: "linear-gradient(135deg, #7c5af5 0%, #6040e0 100%)",
                 boxShadow: "0 0 0 1px rgba(124,90,245,0.4), 0 4px 20px rgba(124,90,245,0.3)",
@@ -107,12 +108,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="space-y-5">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex items-center justify-center h-6 w-6 rounded-md bg-violet-600/90">
-                <Zap className="h-3.5 w-3.5 text-white" fill="currentColor" />
-              </div>
-              <span className="font-display text-base font-bold tracking-[0.08em] text-white uppercase">
-                Stageway
-              </span>
+              <BrandLogo size="sm" />
             </Link>
             <p className="text-sm text-white/35 max-w-xs leading-relaxed">
               Built for bold organizers and curious attendees. Discover, register, and experience events on a platform that moves as fast as your crowd.

@@ -83,6 +83,7 @@
 @layer base {
   html {
     font-size: 16px;
+    position: relative; /* motion/useScroll target offset calc expects non-static scrolling container */
     scroll-behavior: auto; /* Lenis handles smooth scroll */
   }
   * { @apply border-border; }

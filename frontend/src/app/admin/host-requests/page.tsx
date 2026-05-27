@@ -86,8 +86,8 @@ export default function AdminHostRequestsPage() {
       <div className="border-b border-white/[0.07]">
         <div className="container px-4 py-8 md:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04]">
+            <div className="mb-1 flex items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04]">
                 <ShieldCheck className="h-4 w-4 text-white/50" />
               </div>
               <div>
@@ -95,21 +95,21 @@ export default function AdminHostRequestsPage() {
                   <h1 className="font-display text-2xl font-bold text-white">Host Requests</h1>
                   <Badge className="bg-white/[0.06] text-white/50 border-white/[0.10] text-[10px] font-bold">ADMIN</Badge>
                 </div>
+                <p className="text-sm text-white/40">Review submissions and approve qualified organizers.</p>
               </div>
             </div>
-            <p className="text-white/40 text-sm ml-12">Review submissions and approve qualified organizers.</p>
           </motion.div>
         </div>
       </div>
 
       <div className="container px-4 py-8 md:px-8">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterStatus)}>
-          <TabsList className="bg-white/[0.04] border border-white/[0.07] rounded-lg p-0.5 mb-6">
+          <TabsList className="mb-6 w-full overflow-x-auto rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-white/40 rounded-md px-3 py-1.5 text-sm capitalize"
+                className="whitespace-nowrap rounded-md px-3 py-1.5 text-sm capitalize text-white/40 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white"
               >
                 {tab === "ALL" ? "All" : tab.toLowerCase()}
               </TabsTrigger>
@@ -182,12 +182,12 @@ export default function AdminHostRequestsPage() {
 
                         {/* Actions */}
                         {req.status === "PENDING" && (
-                          <div className="flex gap-3 pt-1">
+                          <div className="grid gap-3 pt-1 sm:grid-cols-2">
                             <Button
                               size="sm"
                               disabled={actionId === req.id}
                               onClick={() => handleDecision(req.id, "APPROVED")}
-                              className="bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs shadow-btn-white"
+                              className="w-full justify-center bg-violet-600 text-xs font-semibold text-white shadow-btn-white hover:bg-violet-500"
                             >
                               {actionId === req.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (
                                 <><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />Approve</>
@@ -198,7 +198,7 @@ export default function AdminHostRequestsPage() {
                               variant="ghost"
                               disabled={actionId === req.id}
                               onClick={() => handleDecision(req.id, "REJECTED")}
-                              className="border border-white/[0.12] text-white/45 hover:bg-white/[0.05] hover:text-white/70 text-xs"
+                              className="w-full justify-center border border-white/[0.12] text-xs text-white/45 hover:bg-white/[0.05] hover:text-white/70"
                             >
                               <XCircle className="mr-1.5 h-3.5 w-3.5" />Reject
                             </Button>

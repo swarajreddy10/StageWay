@@ -33,9 +33,9 @@ const categories: EventCategory[] = [
   "NETWORKING", "SPORTS", "ARTS", "OTHER",
 ];
 
-const selectCls = "bg-white/[0.04] border-white/[0.08] text-white/80 text-xs h-8 focus:border-white/25";
+const selectCls = "h-10 bg-white/[0.04] border-white/[0.08] text-white/80 text-sm focus:border-white/25";
 const selectContentCls = "bg-[#0e1018] border-white/[0.08]";
-const selectItemCls = "text-white/70 focus:bg-white/[0.06] focus:text-white text-xs";
+const selectItemCls = "text-white/70 focus:bg-white/[0.06] focus:text-white text-sm";
 
 export function EventFiltersComponent({ filters, onFiltersChange, sortOrder, onSortChange }: EventFiltersProps) {
   const { register, handleSubmit, setValue, reset, control } = useForm<EventFilters>({ defaultValues: filters });
@@ -90,24 +90,29 @@ export function EventFiltersComponent({ filters, onFiltersChange, sortOrder, onS
   };
 
   return (
-    <div className="space-y-3 p-4 rounded-xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm">
-      <div className="flex items-center justify-between gap-2">
+    <div className="space-y-4 rounded-2xl border border-white/[0.08] bg-[#0e1018] p-5 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-white/80">Filters</h3>
+          <h3 className="text-base font-semibold text-white/85">Filters</h3>
           {hasActive && (
-            <Badge className="bg-white/[0.08] text-white/60 border-white/[0.12] text-[10px] px-1.5 py-0">{activeCount}</Badge>
+            <Badge className="border-white/[0.12] bg-white/[0.08] px-1.5 py-0 text-[10px] text-white/60">{activeCount}</Badge>
           )}
         </div>
         {hasActive && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs text-white/40 hover:text-white px-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-8 px-2 text-xs text-white/45 hover:bg-white/[0.05] hover:text-white"
+          >
             <X className="mr-1 h-3 w-3" />Clear
           </Button>
         )}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-wrap items-end gap-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-12">
         {/* Category */}
-        <div className="flex-1 min-w-[140px] space-y-1">
+        <div className="space-y-1 xl:col-span-2">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Category</Label>
           <Select value={categoryValue} onValueChange={(v) => {
             setCategoryValue(v);
@@ -123,27 +128,27 @@ export function EventFiltersComponent({ filters, onFiltersChange, sortOrder, onS
         </div>
 
         {/* Location */}
-        <div className="flex-1 min-w-[140px] space-y-1">
+        <div className="space-y-1 xl:col-span-2">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Location</Label>
           <input
             placeholder="City"
             {...register("location")}
             onChange={(e) => { register("location").onChange(e); debouncedSubmit(); }}
-            className="w-full h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/25"
+            className="h-10 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-sm text-white placeholder:text-white/25 focus:border-white/25 focus:outline-none"
           />
         </div>
 
         {/* Date range */}
-        <div className="flex-[1.5] min-w-[200px] space-y-1">
+        <div className="space-y-1 xl:col-span-3">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Date Range</Label>
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <input type="hidden" {...register("dateFrom")} />
             <input type="hidden" {...register("dateTo")} />
             {(["dateFrom", "dateTo"] as const).map((field, i) => (
               <Popover key={field}>
                 <PopoverTrigger asChild>
                   <Button type="button" variant="ghost" size="sm"
-                    className={cn("flex-1 justify-between h-8 text-xs px-2 border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.07] text-white/50 hover:text-white",
+                    className={cn("h-10 flex-1 justify-between border border-white/[0.08] bg-white/[0.04] px-3 text-sm text-white/50 hover:bg-white/[0.07] hover:text-white",
                       (i === 0 ? dateFrom : dateTo) && "text-white/80"
                     )}
                   >
@@ -168,21 +173,21 @@ export function EventFiltersComponent({ filters, onFiltersChange, sortOrder, onS
         </div>
 
         {/* Price */}
-        <div className="flex-1 min-w-[160px] space-y-1">
+        <div className="space-y-1 xl:col-span-3">
           <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/30">
-            Price max: {maxPriceValue === 10000 ? "Any" : `₹${(maxPriceValue / 1000).toFixed(0)}k`}
+            Price Max: {maxPriceValue === 10000 ? "Any" : `₹${(maxPriceValue / 1000).toFixed(0)}k`}
           </Label>
           <input
             type="range" min={0} max={10000} step={100} value={maxPriceValue}
             onChange={(e) => handlePriceChange(Number(e.target.value))}
-            className="w-full h-8 cursor-pointer accent-white"
+            className="h-10 w-full cursor-pointer accent-violet-400"
             aria-label="Maximum price"
           />
         </div>
 
         {/* Sort */}
         {onSortChange && (
-          <div className="flex-1 min-w-[120px] space-y-1">
+          <div className="space-y-1 xl:col-span-2">
             <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Sort</Label>
             <Select value={sortOrder} onValueChange={onSortChange}>
               <SelectTrigger className={selectCls}><SelectValue placeholder="Soonest" /></SelectTrigger>
@@ -200,15 +205,15 @@ export function EventFiltersComponent({ filters, onFiltersChange, sortOrder, onS
         )}
 
         {/* Free toggle */}
-        <div className="flex items-end h-8">
-          <div className="flex items-center gap-1.5">
+        <div className={cn("flex items-end", onSortChange ? "xl:col-span-2" : "sm:col-span-2 xl:col-span-2")}>
+          <div className="flex h-10 w-full items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3">
             <Switch
               id="isFree"
               checked={!!isFree}
               onCheckedChange={(c) => { setValue("isFree", c || undefined); handleSubmit(onSubmit)(); }}
-              className="scale-75 data-[state=checked]:bg-white"
+              className="data-[state=checked]:bg-violet-500"
             />
-            <Label htmlFor="isFree" className="text-xs text-white/50 cursor-pointer whitespace-nowrap">Free only</Label>
+            <Label htmlFor="isFree" className="cursor-pointer whitespace-nowrap text-sm text-white/60">Free only</Label>
           </div>
         </div>
       </form>
